@@ -1,10 +1,6 @@
 package qouteall.imm_ptl.core.chunk_loading;
 
-import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongList;
-import it.unimi.dsi.fastutil.longs.LongSortedSet;
+import it.unimi.dsi.fastutil.longs.*;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket;
 import net.minecraft.resources.ResourceKey;
@@ -22,14 +18,7 @@ import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.my_util.SignalBiArged;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -98,11 +87,9 @@ public class NewChunkTrackingGraph {
         long chunkPos,
         ArrayList<PlayerWatchRecord> records
     ) {
-        boolean isIndirectLoading = Helper.indexOf(records, r ->
+        return Helper.indexOf(records, r ->
             (r.isLoadedToPlayer) && (!r.isDirectLoading)
         ) != -1;
-        
-        return isIndirectLoading;
     }
     
     // Every chunk has a list of watching records

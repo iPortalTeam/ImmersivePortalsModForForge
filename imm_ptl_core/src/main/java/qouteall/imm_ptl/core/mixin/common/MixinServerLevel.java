@@ -37,7 +37,7 @@ public abstract class MixinServerLevel implements IEServerWorld {
     
     //in vanilla if a dimension has no player and no forced chunks then it will not tick
     @Redirect(
-        method = "Lnet/minecraft/server/level/ServerLevel;tick(Ljava/util/function/BooleanSupplier;)V",
+        method = "tick(Ljava/util/function/BooleanSupplier;)V",
         at = @At(
             value = "INVOKE",
             target = "Ljava/util/List;isEmpty()Z"
@@ -52,7 +52,7 @@ public abstract class MixinServerLevel implements IEServerWorld {
     }
     
     // for debug
-    @Inject(method = "Lnet/minecraft/server/level/ServerLevel;toString()Ljava/lang/String;", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "toString()Ljava/lang/String;", at = @At("HEAD"), cancellable = true)
     private void onToString(CallbackInfoReturnable<String> cir) {
         final ServerLevel this_ = (ServerLevel) (Object) this;
         cir.setReturnValue("ServerWorld " + this_.dimension().location() +

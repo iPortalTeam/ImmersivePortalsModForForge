@@ -11,7 +11,7 @@ import qouteall.imm_ptl.core.ducks.IEEntity;
 @Mixin(LocalPlayer.class)
 public class MixinLocalPlayer {
     @Inject(
-        method = "Lnet/minecraft/client/player/LocalPlayer;suffocatesAt(Lnet/minecraft/core/BlockPos;)Z",
+        method = "suffocatesAt(Lnet/minecraft/core/BlockPos;)Z",
         at = @At("HEAD"),
         cancellable = true
     )

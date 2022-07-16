@@ -18,7 +18,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import qouteall.imm_ptl.core.IPGlobal;
-import qouteall.q_misc_util.dimension.DimensionIdManagement;
 import qouteall.imm_ptl.core.ducks.IEMinecraftServer;
 import qouteall.imm_ptl.core.platform_specific.O_O;
 
@@ -60,7 +59,7 @@ public abstract class MixinMinecraftServer implements IEMinecraftServer {
     }
     
     @Inject(
-        method = "Lnet/minecraft/server/MinecraftServer;tickChildren(Ljava/util/function/BooleanSupplier;)V",
+        method = "tickChildren(Ljava/util/function/BooleanSupplier;)V",
         at = @At("TAIL")
     )
     private void onServerTick(BooleanSupplier booleanSupplier_1, CallbackInfo ci) {
@@ -70,7 +69,7 @@ public abstract class MixinMinecraftServer implements IEMinecraftServer {
     }
     
     @Inject(
-        method = "Lnet/minecraft/server/MinecraftServer;runServer()V",
+        method = "runServer()V",
         at = @At("RETURN")
     )
     private void onServerClose(CallbackInfo ci) {
@@ -78,7 +77,7 @@ public abstract class MixinMinecraftServer implements IEMinecraftServer {
     }
     
     @Inject(
-        method = "Lnet/minecraft/server/MinecraftServer;createLevels(Lnet/minecraft/server/level/progress/ChunkProgressListener;)V",
+        method = "createLevels(Lnet/minecraft/server/level/progress/ChunkProgressListener;)V",
         at = @At("RETURN")
     )
     private void onFinishedLoadingAllWorlds(

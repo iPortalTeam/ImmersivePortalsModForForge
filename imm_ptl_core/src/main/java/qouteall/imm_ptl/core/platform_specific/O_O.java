@@ -1,9 +1,5 @@
 package qouteall.imm_ptl.core.platform_specific;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientChunkEvents;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.multiplayer.ClientChunkCache;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.resources.ResourceKey;
@@ -12,6 +8,12 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.ChunkEvent;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import qouteall.imm_ptl.core.chunk_loading.MyClientChunkManager;
 import qouteall.imm_ptl.core.portal.custom_portal_gen.PortalGenInfo;
 
@@ -22,7 +24,7 @@ public class O_O {
         return false;
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void onPlayerChangeDimensionClient(
         ResourceKey<Level> from, ResourceKey<Level> to
     ) {
@@ -62,12 +64,6 @@ public class O_O {
         RequiemCompat.onPlayerTeleportedServer(player);
     }
     
-    public static void loadConfigFabric() {
-        IPConfig ipConfig = IPConfig.readConfig();
-        ipConfig.onConfigChanged();
-        ipConfig.saveConfigFile();
-    }
-    
     public static void onServerConstructed() {
         // forge version initialize server config
     }
@@ -79,31 +75,29 @@ public class O_O {
     }
     
     public static void postClientChunkLoadEvent(LevelChunk chunk) {
-        ClientChunkEvents.CHUNK_LOAD.invoker().onChunkLoad(
-            ((ClientLevel) chunk.getLevel()), chunk
-        );
+        MinecraftForge.EVENT_BUS.post(new ChunkEvent.Load(chunk));
+        //ClientChunkEvents.CHUNK_LOAD.invoker().onChunkLoad(((ClientLevel) chunk.getLevel()), chunk);
     }
     
     public static void postClientChunkUnloadEvent(LevelChunk chunk) {
-        ClientChunkEvents.CHUNK_UNLOAD.invoker().onChunkUnload(
-            ((ClientLevel) chunk.getLevel()), chunk
-        );
+        MinecraftForge.EVENT_BUS.post(new ChunkEvent.Unload(chunk));
+        //ClientChunkEvents.CHUNK_UNLOAD.invoker().onChunkUnload(((ClientLevel) chunk.getLevel()), chunk);
     }
     
     public static boolean isDedicatedServer() {
-        return FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER;
+        return FMLEnvironment.dist == Dist.DEDICATED_SERVER;
     }
     
     public static void postPortalSpawnEventForge(PortalGenInfo info) {
     
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static ClientChunkCache createMyClientChunkManager(ClientLevel world, int loadDistance) {
         return new MyClientChunkManager(world, loadDistance);
     }
     
     public static boolean getIsPehkuiPresent() {
-        return FabricLoader.getInstance().isModLoaded("pehkui");
+        return ModList.get().isLoaded("pehkui");
     }
 }

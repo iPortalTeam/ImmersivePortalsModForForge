@@ -95,7 +95,7 @@ public class ChunkLoader {
         return Objects.hash(center, radius);
     }
     
-    public static interface ChunkPosConsumer {
+    public interface ChunkPosConsumer {
         void consume(ResourceKey<Level> dimension, int x, int z, int distanceToSource);
     }
 }

@@ -1,12 +1,13 @@
 package qouteall.q_misc_util;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import org.apache.commons.lang3.Validate;
 import qouteall.q_misc_util.ducks.IEMinecraftServer_Misc;
 import qouteall.q_misc_util.mixin.IELevelStorageAccess_Misc;
@@ -43,7 +44,7 @@ public class MiscHelper {
      * {@link ReentrantThreadExecutor#shouldExecuteAsync()}
      * The execution may get deferred on the render thread
      */
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void executeOnRenderThread(Runnable runnable) {
         Minecraft client = Minecraft.getInstance();
         
@@ -56,7 +57,7 @@ public class MiscHelper {
     }
     
     public static MinecraftServer getServer() {
-        return MiscGlobals.refMinecraftServer.get();
+        return ServerLifecycleHooks.getCurrentServer();
     }
     
     public static void executeOnServerThread(Runnable runnable) {
@@ -71,7 +72,7 @@ public class MiscHelper {
     }
     
     public static boolean isDedicatedServer() {
-        return FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER;
+        return FMLEnvironment.dist == Dist.DEDICATED_SERVER;
     }
     
     

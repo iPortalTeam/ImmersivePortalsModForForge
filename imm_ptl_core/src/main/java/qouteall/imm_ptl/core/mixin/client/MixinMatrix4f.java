@@ -9,36 +9,52 @@ import qouteall.imm_ptl.core.ducks.IEMatrix4f;
 @Mixin(Matrix4f.class)
 public class MixinMatrix4f implements IEMatrix4f {
     @Shadow
+    protected
     float m00;
     @Shadow
+    protected
     float m01;
     @Shadow
+    protected
     float m02;
     @Shadow
+    protected
     float m03;
     @Shadow
+    protected
     float m10;
     @Shadow
+    protected
     float m11;
     @Shadow
+    protected
     float m12;
     @Shadow
+    protected
     float m13;
     @Shadow
+    protected
     float m20;
     @Shadow
+    protected
     float m21;
     @Shadow
+    protected
     float m22;
     @Shadow
+    protected
     float m23;
     @Shadow
+    protected
     float m30;
     @Shadow
+    protected
     float m31;
     @Shadow
+    protected
     float m32;
     @Shadow
+    protected
     float m33;
     
     @Override

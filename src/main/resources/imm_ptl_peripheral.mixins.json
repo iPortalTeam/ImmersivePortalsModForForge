@@ -18,12 +18,13 @@
   "client": [
     "client.MixinBossHealthOverlay",
     "client.MixinSplashManager",
-    "client.alternate_dimension.MixinFogRenderer_A",
     "client.alternate_dimension.MixinClientLevelData",
+    "client.alternate_dimension.MixinFogRenderer_A",
     "client.alternate_dimension.MixinWorldRenderer_A",
     "client.dim_stack.MixinCreateWorldScreen"
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "refmap": "mixins.imm_ptl.refmap.json"
 }

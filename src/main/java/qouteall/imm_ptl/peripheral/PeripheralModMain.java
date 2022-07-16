@@ -1,32 +1,40 @@
 package qouteall.imm_ptl.peripheral;
 
 import com.google.common.collect.Lists;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import com.mojang.serialization.Codec;
 import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.RegistryObject;
 import qouteall.imm_ptl.peripheral.alternate_dimension.AlternateDimensions;
 import qouteall.imm_ptl.peripheral.alternate_dimension.ChaosBiomeSource;
 import qouteall.imm_ptl.peripheral.alternate_dimension.ErrorTerrainGenerator;
 import qouteall.imm_ptl.peripheral.alternate_dimension.FormulaGenerator;
-import qouteall.imm_ptl.peripheral.alternate_dimension.NormalSkylandGenerator;
 import qouteall.imm_ptl.peripheral.dim_stack.DimStackGameRule;
 import qouteall.imm_ptl.peripheral.dim_stack.DimStackManagement;
 import qouteall.imm_ptl.peripheral.guide.IPGuide;
 import qouteall.imm_ptl.peripheral.portal_generation.IntrinsicPortalGeneration;
 
+
 public class PeripheralModMain {
     
-    public static Block portalHelperBlock;
-    public static BlockItem portalHelperBlockItem;
-    
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void initClient() {
         IPGuide.initClient();
     }
-    
+
+    private static final DeferredRegister<Codec<? extends ChunkGenerator>> CHUNK_GENERATOR = DeferredRegister.create(Registry.CHUNK_GENERATOR_REGISTRY, "immersive_portals");
+    private static final DeferredRegister<Codec<? extends BiomeSource>> BIOME_SOURCE = DeferredRegister.create(Registry.BIOME_SOURCE_REGISTRY, "immersive_portals");
+
+    public static final RegistryObject<Codec<? extends ChunkGenerator>> ERROR_TERRAIN_GENERATOR = CHUNK_GENERATOR.register("error_terrain_generator", () -> ErrorTerrainGenerator.codec);
+    public static final RegistryObject<Codec<? extends ChunkGenerator>> NORMAL_SKYLAND_GENERATOR = CHUNK_GENERATOR.register("normal_skyland_generator", () -> ErrorTerrainGenerator.codec);
+
+    public static final RegistryObject<Codec<? extends BiomeSource>> CHAOS_BIOME_SOURCE = BIOME_SOURCE.register("chaos_biome_source", () -> ChaosBiomeSource.CODEC);
+
     public static void init() {
         FormulaGenerator.init();
         
@@ -36,23 +44,26 @@ public class PeripheralModMain {
         DimStackManagement.init();
         
         AlternateDimensions.init();
+
+        CHUNK_GENERATOR.register(FMLJavaModLoadingContext.get().getModEventBus());
+        BIOME_SOURCE.register(FMLJavaModLoadingContext.get().getModEventBus());
         
-        Registry.register(
-            Registry.CHUNK_GENERATOR,
-            new ResourceLocation("immersive_portals:error_terrain_generator"),
-            ErrorTerrainGenerator.codec
-        );
-        Registry.register(
-            Registry.CHUNK_GENERATOR,
-            new ResourceLocation("immersive_portals:normal_skyland_generator"),
-            NormalSkylandGenerator.codec
-        );
+//        Registry.register( //Fixme removal
+//            Registry.CHUNK_GENERATOR,
+//            new ResourceLocation("immersive_portals:error_terrain_generator"),
+//            ErrorTerrainGenerator.codec
+//        );
+//        Registry.register(
+//            Registry.CHUNK_GENERATOR,
+//            new ResourceLocation("immersive_portals:normal_skyland_generator"),
+//            NormalSkylandGenerator.codec
+//        );
     
-        Registry.register(
-            Registry.BIOME_SOURCE,
-            new ResourceLocation("immersive_portals:chaos_biome_source"),
-            ChaosBiomeSource.CODEC
-        );
+//        Registry.register(
+//            Registry.BIOME_SOURCE,
+//            new ResourceLocation("immersive_portals:chaos_biome_source"),
+//            ChaosBiomeSource.CODEC
+//        );
     }
     
     public static void registerCommandStickTypes() {

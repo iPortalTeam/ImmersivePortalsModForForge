@@ -1,27 +1,30 @@
 package qouteall.imm_ptl.peripheral.guide;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.ChatType;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
-import qouteall.imm_ptl.core.platform_specific.IPNetworkingClient;
+import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.q_misc_util.my_util.MyTaskList;
+import qouteall.q_misc_util.my_util.SignalArged;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-@Environment(EnvType.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class IPGuide {
+
+    public static final SignalArged<Portal> clientPortalSpawnSignal = new SignalArged<>();
+
     public static class GuideInfo {
         public boolean wikiInformed = false;
         public boolean portalHelperInformed = false;
@@ -73,7 +76,7 @@ public class IPGuide {
     public static void initClient() {
         guideInfo = readFromFile();
         
-        IPNetworkingClient.clientPortalSpawnSignal.connect(p -> {
+        clientPortalSpawnSignal.connect(p -> {
             LocalPlayer player = Minecraft.getInstance().player;
             
             if (!guideInfo.wikiInformed) {
@@ -126,8 +129,8 @@ public class IPGuide {
             Util.NIL_UUID
         );
     }
-    
-    @Environment(EnvType.CLIENT)
+
+    @OnlyIn(Dist.CLIENT)
     public static class RemoteCallables {
         public static void showWiki() {
             informWithURL(

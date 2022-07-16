@@ -39,7 +39,7 @@ public abstract class MixinCamera implements IECamera {
     public abstract Entity getEntity();
     
     @Inject(
-        method = "Lnet/minecraft/client/Camera;setup(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/world/entity/Entity;ZZF)V",
+        method = "setup(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/world/entity/Entity;ZZF)V",
         at = @At("RETURN")
     )
     private void onUpdateFinished(
@@ -51,7 +51,7 @@ public abstract class MixinCamera implements IECamera {
     }
     
     @Inject(
-        method = "Lnet/minecraft/client/Camera;getFluidInCamera()Lnet/minecraft/world/level/material/FogType;",
+        method = "getFluidInCamera()Lnet/minecraft/world/level/material/FogType;",
         at = @At("HEAD"),
         cancellable = true
     )
@@ -62,7 +62,7 @@ public abstract class MixinCamera implements IECamera {
         }
     }
     
-    @Inject(method = "Lnet/minecraft/client/Camera;getMaxZoom(D)D", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getMaxZoom(D)D", at = @At("HEAD"), cancellable = true)
     private void onClipToSpaceHead(double double_1, CallbackInfoReturnable<Double> cir) {
         if (PortalRendering.isRendering()) {
             cir.setReturnValue(lastClipSpaceResult);
@@ -70,13 +70,13 @@ public abstract class MixinCamera implements IECamera {
         }
     }
     
-    @Inject(method = "Lnet/minecraft/client/Camera;getMaxZoom(D)D", at = @At("RETURN"), cancellable = true)
+    @Inject(method = "getMaxZoom(D)D", at = @At("RETURN"), cancellable = true)
     private void onClipToSpaceReturn(double double_1, CallbackInfoReturnable<Double> cir) {
         lastClipSpaceResult = cir.getReturnValue();
     }
     
     //to let the player be rendered when rendering portal
-    @Inject(method = "Lnet/minecraft/client/Camera;isDetached()Z", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "isDetached()Z", at = @At("HEAD"), cancellable = true)
     private void onIsThirdPerson(CallbackInfoReturnable<Boolean> cir) {
         if (CrossPortalEntityRenderer.shouldRenderPlayerDefault()) {
             cir.setReturnValue(true);

@@ -29,7 +29,7 @@ public abstract class MixinMinecraft_B {
     protected int missTime;
     
     @Inject(
-        method = "Lnet/minecraft/client/Minecraft;continueAttack(Z)V",
+        method = "continueAttack(Z)V",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z"
@@ -58,7 +58,7 @@ public abstract class MixinMinecraft_B {
     }
     
     @Inject(
-        method = "Lnet/minecraft/client/Minecraft;startUseItem()V",
+        method = "startUseItem()V",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/player/LocalPlayer;getItemInHand(Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/item/ItemStack;"
@@ -74,7 +74,7 @@ public abstract class MixinMinecraft_B {
     }
     
     @Redirect(
-        method = "Lnet/minecraft/client/Minecraft;handleKeybinds()V",
+        method = "handleKeybinds()V",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/Minecraft;pickBlock()V"

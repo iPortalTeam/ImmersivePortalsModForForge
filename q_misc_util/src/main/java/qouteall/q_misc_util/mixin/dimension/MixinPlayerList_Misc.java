@@ -7,12 +7,13 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import qouteall.q_misc_util.MiscNetworking;
+import qouteall.q_misc_util.forge.networking.Dim_Sync;
+import qouteall.q_misc_util.forge.networking.Message;
 
 @Mixin(PlayerList.class)
 public class MixinPlayerList_Misc {
     @Inject(
-        method = "Lnet/minecraft/server/players/PlayerList;placeNewPlayer(Lnet/minecraft/network/Connection;Lnet/minecraft/server/level/ServerPlayer;)V",
+        method = "placeNewPlayer(Lnet/minecraft/network/Connection;Lnet/minecraft/server/level/ServerPlayer;)V",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/network/protocol/game/ClientboundLoginPacket;<init>(IZLnet/minecraft/world/level/GameType;Lnet/minecraft/world/level/GameType;Ljava/util/Set;Lnet/minecraft/core/RegistryAccess$Frozen;Lnet/minecraft/core/Holder;Lnet/minecraft/resources/ResourceKey;JIIIZZZZ)V"
@@ -23,6 +24,7 @@ public class MixinPlayerList_Misc {
         ServerPlayer player,
         CallbackInfo ci
     ) {
-        player.connection.send(MiscNetworking.createDimSyncPacket());
+        Message.sendToPlayer(new Dim_Sync(), player);
+        //player.connection.send(MiscNetworking.createDimSyncPacket());
     }
 }

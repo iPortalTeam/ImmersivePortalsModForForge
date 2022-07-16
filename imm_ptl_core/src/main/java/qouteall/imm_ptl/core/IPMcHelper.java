@@ -164,7 +164,7 @@ public class IPMcHelper {
     
     /**
      * @author LoganDark
-     * @see IPMcHelper#rayTrace(World, RaycastContext, boolean, List)
+     * @see IPMcHelper#rayTrace(Level, ClipContext, boolean, List)
      */
     private static Tuple<BlockHitResult, List<Portal>> rayTrace(
         Level world,

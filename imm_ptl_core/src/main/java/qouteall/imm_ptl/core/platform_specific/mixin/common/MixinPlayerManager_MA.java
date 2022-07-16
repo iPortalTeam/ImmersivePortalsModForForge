@@ -12,7 +12,7 @@ import qouteall.imm_ptl.core.IPGlobal;
 @Mixin(PlayerList.class)
 public class MixinPlayerManager_MA {
     @Inject(
-        method = "Lnet/minecraft/server/players/PlayerList;respawn(Lnet/minecraft/server/level/ServerPlayer;Z)Lnet/minecraft/server/level/ServerPlayer;",
+        method = "respawn(Lnet/minecraft/server/level/ServerPlayer;Z)Lnet/minecraft/server/level/ServerPlayer;",
         at = @At("HEAD")
     )
     private void onPlayerRespawn(

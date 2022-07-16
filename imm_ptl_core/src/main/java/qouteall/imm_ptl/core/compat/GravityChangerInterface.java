@@ -1,16 +1,16 @@
 package qouteall.imm_ptl.core.compat;
 
-import me.andrew.gravitychanger.accessor.EntityAccessor;
-import me.andrew.gravitychanger.accessor.RotatableEntityAccessor;
-import me.andrew.gravitychanger.api.GravityChangerAPI;
-import me.andrew.gravitychanger.util.RotationUtil;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+//DISABLED_COMPILEimport me.andrew.gravitychanger.accessor.EntityAccessor;
+//DISABLED_COMPILEimport me.andrew.gravitychanger.accessor.RotatableEntityAccessor;
+//DISABLED_COMPILEimport me.andrew.gravitychanger.api.GravityChangerAPI;
+//DISABLED_COMPILEimport me.andrew.gravitychanger.util.RotationUtil;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.q_misc_util.my_util.DQuaternion;
@@ -63,7 +63,7 @@ public class GravityChangerInterface {
     
     private static boolean warned = false;
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     private static void warnGravityChangerNotPresent() {
         if (!warned) {
             warned = true;
@@ -79,25 +79,25 @@ public class GravityChangerInterface {
         public boolean isGravityChangerPresent() {
             return true;
         }
-        
-        @Override
-        public Vec3 getEyeOffset(Entity entity) {
-            if (entity instanceof Player player) {
-                return GravityChangerAPI.getEyeOffset(player);
-            }
-            else {
-                return super.getEyeOffset(entity);
-            }
-        }
-        
-        @Override
-        public Direction getGravityDirection(Player entity) {
-            return ((EntityAccessor) entity).gravitychanger$getAppliedGravityDirection();
-        }
+
+        //DISABLED_COMPILE      @Override
+        //DISABLED_COMPILE     public Vec3 getEyeOffset(Entity entity) {
+        //DISABLED_COMPILE        if (entity instanceof Player player) {
+//DISABLED_COMPILE                return GravityChangerAPI.getEyeOffset(player);
+        //DISABLED_COMPILE         }
+        //DISABLED_COMPILE       else {
+        //DISABLED_COMPILE         return super.getEyeOffset(entity);
+        //DISABLED_COMPILE      }
+        //DISABLED_COMPILE  }
+
+        //DISABLED_COMPILE    @Override
+        //DISABLED_COMPILE    public Direction getGravityDirection(Player entity) {
+//DISABLED_COMPILE            return ((EntityAccessor) entity).gravitychanger$getAppliedGravityDirection();
+            //DISABLED_COMPILE    }
         
         @Override
         public void setGravityDirection(Entity entity, Direction direction) {
-            ((RotatableEntityAccessor) entity).gravitychanger$setGravityDirection(direction, false);
+//DISABLED_COMPILE            ((RotatableEntityAccessor) entity).gravitychanger$setGravityDirection(direction, false);
         }
         
         @Nullable
@@ -106,40 +106,41 @@ public class GravityChangerInterface {
             if (gravityDirection == Direction.DOWN) {
                 return null;
             }
-            
-            return DQuaternion.fromMcQuaternion(
-                RotationUtil.getWorldRotationQuaternion(gravityDirection)
-            );
+            return null; //TODO RECOMMENT
+
+//DISABLED_COMPILE            return DQuaternion.fromMcQuaternion(
+//DISABLED_COMPILE                RotationUtil.getWorldRotationQuaternion(gravityDirection)
+//DISABLED_COMPILE            );
         }
-        
-        @Override
-        public Vec3 getWorldVelocity(Entity entity) {
-            if (entity instanceof Player player) {
-                return GravityChangerAPI.getWorldVelocity(player);
-            }
-            else {
-                return super.getWorldVelocity(entity);
-            }
-        }
-        
-        @Override
-        public void setWorldVelocity(Entity entity, Vec3 newVelocity) {
-            if (entity instanceof Player player) {
-                GravityChangerAPI.setWorldVelocity(player, newVelocity);
-            }
-            else {
-                super.setWorldVelocity(entity, newVelocity);
-            }
-        }
-        
-        @Override
-        public Vec3 transformPlayerToWorld(Direction gravity, Vec3 vec3d) {
-            return RotationUtil.vecPlayerToWorld(vec3d, gravity);
-        }
-        
-        @Override
-        public Vec3 transformWorldToPlayer(Direction gravity, Vec3 vec3d) {
-            return RotationUtil.vecWorldToPlayer(vec3d, gravity);
-        }
+
+        //DISABLED_COMPILE        @Override
+        //DISABLED_COMPILE       public Vec3 getWorldVelocity(Entity entity) {
+        //DISABLED_COMPILE          if (entity instanceof Player player) {
+//DISABLED_COMPILE                return GravityChangerAPI.getWorldVelocity(player);
+        //DISABLED_COMPILE         }
+        //DISABLED_COMPILE        else {
+        //DISABLED_COMPILE          return super.getWorldVelocity(entity);
+        //DISABLED_COMPILE       }
+        //DISABLED_COMPILE    }
+
+        //DISABLED_COMPILE        @Override
+        //DISABLED_COMPILE      public void setWorldVelocity(Entity entity, Vec3 newVelocity) {
+        //DISABLED_COMPILE          if (entity instanceof Player player) {
+        //DISABLED_COMPILE             GravityChangerAPI.setWorldVelocity(player, newVelocity);
+        //DISABLED_COMPILE        }
+        //DISABLED_COMPILE         else {
+        //DISABLED_COMPILE             super.setWorldVelocity(entity, newVelocity);
+        //DISABLED_COMPILE          }
+        //DISABLED_COMPILE      }
+
+        //DISABLED_COMPILE     @Override
+        //DISABLED_COMPILE     public Vec3 transformPlayerToWorld(Direction gravity, Vec3 vec3d) {
+        //DISABLED_COMPILE         return RotationUtil.vecPlayerToWorld(vec3d, gravity);
+        //DISABLED_COMPILE     }
+
+        //DISABLED_COMPILE    @Override
+        //DISABLED_COMPILE      public Vec3 transformWorldToPlayer(Direction gravity, Vec3 vec3d) {
+        //DISABLED_COMPILE          return RotationUtil.vecWorldToPlayer(vec3d, gravity);
+        //DISABLED_COMPILE      }
     }
 }

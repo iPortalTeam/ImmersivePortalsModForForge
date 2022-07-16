@@ -1,16 +1,20 @@
 pluginManagement {
     repositories {
         maven {
-            name = 'Fabric'
-            url = 'https://maven.fabricmc.net/'
+            name = 'Forge'
+            url = 'https://maven.minecraftforge.net'
         }
-        maven { // for quilt-flower
-            name = 'Cotton'
-            url = 'https://server.bbkr.space/artifactory/libs-release/'
+        maven {
+            name = 'Parchment'
+            url = 'https://maven.parchmentmc.org'
+        }
+        maven {
+            name = 'Sponge'
+            url = 'https://repo.spongepowered.org/maven'
         }
         gradlePluginPortal()
+        mavenCentral()
     }
 }
 
-include 'imm_ptl_core'
-include 'q_misc_util'
+include('imm_ptl_core', 'q_misc_util')

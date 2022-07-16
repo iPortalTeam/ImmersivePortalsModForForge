@@ -52,7 +52,7 @@ public class FrontClipping {
     
     //NOTE the actual culling plane is related to current model view matrix
     public static void setupInnerClipping(
-        PortalLike portalLike, boolean doCompensate, PoseStack matrixStack
+            PortalLike portalLike, boolean doCompensate, PoseStack matrixStack
     ) {
         if (!IPCGlobal.useFrontClipping) {
             return;

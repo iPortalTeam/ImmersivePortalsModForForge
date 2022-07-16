@@ -1,6 +1,6 @@
 package qouteall.imm_ptl.core.compat;
 
-import net.fabricmc.loader.api.FabricLoader;
+import net.minecraftforge.fml.ModList;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -24,23 +24,23 @@ public class IPCompatMixinPlugin implements IMixinConfigPlugin {
         
         
         if (mixinClassName.contains("IrisSodium")) {
-            boolean sodiumLoaded = FabricLoader.getInstance().isModLoaded("sodium");
-            boolean irisLoaded = FabricLoader.getInstance().isModLoaded("iris");
+            boolean sodiumLoaded = ModList.get().isLoaded("sodium");
+            boolean irisLoaded = ModList.get().isLoaded("iris");
             return sodiumLoaded && irisLoaded;
         }
         
         if (mixinClassName.contains("Iris")) {
-            boolean irisLoaded = FabricLoader.getInstance().isModLoaded("iris");
+            boolean irisLoaded = ModList.get().isLoaded("iris");
             return irisLoaded;
         }
         
         if (mixinClassName.contains("Sodium")) {
-            boolean sodiumLoaded = FabricLoader.getInstance().isModLoaded("sodium");
+            boolean sodiumLoaded = ModList.get().isLoaded("sodium");
             return sodiumLoaded;
         }
         
         if (mixinClassName.contains("Flywheel")) {
-            boolean flywheelLoaded = FabricLoader.getInstance().isModLoaded("flywheel");
+            boolean flywheelLoaded = ModList.get().isLoaded("flywheel");
             return flywheelLoaded;
         }
         

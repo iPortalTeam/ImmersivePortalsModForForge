@@ -3,12 +3,6 @@ package qouteall.imm_ptl.core.compat.iris_compatibility;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.pipeline.WorldRenderingPipeline;
-import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
-import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
-import net.coderbot.iris.shadows.ShadowRenderTargets;
-import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.world.phys.Vec3;
 import org.lwjgl.opengl.GL11;
 import qouteall.imm_ptl.core.IPGlobal;
@@ -16,25 +10,14 @@ import qouteall.imm_ptl.core.compat.IPPortingLibCompat;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.PortalLike;
 import qouteall.imm_ptl.core.portal.PortalRenderInfo;
-import qouteall.imm_ptl.core.render.FrontClipping;
-import qouteall.imm_ptl.core.render.MyRenderHelper;
-import qouteall.imm_ptl.core.render.PortalRenderer;
-import qouteall.imm_ptl.core.render.RendererUsingStencil;
-import qouteall.imm_ptl.core.render.ViewAreaRenderer;
+import qouteall.imm_ptl.core.render.*;
 import qouteall.imm_ptl.core.render.context_management.PortalRendering;
 import qouteall.imm_ptl.core.render.context_management.WorldRenderInfo;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.lwjgl.opengl.GL11.GL_ALWAYS;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_FUNC;
-import static org.lwjgl.opengl.GL11.GL_EQUAL;
-import static org.lwjgl.opengl.GL11.GL_INCR;
-import static org.lwjgl.opengl.GL11.GL_KEEP;
-import static org.lwjgl.opengl.GL11.GL_LESS;
-import static org.lwjgl.opengl.GL11.GL_REPLACE;
-import static org.lwjgl.opengl.GL11.GL_STENCIL_TEST;
+import static org.lwjgl.opengl.GL11.*;
 
 // Iris now use the vanilla framebuffer's depth texture and support stencil
 // So a better portal rendering method for forward-shading shaders is possible
@@ -69,8 +52,8 @@ public class ExperimentalIrisPortalRenderer extends PortalRenderer {
         doPortalRendering(matrixStack);
         
         // Resume Iris world rendering
-        ((IEIrisNewWorldRenderingPipeline) (Object) Iris.getPipelineManager().getPipeline().get())
-            .ip_setIsRenderingWorld(true);
+//DISABLED_COMPILE        ((IEIrisNewWorldRenderingPipeline) (Object) Iris.getPipelineManager().getPipeline().get())
+//DISABLED_COMPILE            .ip_setIsRenderingWorld(true);
     }
     
     @Override
@@ -129,7 +112,7 @@ public class ExperimentalIrisPortalRenderer extends PortalRenderer {
     
     @Override
     public void invokeWorldRendering(WorldRenderInfo worldRenderInfo) {
-        WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline().get();
+//DISABLED_COMPILE        WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline().get();
         
 //        ShadowMapSwapper.Storage shadowMapCache = null;
 //
@@ -146,19 +129,19 @@ public class ExperimentalIrisPortalRenderer extends PortalRenderer {
 //                }
 //            }
 //        }
-        
-        SystemTimeUniforms.COUNTER.beginFrame(); // is it necessary?
+
+//DISABLED_COMPILE        SystemTimeUniforms.COUNTER.beginFrame(); // is it necessary?
         super.invokeWorldRendering(worldRenderInfo);
-        SystemTimeUniforms.COUNTER.beginFrame(); // make Iris to update the uniforms
-        
-        if (pipeline instanceof NewWorldRenderingPipeline newWorldRenderingPipeline) {
+//DISABLED_COMPILE        SystemTimeUniforms.COUNTER.beginFrame(); // make Iris to update the uniforms
+
+//DISABLED_COMPILE        if (pipeline instanceof NewWorldRenderingPipeline newWorldRenderingPipeline) {
             // this is important to hand rendering
-            newWorldRenderingPipeline.isBeforeTranslucent = true;
-        }
+//DISABLED_COMPILE            newWorldRenderingPipeline.isBeforeTranslucent = true;
+//DISABLED_COMPILE        }
         
         // Avoid Iris from force-disabling depth mask
-        ((IEIrisNewWorldRenderingPipeline) (Object) pipeline)
-            .ip_setIsRenderingWorld(false);
+//DISABLED_COMPILE        ((IEIrisNewWorldRenderingPipeline) (Object) pipeline)
+//DISABLED_COMPILE            .ip_setIsRenderingWorld(false);
         
 //        if (shadowMapCache != null) {
 //            shadowMapCache.copyToIrisShadowRenderTargets();

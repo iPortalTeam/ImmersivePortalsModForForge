@@ -20,7 +20,7 @@ public class MixinGameRenderer_Shaders {
     private Map<String, ShaderInstance> shaders;
     
     @Inject(
-        method = "Lnet/minecraft/client/renderer/GameRenderer;reloadShaders(Lnet/minecraft/server/packs/resources/ResourceManager;)V", at = @At("RETURN")
+        method = "reloadShaders(Lnet/minecraft/server/packs/resources/ResourceManager;)V", at = @At("RETURN")
     )
     private void onLoadShaders(ResourceManager manager, CallbackInfo ci) {
         MyRenderHelper.loadShaderSignal.emit(

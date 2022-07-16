@@ -1,8 +1,6 @@
 package qouteall.q_misc_util.dimension;
 
 import com.google.common.collect.Streams;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
@@ -11,6 +9,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 
@@ -19,19 +19,19 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class DimensionTypeSync {
-    
-    @Environment(EnvType.CLIENT)
+
+    @OnlyIn(Dist.CLIENT)
     public static Map<ResourceKey<Level>, ResourceKey<DimensionType>> clientTypeMap;
-    
-    @Environment(EnvType.CLIENT)
+
+    @OnlyIn(Dist.CLIENT)
     private static RegistryAccess currentDimensionTypeTracker;
-    
-    @Environment(EnvType.CLIENT)
+
+    @OnlyIn(Dist.CLIENT)
     public static void onGameJoinPacketReceived(RegistryAccess tracker) {
         currentDimensionTypeTracker = tracker;
     }
-    
-    @Environment(EnvType.CLIENT)
+
+    @OnlyIn(Dist.CLIENT)
     private static Map<ResourceKey<Level>, ResourceKey<DimensionType>> typeMapFromTag(CompoundTag tag) {
         Map<ResourceKey<Level>, ResourceKey<DimensionType>> result = new HashMap<>();
         tag.getAllKeys().forEach(key -> {
@@ -47,8 +47,8 @@ public class DimensionTypeSync {
         
         return result;
     }
-    
-    @Environment(EnvType.CLIENT)
+
+    @OnlyIn(Dist.CLIENT)
     public static void acceptTypeMapData(CompoundTag tag) {
         clientTypeMap = typeMapFromTag(tag);
         
@@ -94,8 +94,8 @@ public class DimensionTypeSync {
         });
         return tag;
     }
-    
-    @Environment(EnvType.CLIENT)
+
+    @OnlyIn(Dist.CLIENT)
     public static ResourceKey<DimensionType> getDimensionTypeKey(ResourceKey<Level> worldKey) {
         if (worldKey == Level.OVERWORLD) {
             return DimensionType.OVERWORLD_LOCATION;
@@ -118,8 +118,8 @@ public class DimensionTypeSync {
         
         return obj;
     }
-    
-    @Environment(EnvType.CLIENT)
+
+    @OnlyIn(Dist.CLIENT)
     public static DimensionType getDimensionType(ResourceKey<DimensionType> registryKey) {
         return currentDimensionTypeTracker.registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY).get(registryKey);
     }

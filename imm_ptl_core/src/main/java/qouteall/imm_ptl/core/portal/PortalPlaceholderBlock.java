@@ -1,7 +1,5 @@
 package qouteall.imm_ptl.core.portal;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
@@ -16,6 +14,8 @@ import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.portal.nether_portal.BreakablePortalEntity;
 
@@ -47,13 +47,11 @@ public class PortalPlaceholderBlock extends Block {
         16.0D,
         10.0D
     );
-    
-    public static PortalPlaceholderBlock instance;
-    
+
     public PortalPlaceholderBlock(Properties properties) {
         super(properties);
         this.registerDefaultState(
-            (BlockState) ((BlockState) this.getStateDefinition().any()).setValue(
+                (this.getStateDefinition().any()).setValue(
                 AXIS, Direction.Axis.X
             )
         );
@@ -150,7 +148,7 @@ public class PortalPlaceholderBlock extends Block {
         return RenderShape.INVISIBLE;
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @Override
     public float getShadeBrightness(
         BlockState blockState_1,

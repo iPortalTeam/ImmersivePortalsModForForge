@@ -1,12 +1,10 @@
 package qouteall.imm_ptl.core.compat.mixin;
 
-import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
-import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
+//DISABLED_COMPILEimport me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
+//DISABLED_COMPILEimport me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
 
-@Mixin(value = SodiumWorldRenderer.class, remap = false)
+//DISABLED_COMPILE@Mixin(value = SodiumWorldRenderer.class, remap = false)
 public interface IESodiumWorldRenderer {
-    @Accessor("renderSectionManager")
-    RenderSectionManager ip_getRenderSectionManager();
+//DISABLED_COMPILE    @Accessor("renderSectionManager")
+//DISABLED_COMPILE    RenderSectionManager ip_getRenderSectionManager();
 }

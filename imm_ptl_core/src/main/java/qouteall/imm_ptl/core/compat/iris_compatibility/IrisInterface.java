@@ -1,8 +1,8 @@
 package qouteall.imm_ptl.core.compat.iris_compatibility;
 
-import net.coderbot.iris.Iris;
-import net.coderbot.iris.pipeline.ShadowRenderer;
-import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+//DISABLED_COMPILEimport net.coderbot.iris.Iris;
+//DISABLED_COMPILEimport net.coderbot.iris.pipeline.ShadowRenderer;
+//DISABLED_COMPILEimport net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.renderer.LevelRenderer;
 import qouteall.q_misc_util.Helper;
 
@@ -47,23 +47,24 @@ public class IrisInterface {
         public boolean isIrisPresent() {
             return true;
         }
-        
-        @Override
-        public boolean isShaders() {
-            return Iris.getCurrentPack().isPresent();
-        }
+
+//DISABLED_COMPILE        @Override
+//DISABLED_COMPILE        public boolean isShaders() {
+//DISABLED_COMPILE            return Iris.getCurrentPack().isPresent();
+//DISABLED_COMPILE        }
         
         @Override
         public boolean isRenderingShadowMap() {
-            return ShadowRenderer.ACTIVE;
+            return false; //TODO RECOMMENT
+//DISABLED_COMPILE            return ShadowRenderer.ACTIVE;
         }
         
         @Override
         public Object getPipeline(LevelRenderer worldRenderer) {
-//            return null;
-            return Helper.noError(() ->
-                ((WorldRenderingPipeline) worldRendererPipelineField.get(worldRenderer))
-            );
+            return null; //TODO RECOMMENT
+//DISABLED_COMPILE            return Helper.noError(() ->
+//DISABLED_COMPILE                ((WorldRenderingPipeline) worldRendererPipelineField.get(worldRenderer))
+//DISABLED_COMPILE            );
         }
         
         // the pipeline switching is unnecessary when using shaders
@@ -78,7 +79,7 @@ public class IrisInterface {
         
         @Override
         public void reloadPipelines() {
-            Iris.getPipelineManager().destroyPipeline();
+//DISABLED_COMPILE            Iris.getPipelineManager().destroyPipeline();
         }
     }
     

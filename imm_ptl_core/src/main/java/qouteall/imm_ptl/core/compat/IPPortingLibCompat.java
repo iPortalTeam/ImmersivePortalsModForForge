@@ -1,15 +1,15 @@
 package qouteall.imm_ptl.core.compat;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import qouteall.imm_ptl.core.ducks.IEFrameBuffer;
 import qouteall.q_misc_util.Helper;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 public class IPPortingLibCompat {
     
@@ -18,11 +18,11 @@ public class IPPortingLibCompat {
     private static Field f_port_lib$stencilEnabled;
     
     public static void init() {
-        if (FabricLoader.getInstance().isModLoaded("porting_lib")) {
+        if (ModList.get().isLoaded("porting_lib")) {
             Helper.log("Porting Lib is present");
             isPortingLibPresent = true;
             
-            if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+            if (FMLEnvironment.dist == Dist.CLIENT) {
                 f_port_lib$stencilEnabled = Helper.noError(
                     () -> RenderTarget.class.getDeclaredField("port_lib$stencilEnabled")
                 );
@@ -30,8 +30,8 @@ public class IPPortingLibCompat {
             }
         }
     }
-    
-    @Environment(EnvType.CLIENT)
+
+    @OnlyIn(Dist.CLIENT)
     public static boolean getIsStencilEnabled(RenderTarget renderTarget) {
         if (isPortingLibPresent) {
             return Helper.noError(
@@ -43,7 +43,7 @@ public class IPPortingLibCompat {
         }
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void setIsStencilEnabled(RenderTarget renderTarget, boolean cond) {
         if (isPortingLibPresent) {
             

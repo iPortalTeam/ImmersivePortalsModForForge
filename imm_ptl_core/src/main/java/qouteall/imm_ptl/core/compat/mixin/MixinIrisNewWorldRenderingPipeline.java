@@ -1,51 +1,45 @@
 package qouteall.imm_ptl.core.compat.mixin;
 
-import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
-import net.coderbot.iris.shadows.ShadowRenderTargets;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import qouteall.imm_ptl.core.IPCGlobal;
-import qouteall.imm_ptl.core.compat.iris_compatibility.ExperimentalIrisPortalRenderer;
-import qouteall.imm_ptl.core.compat.iris_compatibility.IEIrisNewWorldRenderingPipeline;
-import qouteall.imm_ptl.core.render.context_management.PortalRendering;
+//DISABLED_COMPILEimport net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
+//DISABLED_COMPILEimport net.coderbot.iris.shadows.ShadowRenderTargets;
 
-@Mixin(value = NewWorldRenderingPipeline.class, remap = false)
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import qouteall.imm_ptl.core.compat.iris_compatibility.IEIrisNewWorldRenderingPipeline;
+
+//DISABLED_COMPILE@Mixin(value = NewWorldRenderingPipeline.class, remap = false)
 public class MixinIrisNewWorldRenderingPipeline implements IEIrisNewWorldRenderingPipeline {
-    @Shadow private boolean isRenderingWorld;
+//DISABLED_COMPILE    @Shadow private boolean isRenderingWorld;
     
 //    @Shadow private ShadowRenderTargets shadowRenderTargets;
-    
-    @Inject(
-        method = "finalizeLevelRendering", at = @At("HEAD"), cancellable = true
-    )
+
+//DISABLED_COMPILE    @Inject(
+//DISABLED_COMPILE        method = "finalizeLevelRendering", at = @At("HEAD"), cancellable = true
+    //DISABLED_COMPILE    )
     private void onFinalizeLevelRendering(CallbackInfo ci) {
-        if (IPCGlobal.renderer instanceof ExperimentalIrisPortalRenderer) {
-            if (PortalRendering.isRendering()) {
-                ci.cancel();
-            }
-        }
+//DISABLED_COMPILE        if (IPCGlobal.renderer instanceof ExperimentalIrisPortalRenderer) {
+//DISABLED_COMPILE            if (PortalRendering.isRendering()) {
+//DISABLED_COMPILE                ci.cancel();
+//DISABLED_COMPILE            }
+//DISABLED_COMPILE        }
     }
-    
-    @Inject(
-        method = "beginTranslucents",
-        at = @At(
-            value = "INVOKE",
-            target = "Lnet/coderbot/iris/postprocess/CompositeRenderer;renderAll()V",
-            shift = At.Shift.AFTER
-        )
-    )
+
+//DISABLED_COMPILE    @Inject(
+//DISABLED_COMPILE        method = "beginTranslucents",
+//DISABLED_COMPILE        at = @At(
+//DISABLED_COMPILE            value = "INVOKE",
+//DISABLED_COMPILE            target = "Lnet/coderbot/iris/postprocess/CompositeRenderer;renderAll()V",
+//DISABLED_COMPILE            shift = At.Shift.AFTER
+//DISABLED_COMPILE        )
+//DISABLED_COMPILE    )
     private void onAfterDeferredCompositeRendering(CallbackInfo ci) {
-        if (IPCGlobal.renderer instanceof ExperimentalIrisPortalRenderer r) {
-            r.onAfterIrisDeferredCompositeRendering();
-        }
+//DISABLED_COMPILE        if (IPCGlobal.renderer instanceof ExperimentalIrisPortalRenderer r) {
+//DISABLED_COMPILE            r.onAfterIrisDeferredCompositeRendering();
+//DISABLED_COMPILE        }
     }
     
     @Override
     public void ip_setIsRenderingWorld(boolean cond) {
-        isRenderingWorld = cond;
+//DISABLED_COMPILE        isRenderingWorld = cond;
     }
     
 //    @Override

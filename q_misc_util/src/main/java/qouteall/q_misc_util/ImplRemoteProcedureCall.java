@@ -9,8 +9,6 @@ import com.google.gson.reflect.TypeToken;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import io.netty.buffer.Unpooled;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
@@ -28,6 +26,8 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import org.apache.commons.lang3.Validate;
 
 import java.lang.reflect.InvocationTargetException;
@@ -153,8 +153,8 @@ public class ImplRemoteProcedureCall {
         String jsonString = gson.toJson(result);
         buf.writeUtf(jsonString);
     }
-    
-    @Environment(EnvType.CLIENT)
+
+    @OnlyIn(Dist.CLIENT)
     public static ServerboundCustomPayloadPacket createC2SPacket(
         String methodPath,
         Object... arguments
@@ -176,8 +176,8 @@ public class ImplRemoteProcedureCall {
         
         return new ClientboundCustomPayloadPacket(MiscNetworking.id_stcRemote, buf);
     }
-    
-    @Environment(EnvType.CLIENT)
+
+    @OnlyIn(Dist.CLIENT)
     public static Runnable clientReadPacketAndGetHandler(FriendlyByteBuf buf) {
         String methodPath = readStringNonClientOnly(buf);
         

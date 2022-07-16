@@ -7,13 +7,10 @@ import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.EmptyLevelChunk;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.entity.EntityTickList;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import org.spongepowered.asm.mixin.Final;
@@ -107,7 +104,7 @@ public abstract class MixinClientLevel implements IEClientWorld {
     
     // avoid entity duplicate when an entity travels
     @Inject(
-        method = "Lnet/minecraft/client/multiplayer/ClientLevel;addEntity(ILnet/minecraft/world/entity/Entity;)V",
+        method = "addEntity(ILnet/minecraft/world/entity/Entity;)V",
         at = @At("TAIL")
     )
     private void onOnEntityAdded(int entityId, Entity entityIn, CallbackInfo ci) {
@@ -126,7 +123,7 @@ public abstract class MixinClientLevel implements IEClientWorld {
      * {@link ClientPlayerEntity#tick()}
      */
     @Inject(
-        method = "Lnet/minecraft/client/multiplayer/ClientLevel;hasChunk(II)Z",
+        method = "hasChunk(II)Z",
         at = @At("HEAD"),
         cancellable = true
     )
@@ -144,7 +141,7 @@ public abstract class MixinClientLevel implements IEClientWorld {
     private static final LimitedLogger limitedLogger = new LimitedLogger(100);
     
     // for debug
-    @Inject(method = "Lnet/minecraft/client/multiplayer/ClientLevel;toString()Ljava/lang/String;", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "toString()Ljava/lang/String;", at = @At("HEAD"), cancellable = true)
     private void onToString(CallbackInfoReturnable<String> cir) {
         ClientLevel this_ = (ClientLevel) (Object) this;
         cir.setReturnValue("ClientWorld " + this_.dimension().location());

@@ -24,16 +24,16 @@ public abstract class MixinLevel implements IEWorld {
     public abstract ResourceKey<Level> dimension();
     
     @Shadow
-    protected float rainLevel;
+    public float rainLevel;
     
     @Shadow
-    protected float thunderLevel;
+    public float thunderLevel;
     
     @Shadow
-    protected float oRainLevel;
+    public float oRainLevel;
     
     @Shadow
-    protected float oThunderLevel;
+    public float oThunderLevel;
     
     @Shadow
     protected abstract LevelEntityGetter<Entity> getEntities();
@@ -43,7 +43,7 @@ public abstract class MixinLevel implements IEWorld {
     private Thread thread;
     
     // Fix overworld rain cause nether fog change
-    @Inject(method = "Lnet/minecraft/world/level/Level;prepareWeather()V", at = @At("TAIL"))
+    @Inject(method = "prepareWeather()V", at = @At("TAIL"))
     private void onInitWeatherGradients(CallbackInfo ci) {
         if (dimension() == Level.NETHER) {
             rainLevel = 0;

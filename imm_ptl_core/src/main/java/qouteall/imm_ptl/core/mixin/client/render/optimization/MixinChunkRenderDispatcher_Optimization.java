@@ -7,7 +7,6 @@ import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -22,11 +21,9 @@ import java.util.concurrent.PriorityBlockingQueue;
 public abstract class MixinChunkRenderDispatcher_Optimization {
     @Shadow
     private volatile int freeBufferCount;
-    
-    @Mutable
+
     @Shadow
-    @Final
-    private Queue<ChunkBufferBuilderPack> freeBuffers;
+    public Queue<ChunkBufferBuilderPack> freeBuffers;
     
     @Shadow
     @Final
@@ -54,25 +51,25 @@ public abstract class MixinChunkRenderDispatcher_Optimization {
     @Final
     private Executor executor;
     
-    @Redirect(
-        method = "<init>",
-        at = @At(
-            value = "INVOKE",
-            target = "Ljava/lang/Math;max(II)I",
-            ordinal = 1
-        ),
-        require = 0
-    )
-    private int redirectMax(int a, int b) {
-        if (IPGlobal.enableSharedBlockMeshBuffers) {
-            return 0;
-        }
-        return Math.max(a, b);
-    }
+//    @Redirect( //TODO Reenable
+//        method = "<init>",
+//        at = @At(
+//            value = "INVOKE",
+//            target = "Ljava/lang/Math;max(II)I",
+//            ordinal = 1
+//        ),
+//        require = 0
+//    )
+//    private int redirectMax(int a, int b) {
+//        if (IPGlobal.enableSharedBlockMeshBuffers) {
+//            return 0;
+//        }
+//        return Math.max(a, b);
+//    }
     
     // inject on constructor seems to be not working normally, so use redirect
     @Redirect(
-        method = "<init>",
+        method = "<init>(Lnet/minecraft/client/multiplayer/ClientLevel;Lnet/minecraft/client/renderer/LevelRenderer;Ljava/util/concurrent/Executor;ZLnet/minecraft/client/renderer/ChunkBufferBuilderPack;I)V",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/util/thread/ProcessorMailbox;create(Ljava/util/concurrent/Executor;Ljava/lang/String;)Lnet/minecraft/util/thread/ProcessorMailbox;"
@@ -81,11 +78,11 @@ public abstract class MixinChunkRenderDispatcher_Optimization {
     )
     private ProcessorMailbox<Runnable> redirectCreate(Executor dispatcher, String name) {
         if (IPGlobal.enableSharedBlockMeshBuffers) {
-            Validate.isTrue(freeBufferCount == 0);
+            //Validate.isTrue(freeBufferCount == 0); //TODO Reenable
             freeBuffers = SharedBlockMeshBuffers.acquireThreadBuffers();
             freeBufferCount = freeBuffers.size();
         }
-        
+
         return ProcessorMailbox.create(dispatcher, name);
     }
     

@@ -1,42 +1,25 @@
-# gradle
-
-.gradle/
-build/
-out/
-classes/
-
-# idea
-
-.idea/
-*.iml
-*.ipr
-*.iws
-
-# vscode
-
-.settings/
-.vscode/
-bin/
+# eclipse
+bin
+*.launch
+.settings
+.metadata
 .classpath
 .project
 
-# fabric
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea
 
-run/
-run_server/
+# gradle
+build
+.gradle
 
-compiler_output/
-deps/
+# other
+eclipse
+run
 
-# macOS droppings
-
-.DS_Store
-
-# eclipse
-
-*.launch
-
-# whatever
-logs/
-/deps_unused/
-/deps/
+# Files from Forge MDK
+forge*changelog.txt

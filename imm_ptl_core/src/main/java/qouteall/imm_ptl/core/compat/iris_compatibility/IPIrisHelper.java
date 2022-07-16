@@ -5,10 +5,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL30C;
 
-import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_COMPONENT;
-import static org.lwjgl.opengl.GL11.GL_NEAREST;
-import static org.lwjgl.opengl.GL11.GL_STENCIL_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.*;
 
 public class IPIrisHelper {
     

@@ -54,7 +54,7 @@ public abstract class MixinMinecraft implements IEMinecraftClient {
     private RenderBuffers renderBuffers;
     
     @Inject(
-        method = "Lnet/minecraft/client/Minecraft;tick()V",
+        method = "tick()V",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/multiplayer/ClientLevel;tick(Ljava/util/function/BooleanSupplier;)V",
@@ -70,7 +70,7 @@ public abstract class MixinMinecraft implements IEMinecraftClient {
     }
     
     @Inject(
-        method = "Lnet/minecraft/client/Minecraft;runTick(Z)V",
+        method = "runTick(Z)V",
         at = @At(
             value = "FIELD",
             target = "Lnet/minecraft/client/Minecraft;fps:I",
@@ -82,7 +82,7 @@ public abstract class MixinMinecraft implements IEMinecraftClient {
     }
     
     @Inject(
-        method = "Lnet/minecraft/client/Minecraft;updateLevelInEngines(Lnet/minecraft/client/multiplayer/ClientLevel;)V",
+        method = "updateLevelInEngines(Lnet/minecraft/client/multiplayer/ClientLevel;)V",
         at = @At("HEAD")
     )
     private void onSetWorld(ClientLevel clientWorld_1, CallbackInfo ci) {
@@ -90,7 +90,7 @@ public abstract class MixinMinecraft implements IEMinecraftClient {
     }
     
     //avoid messing up rendering states in fabulous
-    @Inject(method = "Lnet/minecraft/client/Minecraft;useShaderTransparency()Z", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "useShaderTransparency()Z", at = @At("HEAD"), cancellable = true)
     private static void onIsFabulousGraphicsOrBetter(CallbackInfoReturnable<Boolean> cir) {
         if (WorldRenderInfo.isRendering()) {
             cir.setReturnValue(false);

@@ -22,7 +22,7 @@ public abstract class MixinMinecraft_RedirectedPacket extends ReentrantBlockable
     
     // ensure that the task is processed with the redirected dimension
     @Inject(
-        method = "Lnet/minecraft/client/Minecraft;wrapRunnable(Ljava/lang/Runnable;)Ljava/lang/Runnable;",
+        method = "wrapRunnable(Ljava/lang/Runnable;)Ljava/lang/Runnable;",
         at = @At("HEAD"),
         cancellable = true
     )

@@ -1,43 +1,37 @@
 package qouteall.imm_ptl.core.compat.mixin;
 
-import me.jellysquid.mods.sodium.client.render.chunk.graph.ChunkGraphInfo;
-import me.jellysquid.mods.sodium.client.util.frustum.Frustum;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import qouteall.imm_ptl.core.compat.sodium_compatibility.SodiumInterface;
+//DISABLED_COMPILEimport me.jellysquid.mods.sodium.client.render.chunk.graph.ChunkGraphInfo;
+//DISABLED_COMPILEimport me.jellysquid.mods.sodium.client.util.frustum.Frustum;
 
-@Mixin(value = ChunkGraphInfo.class, remap = false)
+//DISABLED_COMPILE@Mixin(value = ChunkGraphInfo.class, remap = false)
 public abstract class MixinSodiumChunkGraphInfo {
-    @Shadow
+    //DISABLED_COMPILE    @Shadow
     public abstract int getOriginX();
-    
-    @Shadow
+
+    //DISABLED_COMPILE    @Shadow
     public abstract int getOriginY();
-    
-    @Shadow
+
+    //DISABLED_COMPILE    @Shadow
     public abstract int getOriginZ();
     
     // do portal frustum culling
-    @Inject(
-        method = "isCulledByFrustum",
-        at = @At("HEAD"),
-        cancellable = true
-    )
-    private void onIsCulledByFrustum(Frustum frustum, CallbackInfoReturnable<Boolean> cir) {
-        if (SodiumInterface.frustumCuller != null) {
-            double x = this.getOriginX();
-            double y = this.getOriginY();
-            double z = this.getOriginZ();
-            
-            boolean invisible = SodiumInterface.frustumCuller.canDetermineInvisibleWithWorldCoord(
-                x, y, z, x + 16.0F, y + 16.0F, z + 16.0F
-            );
-            if (invisible) {
-                cir.setReturnValue(true);
-            }
-        }
-    }
+//DISABLED_COMPILE    @Inject(
+//DISABLED_COMPILE        method = "isCulledByFrustum",
+//DISABLED_COMPILE        at = @At("HEAD"),
+//DISABLED_COMPILE        cancellable = true
+//DISABLED_COMPILE    )
+//DISABLED_COMPILE    private void onIsCulledByFrustum(Frustum frustum, CallbackInfoReturnable<Boolean> cir) {
+//DISABLED_COMPILE        if (SodiumInterface.frustumCuller != null) {
+//DISABLED_COMPILE            double x = this.getOriginX();
+//DISABLED_COMPILE            double y = this.getOriginY();
+//DISABLED_COMPILE            double z = this.getOriginZ();
+
+//DISABLED_COMPILE            boolean invisible = SodiumInterface.frustumCuller.canDetermineInvisibleWithWorldCoord(
+//DISABLED_COMPILE                x, y, z, x + 16.0F, y + 16.0F, z + 16.0F
+//DISABLED_COMPILE            );
+//DISABLED_COMPILE            if (invisible) {
+//DISABLED_COMPILE                cir.setReturnValue(true);
+//DISABLED_COMPILE            }
+//DISABLED_COMPILE        }
+//DISABLED_COMPILE    }
 }

@@ -4,11 +4,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.level.ChunkHolder;
-import net.minecraft.server.level.ServerChunkCache;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.level.ThreadedLevelLightEngine;
+import net.minecraft.server.level.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import qouteall.imm_ptl.core.McHelper;
@@ -69,14 +65,12 @@ public class ChunkDataSyncManager {
                 PacketRedirection.sendRedirectedMessage(
                     player,
                     chunkPos.dimension,
-                    new ClientboundLevelChunkWithLightPacket(((LevelChunk) chunk), lightingProvider, null, null, true)
+                    new ClientboundLevelChunkWithLightPacket((chunk), lightingProvider, null, null, true)
                 );
                 
                 ieStorage.ip_updateEntityTrackersAfterSendingChunkPacket(chunk, player);
                 
                 MiscHelper.getServer().getProfiler().pop();
-                
-                return;
             }
         }
         //if the chunk is not present then the packet will be sent when chunk is ready
@@ -95,7 +89,7 @@ public class ChunkDataSyncManager {
         Supplier<Packet> chunkDataPacketRedirected = Helper.cached(
             () -> PacketRedirection.createRedirectedMessage(
                 dimension,
-                new ClientboundLevelChunkWithLightPacket(((LevelChunk) chunk), lightingProvider, null, null, true)
+                new ClientboundLevelChunkWithLightPacket((chunk), lightingProvider, null, null, true)
             )
         );
         
@@ -126,7 +120,7 @@ public class ChunkDataSyncManager {
     public void removePlayerFromChunkTrackersAndEntityTrackers(ServerPlayer oldPlayer) {
         MiscHelper.getServer().getAllLevels()
             .forEach(world -> {
-                ServerChunkCache chunkManager = (ServerChunkCache) world.getChunkSource();
+                ServerChunkCache chunkManager = world.getChunkSource();
                 IEThreadedAnvilChunkStorage storage =
                     (IEThreadedAnvilChunkStorage) chunkManager.chunkMap;
                 storage.ip_onPlayerUnload(oldPlayer);
@@ -139,7 +133,7 @@ public class ChunkDataSyncManager {
     public void removePlayerFromEntityTrackersWithoutSendingPacket(ServerPlayer player) {
         MiscHelper.getServer().getAllLevels()
             .forEach(world -> {
-                ServerChunkCache chunkManager = (ServerChunkCache) world.getChunkSource();
+                ServerChunkCache chunkManager = world.getChunkSource();
                 IEThreadedAnvilChunkStorage storage =
                     (IEThreadedAnvilChunkStorage) chunkManager.chunkMap;
                 storage.ip_onPlayerDisconnected(player);
@@ -149,7 +143,7 @@ public class ChunkDataSyncManager {
     public void onDimensionRemove(ResourceKey<Level> dimension) {
         ServerLevel world = McHelper.getServerWorld(dimension);
         
-        ServerChunkCache chunkManager = (ServerChunkCache) world.getChunkSource();
+        ServerChunkCache chunkManager = world.getChunkSource();
         IEThreadedAnvilChunkStorage storage =
             (IEThreadedAnvilChunkStorage) chunkManager.chunkMap;
         storage.ip_onDimensionRemove();

@@ -9,19 +9,19 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import qouteall.imm_ptl.core.portal.PortalPlaceholderBlock;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 
 @Mixin(Snowball.class)
 public abstract class MixinSnowball extends MixinEntity {
     @Shadow
     public abstract void onHit(HitResult hitResult);
     
-    @Inject(method = "Lnet/minecraft/world/entity/projectile/Snowball;onHit(Lnet/minecraft/world/phys/HitResult;)V", at = @At(value = "HEAD"), cancellable = true)
+    @Inject(method = "onHit(Lnet/minecraft/world/phys/HitResult;)V", at = @At(value = "HEAD"), cancellable = true)
     protected void onHit(HitResult hitResult, CallbackInfo ci) {
         if (hitResult instanceof BlockHitResult) {
             Block hittingBlock = this.level.getBlockState(((BlockHitResult) hitResult).getBlockPos()).getBlock();
             if (hitResult.getType() == HitResult.Type.BLOCK &&
-                hittingBlock == PortalPlaceholderBlock.instance
+                hittingBlock == IPRegistry.NETHER_PORTAL_BLOCK.get()
             ) {
                 ci.cancel();
             }

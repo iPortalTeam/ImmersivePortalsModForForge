@@ -11,7 +11,7 @@ import qouteall.imm_ptl.core.render.TransformationManager;
 @Mixin(GameRenderer.class)
 public class MixinGameRenderer_Isometric {
     @Inject(
-        method = "Lnet/minecraft/client/renderer/GameRenderer;getProjectionMatrix(D)Lcom/mojang/math/Matrix4f;",
+        method = "getProjectionMatrix(D)Lcom/mojang/math/Matrix4f;",
         at = @At("HEAD"),
         cancellable = true
     )

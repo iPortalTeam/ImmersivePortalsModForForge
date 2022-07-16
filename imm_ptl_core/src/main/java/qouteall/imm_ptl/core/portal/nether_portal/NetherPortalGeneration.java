@@ -16,6 +16,7 @@ import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.chunk_loading.ChunkLoader;
 import qouteall.imm_ptl.core.chunk_loading.DimensionalChunkPos;
 import qouteall.imm_ptl.core.chunk_loading.NewChunkTrackingGraph;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.platform_specific.O_O;
 import qouteall.imm_ptl.core.portal.LoadingIndicatorEntity;
 import qouteall.imm_ptl.core.portal.PortalPlaceholderBlock;
@@ -26,11 +27,7 @@ import qouteall.q_misc_util.my_util.LimitedLogger;
 
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 public class NetherPortalGeneration {
     
@@ -93,7 +90,7 @@ public class NetherPortalGeneration {
     ) {
         world.setBlockAndUpdate(
             pos,
-            PortalPlaceholderBlock.instance.defaultBlockState().setValue(
+                IPRegistry.NETHER_PORTAL_BLOCK.get().defaultBlockState().setValue(
                 PortalPlaceholderBlock.AXIS, normalAxis
             )
         );
@@ -119,8 +116,7 @@ public class NetherPortalGeneration {
         
         Vec3 indicatorPos = fromShape.innerAreaBox.getCenterVec();
         
-        LoadingIndicatorEntity indicatorEntity =
-            LoadingIndicatorEntity.entityType.create(fromWorld);
+        LoadingIndicatorEntity indicatorEntity = IPRegistry.LOADING_INDICATOR.get().create(fromWorld);
         indicatorEntity.isValid = true;
         indicatorEntity.portalShape = fromShape;
         indicatorEntity.setPos(

@@ -3,8 +3,6 @@ package qouteall.imm_ptl.core.portal;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Quaternion;
 import com.mojang.math.Vector3f;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.Util;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -18,17 +16,15 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityDimensions;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MoverType;
-import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.network.NetworkDirection;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.ClientWorldLoader;
@@ -36,9 +32,9 @@ import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.compat.PehkuiInterface;
 import qouteall.imm_ptl.core.compat.iris_compatibility.IrisInterface;
-import qouteall.q_misc_util.dimension.DimId;
 import qouteall.imm_ptl.core.mc_utils.IPEntityEventListenableEntity;
-import qouteall.imm_ptl.core.platform_specific.IPNetworking;
+import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
+import qouteall.imm_ptl.core.platform_specific.forge.networking.Spawn_Entity;
 import qouteall.imm_ptl.core.render.FrustumCuller;
 import qouteall.imm_ptl.core.render.PortalGroup;
 import qouteall.imm_ptl.core.render.PortalRenderer;
@@ -47,12 +43,8 @@ import qouteall.imm_ptl.core.teleportation.CollisionHelper;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.api.McRemoteProcedureCall;
-import qouteall.q_misc_util.my_util.BoxPredicate;
-import qouteall.q_misc_util.my_util.DQuaternion;
-import qouteall.q_misc_util.my_util.Plane;
-import qouteall.q_misc_util.my_util.RotationHelper;
-import qouteall.q_misc_util.my_util.SignalArged;
-import qouteall.q_misc_util.my_util.SignalBiArged;
+import qouteall.q_misc_util.dimension.DimId;
+import qouteall.q_misc_util.my_util.*;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -64,7 +56,6 @@ import java.util.stream.Collectors;
  * Portal entity. Global portals are also entities but not added into world.
  */
 public class Portal extends Entity implements PortalLike, IPEntityEventListenableEntity {
-    public static EntityType<Portal> entityType;
     
     public static final UUID nullUUID = Util.NIL_UUID;
     private static final AABB nullBox = new AABB(0, 0, 0, 0, 0, 0);
@@ -197,7 +188,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     @Nullable
     public List<String> commandsOnTeleported;
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     PortalRenderInfo portalRenderInfo;
     
     protected PortalAnimation animation = PortalAnimation.defaultAnimation;
@@ -377,7 +368,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
      *                                  Every 3 vertices correspond to a triangle.
      *                                  In camera-centered coordinate.
      */
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @Override
     public void renderViewAreaMesh(Vec3 portalPosRelativeToCamera, Consumer<Vec3> vertexOutput) {
         if (this instanceof Mirror) {
@@ -743,7 +734,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     
     @Override
     public Packet<?> getAddEntityPacket() {
-        return IPNetworking.createStcSpawnEntity(this);
+        return IPMessage.INSTANCE.toVanillaPacket(new Spawn_Entity(this), NetworkDirection.PLAY_TO_CLIENT);
     }
     
     @Override
@@ -850,7 +841,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
             getY() > (McHelper.getMinY(level) - 100);
         if (valid) {
             if (level instanceof ServerLevel) {
-                ServerLevel destWorld = MiscHelper.getServer().getLevel(dimensionTo);
+                ServerLevel destWorld = this.getServer().getLevel(dimensionTo);
                 if (destWorld == null) {
                     Helper.err("Portal Dest Dimension Missing " + dimensionTo.location());
                     return false;
@@ -871,7 +862,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         return false;
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     private boolean isPortalValidClient() {
         boolean contains = ClientWorldLoader.getServerDimensions().contains(dimensionTo);
         if (!contains) {
@@ -1266,7 +1257,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     
     
     // function return true for culled
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @Override
     public BoxPredicate getInnerFrustumCullingFunc(
         double cameraX, double cameraY, double cameraZ
@@ -1370,7 +1361,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         unsetRemoved();
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public PortalLike getRenderingDelegate() {
         if (IPGlobal.enablePortalRenderingMerge) {
             PortalGroup group = PortalRenderInfo.getGroupOf(this);
@@ -1523,7 +1514,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         setScaleTransformation(state.scaling);
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     private void startAnimationClient(PortalState animationStartState) {
         PortalState newState = getPortalState();
         
@@ -1546,7 +1537,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         setPortalState(animationStartState);
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     private void acceptDataSync(Vec3 pos, CompoundTag customData) {
         PortalState oldState = getPortalState();
         

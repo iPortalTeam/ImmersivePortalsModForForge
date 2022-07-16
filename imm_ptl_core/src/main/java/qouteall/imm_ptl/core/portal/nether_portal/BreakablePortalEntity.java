@@ -1,8 +1,6 @@
 package qouteall.imm_ptl.core.portal.nether_portal;
 
 import com.mojang.math.Quaternion;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -15,11 +13,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.portal.Portal;
-import qouteall.imm_ptl.core.portal.PortalPlaceholderBlock;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.my_util.LimitedLogger;
 
@@ -114,7 +114,7 @@ public abstract class BreakablePortalEntity extends Portal {
     private void breakPortalOnThisSide() {
         blockPortalShape.area.forEach(
             blockPos -> {
-                if (level.getBlockState(blockPos).getBlock() == PortalPlaceholderBlock.instance) {
+                if (level.getBlockState(blockPos).getBlock() == IPRegistry.NETHER_PORTAL_BLOCK.get()) {
                     level.setBlockAndUpdate(
                         blockPos, Blocks.AIR.defaultBlockState()
                     );
@@ -182,8 +182,8 @@ public abstract class BreakablePortalEntity extends Portal {
     
     
     protected abstract boolean isPortalIntactOnThisSide();
-    
-    @Environment(EnvType.CLIENT)
+
+    @OnlyIn(Dist.CLIENT)
     protected abstract void addSoundAndParticle();
     
     private static final LimitedLogger limitedLogger = new LimitedLogger(20);

@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "qouteall.imm_ptl.core.compat.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "plugin": "qouteall.imm_ptl.core.compat.IPCompatMixinPlugin",
+  "mixins": [
+    "MixinFlywheelCrumblingRenderer",
+    "MixinFlywheelProgramCompiler",
+    "MixinFlywheelQuadConverter"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -18,7 +18,7 @@ import java.util.Optional;
 @Mixin(BaseFireBlock.class)
 public class MixinAbstractFireBlock {
     @Redirect(
-        method = "Lnet/minecraft/world/level/block/BaseFireBlock;onPlace(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Z)V",
+        method = "onPlace(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Z)V",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/world/level/portal/PortalShape;findEmptyPortalShape(Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Direction$Axis;)Ljava/util/Optional;"
@@ -55,7 +55,7 @@ public class MixinAbstractFireBlock {
     // allow lighting fire on the side of obsidian
     // for lighting horizontal portals
     @Redirect(
-        method = "Lnet/minecraft/world/level/block/BaseFireBlock;isPortal(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Direction;)Z",
+        method = "isPortal(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Direction;)Z",
         at = @At(
             value = "INVOKE",
             target = "Ljava/util/Optional;isPresent()Z"

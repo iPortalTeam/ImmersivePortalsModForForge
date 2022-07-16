@@ -28,7 +28,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.commands.PortalCommand;
-import qouteall.q_misc_util.MiscHelper;
+import qouteall.imm_ptl.peripheral.platform_specific.PeripheralModEntry;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -92,10 +92,6 @@ public class CommandStickItem extends Item {
         );
     }
     
-    public static final CommandStickItem instance = new CommandStickItem(
-        new Item.Properties().tab(CreativeModeTab.TAB_MISC)
-    );
-    
     public CommandStickItem(Properties settings) {
         super(settings);
     }
@@ -121,7 +117,7 @@ public class CommandStickItem extends Item {
             
             CommandSourceStack commandSource = player.createCommandSourceStack().withPermission(2);
             
-            Commands commandManager = MiscHelper.getServer().getCommands();
+            Commands commandManager =  commandSource.getServer().getCommands();
             
             commandManager.performCommand(commandSource, data.command);
         }
@@ -158,7 +154,7 @@ public class CommandStickItem extends Item {
     public void fillItemCategory(CreativeModeTab group, NonNullList<ItemStack> stacks) {
         if (allowdedIn(group)) {
             commandStickTypeRegistry.stream().forEach(data -> {
-                ItemStack stack = new ItemStack(instance);
+                ItemStack stack = new ItemStack(PeripheralModEntry.COMMAND_STICK_ITEM.get());
                 data.serialize(stack.getOrCreateTag());
                 stacks.add(stack);
             });
@@ -177,7 +173,7 @@ public class CommandStickItem extends Item {
     
     public static void init() {
         PortalCommand.createCommandStickCommandSignal.connect((player, command) -> {
-            ItemStack itemStack = new ItemStack(instance, 1);
+            ItemStack itemStack = new ItemStack(PeripheralModEntry.COMMAND_STICK_ITEM.get(), 1);
             Data data = new Data(
                 command,
                 command, new ArrayList<>()

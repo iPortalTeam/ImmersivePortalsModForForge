@@ -57,7 +57,7 @@ public abstract class MixinTrackedEntity implements IEEntityTracker {
     private SectionPos lastSectionPos;
     
     @Redirect(
-        method = "Lnet/minecraft/server/level/ChunkMap$TrackedEntity;broadcast(Lnet/minecraft/network/protocol/Packet;)V",
+        method = "broadcast(Lnet/minecraft/network/protocol/Packet;)V",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/server/network/ServerPlayerConnection;send(Lnet/minecraft/network/protocol/Packet;)V"
@@ -75,7 +75,7 @@ public abstract class MixinTrackedEntity implements IEEntityTracker {
     }
     
     @Redirect(
-        method = "Lnet/minecraft/server/level/ChunkMap$TrackedEntity;broadcastAndSend(Lnet/minecraft/network/protocol/Packet;)V",
+        method = "broadcastAndSend(Lnet/minecraft/network/protocol/Packet;)V",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;send(Lnet/minecraft/network/protocol/Packet;)V"

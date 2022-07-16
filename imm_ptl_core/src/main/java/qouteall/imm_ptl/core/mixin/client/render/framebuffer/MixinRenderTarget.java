@@ -20,9 +20,7 @@ import qouteall.imm_ptl.core.ducks.IEFrameBuffer;
 import java.nio.IntBuffer;
 
 import static org.lwjgl.opengl.GL11.GL_DEPTH_COMPONENT;
-import static org.lwjgl.opengl.GL30.GL_DEPTH24_STENCIL8;
-import static org.lwjgl.opengl.GL30.GL_DEPTH32F_STENCIL8;
-import static org.lwjgl.opengl.GL30.GL_FLOAT_32_UNSIGNED_INT_24_8_REV;
+import static org.lwjgl.opengl.GL30.*;
 
 @Mixin(RenderTarget.class)
 public abstract class MixinRenderTarget implements IEFrameBuffer {
@@ -136,7 +134,7 @@ public abstract class MixinRenderTarget implements IEFrameBuffer {
     
 
     @Redirect(
-        method = "Lcom/mojang/blaze3d/pipeline/RenderTarget;createBuffers(IIZ)V",
+        method = "createBuffers(IIZ)V",
         at = @At(
             value = "INVOKE",
             target = "Lcom/mojang/blaze3d/platform/GlStateManager;_texImage2D(IIIIIIIILjava/nio/IntBuffer;)V"
@@ -170,7 +168,7 @@ public abstract class MixinRenderTarget implements IEFrameBuffer {
     }
 
     @Redirect(
-        method = "Lcom/mojang/blaze3d/pipeline/RenderTarget;createBuffers(IIZ)V",
+        method = "createBuffers(IIZ)V",
         at = @At(
             value = "INVOKE",
             target = "Lcom/mojang/blaze3d/platform/GlStateManager;_glFramebufferTexture2D(IIIII)V"
@@ -191,7 +189,7 @@ public abstract class MixinRenderTarget implements IEFrameBuffer {
     }
     
     @Inject(
-        method = "Lcom/mojang/blaze3d/pipeline/RenderTarget;copyDepthFrom(Lcom/mojang/blaze3d/pipeline/RenderTarget;)V",
+        method = "copyDepthFrom(Lcom/mojang/blaze3d/pipeline/RenderTarget;)V",
         at = @At("RETURN")
     )
     private void onCopiedDepthFrom(RenderTarget framebuffer, CallbackInfo ci) {

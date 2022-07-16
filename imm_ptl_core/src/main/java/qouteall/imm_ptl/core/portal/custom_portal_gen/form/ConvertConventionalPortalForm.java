@@ -14,11 +14,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import qouteall.imm_ptl.core.portal.custom_portal_gen.CustomPortalGeneration;
 import qouteall.imm_ptl.core.portal.custom_portal_gen.PortalGenInfo;
 import qouteall.imm_ptl.core.portal.custom_portal_gen.SimpleBlockPredicate;
-import qouteall.imm_ptl.core.portal.nether_portal.BlockPortalShape;
-import qouteall.imm_ptl.core.portal.nether_portal.BlockTraverse;
-import qouteall.imm_ptl.core.portal.nether_portal.BreakablePortalEntity;
-import qouteall.imm_ptl.core.portal.nether_portal.GeneralBreakablePortal;
-import qouteall.imm_ptl.core.portal.nether_portal.NetherPortalGeneration;
+import qouteall.imm_ptl.core.portal.nether_portal.*;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.my_util.IntBox;
 

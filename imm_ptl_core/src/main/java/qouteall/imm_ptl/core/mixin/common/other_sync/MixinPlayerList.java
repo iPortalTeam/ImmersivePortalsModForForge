@@ -22,6 +22,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.chunk_loading.NewChunkTrackingGraph;
+import qouteall.imm_ptl.core.mixin.common.position_sync.MixinServerGamePacketListenerImpl;
 import qouteall.imm_ptl.core.network.PacketRedirection;
 import qouteall.imm_ptl.core.portal.global_portals.GlobalPortalStorage;
 
@@ -73,7 +74,7 @@ public class MixinPlayerList {
     
     /**
      * correct the player reference, so that in
-     * {@link qouteall.imm_ptl.core.mixin.common.position_sync.MixinServerGamePacketListenerImpl#teleport(double, double, double, float, float, Set, boolean)}
+     * {@link MixinServerGamePacketListenerImpl#teleport(double, double, double, float, float, Set, boolean)}
      * the player's dimension will be correct
      */
     @Redirect(

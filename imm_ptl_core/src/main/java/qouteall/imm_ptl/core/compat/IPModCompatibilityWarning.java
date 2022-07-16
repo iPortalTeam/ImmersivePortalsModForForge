@@ -1,13 +1,12 @@
 package qouteall.imm_ptl.core.compat;
 
 import com.google.common.collect.Lists;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.ModList;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.IPMcHelper;
@@ -15,7 +14,6 @@ import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.my_util.MyTaskList;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class IPModCompatibilityWarning {
     
@@ -49,7 +47,7 @@ public class IPModCompatibilityWarning {
     
     public static void initDedicatedServer() {
         for (ModInfo mod : incompatibleMods) {
-            if (FabricLoader.getInstance().isModLoaded(mod.modId)) {
+            if (ModList.get().isLoaded(mod.modId)) {
                 Helper.err(String.format(
                     "WARNING: This mod is incompatible with Immersive Portals: %s(%s)",
                     mod.modName, mod.modId
@@ -58,7 +56,7 @@ public class IPModCompatibilityWarning {
         }
         
         for (ModInfo mod : maybeIncompatibleMods) {
-            if (FabricLoader.getInstance().isModLoaded(mod.modId)) {
+            if (ModList.get().isLoaded(mod.modId)) {
                 Helper.err(String.format(
                     "WARNING: This mod is maybe incompatible with Immersive Portals: %s(%s)",
                     mod.modName, mod.modId
@@ -67,10 +65,10 @@ public class IPModCompatibilityWarning {
         }
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void initClient() {
         for (ModInfo mod : incompatibleMods) {
-            if (FabricLoader.getInstance().isModLoaded(mod.modId)) {
+            if (ModList.get().isLoaded(mod.modId)) {
                 IPGlobal.clientTaskList.addTask(MyTaskList.withDelayCondition(
                     () -> Minecraft.getInstance().level == null,
                     MyTaskList.oneShotTask(() -> {
@@ -87,7 +85,7 @@ public class IPModCompatibilityWarning {
         }
         
         for (ModInfo mod : maybeIncompatibleMods) {
-            if (FabricLoader.getInstance().isModLoaded(mod.modId)) {
+            if (ModList.get().isLoaded(mod.modId)) {
                 IPGlobal.clientTaskList.addTask(MyTaskList.withDelayCondition(
                     () -> Minecraft.getInstance().level == null,
                     MyTaskList.oneShotTask(() -> {
@@ -110,18 +108,18 @@ public class IPModCompatibilityWarning {
         IPGlobal.clientTaskList.addTask(MyTaskList.withDelayCondition(
             () -> Minecraft.getInstance().level == null,
             MyTaskList.oneShotTask(() -> {
-                if (IPGlobal.enableWarning && !FabricLoader.getInstance().isDevelopmentEnvironment()) {
-                    List<ModContainer> topLevelMods = FabricLoader.getInstance().getAllMods().stream()
-                        .filter(modContainer -> modContainer.getContainingMod().isEmpty())
-                        .collect(Collectors.toList());
-                    
-                    if (topLevelMods.size() > 20) {
-                        CHelper.printChat(new TextComponent(
-                            "[Immersive Portals] WARNING: You are using many mods. It's likely that one of them has compatibility issues with Immersive Portals. " +
-                                "If you are sure that there is no compatibility issue, disable this warning."
-                        ).withStyle(ChatFormatting.RED).append(IPMcHelper.getDisableWarningText()));
-                    }
-                }
+                //DISABLED_COMPILE            if (IPGlobal.enableWarning && !FabricLoader.getInstance().isDevelopmentEnvironment()) {
+                //DISABLED_COMPILE            List<ModContainer> topLevelMods = FabricLoader.getInstance().getAllMods().stream()
+                //DISABLED_COMPILE                .filter(modContainer -> modContainer.getContainingMod().isEmpty())
+                //DISABLED_COMPILE               .collect(Collectors.toList());
+
+                //DISABLED_COMPILE            if (topLevelMods.size() > 20) {
+                //DISABLED_COMPILE                 CHelper.printChat(new TextComponent(
+                //DISABLED_COMPILE                     "[Immersive Portals] WARNING: You are using many mods. It's likely that one of them has compatibility issues with Immersive Portals. " +
+                //DISABLED_COMPILE                        "If you are sure that there is no compatibility issue, disable this warning."
+                //DISABLED_COMPILE                ).withStyle(ChatFormatting.RED).append(IPMcHelper.getDisableWarningText()));
+                //DISABLED_COMPILE             }
+                //DISABLED_COMPILE         }
             })
         ));
         

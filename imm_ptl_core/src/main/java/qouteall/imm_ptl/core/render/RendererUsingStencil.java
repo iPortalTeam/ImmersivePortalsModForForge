@@ -16,14 +16,7 @@ import qouteall.imm_ptl.core.render.context_management.PortalRendering;
 
 import java.util.List;
 
-import static org.lwjgl.opengl.GL11.GL_ALWAYS;
-import static org.lwjgl.opengl.GL11.GL_DEPTH_FUNC;
-import static org.lwjgl.opengl.GL11.GL_EQUAL;
-import static org.lwjgl.opengl.GL11.GL_INCR;
-import static org.lwjgl.opengl.GL11.GL_KEEP;
-import static org.lwjgl.opengl.GL11.GL_LESS;
-import static org.lwjgl.opengl.GL11.GL_REPLACE;
-import static org.lwjgl.opengl.GL11.GL_STENCIL_TEST;
+import static org.lwjgl.opengl.GL11.*;
 
 //NOTE do not use glDisable(GL_DEPTH_TEST), use GlStateManager.disableDepthTest() instead
 //because GlStateManager will cache its state. Do not make its cache not synchronized

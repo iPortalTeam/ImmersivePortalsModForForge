@@ -1,19 +1,17 @@
 package qouteall.imm_ptl.core.compat.mixin;
 
-import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkShaderInterface;
-import net.coderbot.iris.compat.sodium.impl.shader_overrides.ShaderBindingContextExt;
-import net.coderbot.iris.gl.blending.BlendModeOverride;
-import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
+//DISABLED_COMPILEimport net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkShaderInterface;
+//DISABLED_COMPILEimport net.coderbot.iris.compat.sodium.impl.shader_overrides.ShaderBindingContextExt;
+//DISABLED_COMPILEimport net.coderbot.iris.gl.blending.BlendModeOverride;
+//DISABLED_COMPILEimport net.coderbot.iris.pipeline.SodiumTerrainPipeline;
+
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import qouteall.imm_ptl.core.render.FrontClipping;
 import qouteall.q_misc_util.Helper;
 
-@Mixin(value = IrisChunkShaderInterface.class, remap = false)
+//DISABLED_COMPILE@Mixin(value = IrisChunkShaderInterface.class, remap = false)
 public class MixinIrisSodiumChunkShaderInterface {
     private int uIPClippingEquation;
     
@@ -24,24 +22,24 @@ public class MixinIrisSodiumChunkShaderInterface {
             uIPClippingEquation = -1;
         }
     }
-    
-    @Inject(
-        method = "<init>",
-        at = @At("RETURN"),
-        require = 0
-    )
+
+//DISABLED_COMPILE    @Inject(
+//DISABLED_COMPILE        method = "<init>",
+//DISABLED_COMPILE        at = @At("RETURN"),
+//DISABLED_COMPILE        require = 0
+//DISABLED_COMPILE    )
     private void onInit(
-        int handle, ShaderBindingContextExt contextExt, SodiumTerrainPipeline pipeline,
-        boolean isShadowPass, BlendModeOverride blendModeOverride, float alpha,
-        CallbackInfo ci
+//DISABLED_COMPILE        int handle, ShaderBindingContextExt contextExt, SodiumTerrainPipeline pipeline,
+//DISABLED_COMPILE        boolean isShadowPass, BlendModeOverride blendModeOverride, float alpha,
+//DISABLED_COMPILE        CallbackInfo ci
     ) {
-        ip_init(handle);
+//DISABLED_COMPILE        ip_init(handle);
     }
-    
-    @Inject(
-        method = "setup",
-        at = @At("RETURN")
-    )
+
+//DISABLED_COMPILE    @Inject(
+//DISABLED_COMPILE        method = "setup",
+//DISABLED_COMPILE        at = @At("RETURN")
+//DISABLED_COMPILE    )
     private void onSetup(CallbackInfo ci) {
         if (uIPClippingEquation != -1) {
             if (FrontClipping.isClippingEnabled) {

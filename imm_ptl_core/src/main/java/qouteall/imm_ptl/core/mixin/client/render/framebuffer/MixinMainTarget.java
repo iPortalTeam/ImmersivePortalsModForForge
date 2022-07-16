@@ -15,9 +15,7 @@ import qouteall.imm_ptl.core.ducks.IEFrameBuffer;
 import java.nio.IntBuffer;
 
 import static org.lwjgl.opengl.GL11.GL_DEPTH_COMPONENT;
-import static org.lwjgl.opengl.GL30.GL_DEPTH24_STENCIL8;
-import static org.lwjgl.opengl.GL30.GL_DEPTH32F_STENCIL8;
-import static org.lwjgl.opengl.GL30.GL_FLOAT_32_UNSIGNED_INT_24_8_REV;
+import static org.lwjgl.opengl.GL30.*;
 
 @Mixin(MainTarget.class)
 public abstract class MixinMainTarget extends RenderTarget {
@@ -28,7 +26,7 @@ public abstract class MixinMainTarget extends RenderTarget {
     }
     
     @Redirect(
-        method = "Lcom/mojang/blaze3d/pipeline/MainTarget;allocateDepthAttachment(Lcom/mojang/blaze3d/pipeline/MainTarget$Dimension;)Z",
+        method = "allocateDepthAttachment(Lcom/mojang/blaze3d/pipeline/MainTarget$Dimension;)Z",
         at = @At(
             value = "INVOKE",
             target = "Lcom/mojang/blaze3d/platform/GlStateManager;_texImage2D(IIIIIIIILjava/nio/IntBuffer;)V"
@@ -62,7 +60,7 @@ public abstract class MixinMainTarget extends RenderTarget {
     }
     
     @Redirect(
-        method = "Lcom/mojang/blaze3d/pipeline/MainTarget;createFrameBuffer(II)V",
+        method = "createFrameBuffer(II)V",
         at = @At(
             value = "INVOKE",
             target = "Lcom/mojang/blaze3d/platform/GlStateManager;_glFramebufferTexture2D(IIIII)V"

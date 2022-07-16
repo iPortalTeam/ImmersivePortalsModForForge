@@ -1,6 +1,5 @@
 package qouteall.imm_ptl.core;
 
-import net.fabricmc.loader.api.FabricLoader;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -21,11 +20,11 @@ public class IPMixinPlugin implements IMixinConfigPlugin {
     
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (FabricLoader.getInstance().isModLoaded("porting_lib")) {
-            if (mixinClassName.contains("MixinRenderTarget") || mixinClassName.contains("MixinMainTarget")) {
-                return false;
-            }
-        }
+//        if (ModList.get().isLoaded("porting_lib")) { //TODO Reenable this
+//            if (mixinClassName.contains("MixinRenderTarget") || mixinClassName.contains("MixinMainTarget")) {
+//                return false;
+//            }
+//        }
         return true;
     }
     

@@ -16,7 +16,7 @@ public class MixinLevelInfo {
     
     // used for upgrading legacy dimension stack
     @Inject(
-        method = "Lnet/minecraft/world/level/LevelSettings;parse(Lcom/mojang/serialization/Dynamic;Lnet/minecraft/world/level/DataPackConfig;)Lnet/minecraft/world/level/LevelSettings;",
+        method = "parse(Lcom/mojang/serialization/Dynamic;Lnet/minecraft/world/level/DataPackConfig;)Lnet/minecraft/world/level/LevelSettings;",
         at = @At("RETURN"),
         cancellable = true
     )

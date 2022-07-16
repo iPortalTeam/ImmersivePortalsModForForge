@@ -1,160 +1,129 @@
 package qouteall.imm_ptl.core.platform_specific;
 
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
-import net.minecraft.core.DefaultedRegistry;
-import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.Material;
-import qouteall.imm_ptl.core.portal.BreakableMirror;
-import qouteall.imm_ptl.core.portal.EndPortalEntity;
-import qouteall.imm_ptl.core.portal.LoadingIndicatorEntity;
-import qouteall.imm_ptl.core.portal.Mirror;
-import qouteall.imm_ptl.core.portal.Portal;
-import qouteall.imm_ptl.core.portal.PortalPlaceholderBlock;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+import qouteall.imm_ptl.core.portal.*;
 import qouteall.imm_ptl.core.portal.global_portals.GlobalTrackedPortal;
 import qouteall.imm_ptl.core.portal.global_portals.VerticalConnectingPortal;
 import qouteall.imm_ptl.core.portal.global_portals.WorldWrappingPortal;
 import qouteall.imm_ptl.core.portal.nether_portal.GeneralBreakablePortal;
 import qouteall.imm_ptl.core.portal.nether_portal.NetherPortalEntity;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
 public class IPRegistry {
     public static void registerMyDimensionsFabric() {
     }
-    
-    public static void registerBlocksFabric() {
-        PortalPlaceholderBlock.instance = new PortalPlaceholderBlock(
-            FabricBlockSettings.of(Material.PORTAL)
+
+    public static final RegistryObject<Block> NETHER_PORTAL_BLOCK = RegistryObject.create(new ResourceLocation(IPModEntry.MODID, "nether_portal_block"), ForgeRegistries.BLOCKS);
+
+    @SubscribeEvent
+    public static void registerBlocks(RegistryEvent.Register<Block> event) {
+        event.getRegistry().register(new PortalPlaceholderBlock(BlockBehaviour.Properties
+        .of(Material.PORTAL)
                 .noCollission()
                 .sound(SoundType.GLASS)
                 .strength(1.0f, 0)
                 .noOcclusion()
                 .noDrops()
                 .lightLevel((s)->15)
-        );
-        Registry.register(
-            Registry.BLOCK,
-            // the id is inappropriate
-            new ResourceLocation("immersive_portals", "nether_portal_block"),
-            PortalPlaceholderBlock.instance
-        );
-        
-        
+        ).setRegistryName(IPModEntry.MODID, "nether_portal_block"));
     }
+
+    public static final DeferredRegister<EntityType<?>> ENTITY_TYPES =
+            DeferredRegister.create(ForgeRegistries.ENTITIES, IPModEntry.MODID);
+
+    public static final RegistryObject<EntityType<Portal>> PORTAL =
+            ENTITY_TYPES.register("portal",
+                    () -> EntityType.Builder.of(Portal::new, MobCategory.MISC)
+                            .sized(1.0f, 1.0f)
+                            .fireImmune()
+                            .clientTrackingRange(96)
+                            .build(IPModEntry.MODID + "portal"));
+
+    public static final RegistryObject<EntityType<NetherPortalEntity>> NETHER_PORTAL_NEW =
+            ENTITY_TYPES.register("nether_portal_new",
+                    () -> EntityType.Builder.of(NetherPortalEntity::new, MobCategory.MISC)
+                            .sized(1.0f, 1.0f)
+                            .fireImmune()
+                            .clientTrackingRange(96)
+                            .build(IPModEntry.MODID + "nether_portal_new"));
+
+    public static final RegistryObject<EntityType<EndPortalEntity>> END_PORTAL =
+            ENTITY_TYPES.register("end_portal",
+                    () -> EntityType.Builder.of(EndPortalEntity::new, MobCategory.MISC)
+                            .sized(1.0f, 1.0f)
+                            .fireImmune()
+                            .clientTrackingRange(96)
+                            .build(IPModEntry.MODID + "end_portal"));
+
+    public static final RegistryObject<EntityType<Mirror>> MIRROR =
+            ENTITY_TYPES.register("mirror",
+                    () -> EntityType.Builder.of(Mirror::new, MobCategory.MISC)
+                            .sized(1.0f, 1.0f)
+                            .fireImmune()
+                            .clientTrackingRange(96)
+                            .build(IPModEntry.MODID + "mirror"));
+
+    public static final RegistryObject<EntityType<BreakableMirror>> BREAKABLE_MIRROR =
+            ENTITY_TYPES.register("breakable_mirror",
+                    () -> EntityType.Builder.of(BreakableMirror::new, MobCategory.MISC)
+                            .sized(1.0f, 1.0f)
+                            .fireImmune()
+                            .clientTrackingRange(96)
+                            .build(IPModEntry.MODID + "breakable_mirror"));
+
+    public static final RegistryObject<EntityType<GlobalTrackedPortal>> GLOBAL_TRACKED_PORTAL =
+            ENTITY_TYPES.register("global_tracked_portal",
+                    () -> EntityType.Builder.of(GlobalTrackedPortal::new, MobCategory.MISC)
+                            .sized(1.0f, 1.0f)
+                            .fireImmune()
+                            .clientTrackingRange(96)
+                            .build(IPModEntry.MODID + "global_tracked_portal"));
+
+    public static final RegistryObject<EntityType<WorldWrappingPortal>> BORDER_PORTAL =
+            ENTITY_TYPES.register("border_portal",
+                    () -> EntityType.Builder.of(WorldWrappingPortal::new, MobCategory.MISC)
+                            .sized(1.0f, 1.0f)
+                            .fireImmune()
+                            .clientTrackingRange(96)
+                            .build(IPModEntry.MODID + "border_portal"));
+
+    public static final RegistryObject<EntityType<VerticalConnectingPortal>> END_FLOOR_PORTAL =
+            ENTITY_TYPES.register("end_floor_portal",
+                    () -> EntityType.Builder.of(VerticalConnectingPortal::new, MobCategory.MISC)
+                            .sized(1.0f, 1.0f)
+                            .fireImmune()
+                            .clientTrackingRange(96)
+                            .build(IPModEntry.MODID + "end_floor_portal"));
+
+    public static final RegistryObject<EntityType<GeneralBreakablePortal>> GENERAL_BREAKABLE_PORTAL =
+            ENTITY_TYPES.register("general_breakable_portal",
+                    () -> EntityType.Builder.of(GeneralBreakablePortal::new, MobCategory.MISC)
+                            .sized(1.0f, 1.0f)
+                            .fireImmune()
+                            .clientTrackingRange(96)
+                            .build(IPModEntry.MODID + "general_breakable_portal"));
+
+    public static final RegistryObject<EntityType<LoadingIndicatorEntity>> LOADING_INDICATOR =
+            ENTITY_TYPES.register("loading_indicator",
+                    () -> EntityType.Builder.of(LoadingIndicatorEntity::new, MobCategory.MISC)
+                            .sized(1.0f, 1.0f)
+                            .fireImmune()
+                            .clientTrackingRange(96)
+                            .build(IPModEntry.MODID + "loading_indicator"));
     
-    private static <T extends Entity> void registerEntity(
-        Consumer<EntityType<T>> setEntityType,
-        Supplier<EntityType<T>> getEntityType,
-        String id,
-        EntityType.EntityFactory<T> constructor,
-        Registry<EntityType<?>> registry
-    ) {
-        EntityType<T> entityType = FabricEntityTypeBuilder.create(
-            MobCategory.MISC,
-            constructor
-        ).dimensions(
-            new EntityDimensions(1, 1, true)
-        ).fireImmune().trackable(96, 20).build();
-        setEntityType.accept(entityType);
-        Registry.register(
-            Registry.ENTITY_TYPE,
-            new ResourceLocation(id),
-            entityType
-        );
-    }
-    
-    public static void registerEntitiesFabric() {
-        DefaultedRegistry<EntityType<?>> registry = Registry.ENTITY_TYPE;
-        
-        registerEntity(
-            o -> Portal.entityType = o,
-            () -> Portal.entityType,
-            "immersive_portals:portal",
-            Portal::new,
-            registry
-        );
-        registerEntity(
-            o -> NetherPortalEntity.entityType = o,
-            () -> NetherPortalEntity.entityType,
-            "immersive_portals:nether_portal_new",
-            NetherPortalEntity::new,
-            registry
-        );
-        
-        registerEntity(
-            o -> EndPortalEntity.entityType = o,
-            () -> EndPortalEntity.entityType,
-            "immersive_portals:end_portal",
-            EndPortalEntity::new,
-            registry
-        );
-        
-        registerEntity(
-            o -> Mirror.entityType = o,
-            () -> Mirror.entityType,
-            "immersive_portals:mirror",
-            Mirror::new,
-            registry
-        );
-        
-        registerEntity(
-            o -> BreakableMirror.entityType = o,
-            () -> BreakableMirror.entityType,
-            "immersive_portals:breakable_mirror",
-            BreakableMirror::new,
-            registry
-        );
-        
-        registerEntity(
-            o -> GlobalTrackedPortal.entityType = o,
-            () -> GlobalTrackedPortal.entityType,
-            "immersive_portals:global_tracked_portal",
-            GlobalTrackedPortal::new,
-            registry
-        );
-        
-        registerEntity(
-            o -> WorldWrappingPortal.entityType = o,
-            () -> WorldWrappingPortal.entityType,
-            "immersive_portals:border_portal",
-            WorldWrappingPortal::new,
-            registry
-        );
-        
-        registerEntity(
-            o -> VerticalConnectingPortal.entityType = o,
-            () -> VerticalConnectingPortal.entityType,
-            "immersive_portals:end_floor_portal",
-            VerticalConnectingPortal::new,
-            registry
-        );
-        
-        registerEntity(
-            o -> GeneralBreakablePortal.entityType = o,
-            () -> GeneralBreakablePortal.entityType,
-            "immersive_portals:general_breakable_portal",
-            GeneralBreakablePortal::new,
-            registry
-        );
-        
-        LoadingIndicatorEntity.entityType = Registry.register(
-            Registry.ENTITY_TYPE,
-            new ResourceLocation("immersive_portals", "loading_indicator"),
-            FabricEntityTypeBuilder.create(
-                MobCategory.MISC,
-                (EntityType.EntityFactory<LoadingIndicatorEntity>) LoadingIndicatorEntity::new
-            ).dimensions(
-                new EntityDimensions(1, 1, true)
-            ).fireImmune().trackable(96, 20).build()
-        );
+    public static void registerEntities(IEventBus bus) {
+        ENTITY_TYPES.register(bus);
     }
     
     public static void registerChunkGenerators() {

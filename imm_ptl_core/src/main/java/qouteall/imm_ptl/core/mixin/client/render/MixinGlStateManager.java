@@ -11,7 +11,7 @@ import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.render.context_management.RenderStates;
 import qouteall.imm_ptl.core.render.optimization.GLResourceCache;
 
-@Mixin(value = GlStateManager.class, remap = false)
+@Mixin(value = GlStateManager.class)
 public abstract class MixinGlStateManager {
     
     @Shadow
@@ -20,7 +20,7 @@ public abstract class MixinGlStateManager {
     }
     
     @Inject(
-        method = "Lcom/mojang/blaze3d/platform/GlStateManager;_enableCull()V",
+        method = "_enableCull()V",
         at = @At("HEAD"),
         cancellable = true
     )
@@ -32,7 +32,7 @@ public abstract class MixinGlStateManager {
     }
     
     @Inject(
-        method = "Lcom/mojang/blaze3d/platform/GlStateManager;_glGenBuffers()I",
+        method = "_glGenBuffers()I",
         at = @At("HEAD"),
         cancellable = true
     )
@@ -44,7 +44,7 @@ public abstract class MixinGlStateManager {
     }
     
     @Inject(
-        method = "Lcom/mojang/blaze3d/platform/GlStateManager;_glGenVertexArrays()I",
+        method = "_glGenVertexArrays()I",
         at = @At("HEAD"),
         cancellable = true
     )

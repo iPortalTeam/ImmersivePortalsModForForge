@@ -71,7 +71,7 @@ public class DimensionMisc {
     }
     
     public static void init() {
-        DimensionAPI.serverDimensionsLoadEvent.register(DimensionMisc::addMissingVanillaDimensions);
+//        DimensionAPI.serverDimensionsLoadEvent.register(DimensionMisc::addMissingVanillaDimensions); //TODO Reimplement this !IMPORTANT
     }
     
     // When DFU does not recognize a mod dimension (in level.dat) it will throw an error

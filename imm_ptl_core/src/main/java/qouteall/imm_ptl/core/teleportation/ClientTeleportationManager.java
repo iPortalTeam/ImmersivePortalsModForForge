@@ -1,7 +1,5 @@
 package qouteall.imm_ptl.core.teleportation;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -13,21 +11,20 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.ClientWorldLoader;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
-import qouteall.imm_ptl.core.compat.PehkuiInterface;
 import qouteall.imm_ptl.core.compat.GravityChangerInterface;
-import qouteall.imm_ptl.core.ducks.IEClientPlayNetworkHandler;
-import qouteall.imm_ptl.core.ducks.IEEntity;
-import qouteall.imm_ptl.core.ducks.IEGameRenderer;
-import qouteall.imm_ptl.core.ducks.IEMinecraftClient;
-import qouteall.imm_ptl.core.ducks.IEParticleManager;
+import qouteall.imm_ptl.core.compat.PehkuiInterface;
+import qouteall.imm_ptl.core.ducks.*;
 import qouteall.imm_ptl.core.network.PacketRedirectionClient;
-import qouteall.imm_ptl.core.platform_specific.IPNetworkingClient;
 import qouteall.imm_ptl.core.platform_specific.O_O;
+import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
+import qouteall.imm_ptl.core.platform_specific.forge.networking.Teleport;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.PortalExtension;
 import qouteall.imm_ptl.core.render.FrontClipping;
@@ -41,7 +38,7 @@ import qouteall.q_misc_util.Helper;
 import java.util.Comparator;
 import java.util.stream.Stream;
 
-@Environment(EnvType.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class ClientTeleportationManager {
     public static final Minecraft client = Minecraft.getInstance();
     public long tickTimeForTeleportation = 0;
@@ -223,12 +220,8 @@ public class ClientTeleportationManager {
         McHelper.updateBoundingBox(player);
         
         PehkuiInterface.invoker.onClientPlayerTeleported(portal);
-        
-        player.connection.send(IPNetworkingClient.createCtsTeleport(
-            fromDimension,
-            oldEyePos,
-            portal.getUUID()
-        ));
+
+        IPMessage.sendToServer(new Teleport(fromDimension, oldEyePos, portal.getUUID()));
         
         tickAfterTeleportation(player, newEyePos, newLastTickEyePos);
         

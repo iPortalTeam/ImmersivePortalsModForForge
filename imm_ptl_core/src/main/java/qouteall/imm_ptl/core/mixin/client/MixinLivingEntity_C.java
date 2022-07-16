@@ -28,7 +28,7 @@ public class MixinLivingEntity_C {
     
     //avoid entity position interpolate when crossing portal when not travelling dimension
     @Inject(
-        method = "Lnet/minecraft/world/entity/LivingEntity;lerpTo(DDDFFIZ)V",
+        method = "lerpTo(DDDFFIZ)V",
         at = @At("RETURN")
     )
     private void onUpdateTrackedPositionAndAngles(

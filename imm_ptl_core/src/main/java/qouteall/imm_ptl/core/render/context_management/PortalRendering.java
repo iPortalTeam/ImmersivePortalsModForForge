@@ -1,12 +1,11 @@
 package qouteall.imm_ptl.core.render.context_management;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.portal.Mirror;
-import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.PortalLike;
 import qouteall.imm_ptl.core.render.PortalRenderer;
 
@@ -17,7 +16,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 // TODO remove this and use RenderInfo
-@Environment(EnvType.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class PortalRendering {
     private static final Stack<PortalLike> portalLayers = new Stack<>();
     private static boolean isRenderingCache = false;

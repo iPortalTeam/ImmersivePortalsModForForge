@@ -1,7 +1,5 @@
 package qouteall.imm_ptl.core;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -14,33 +12,27 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.commons.lang3.Validate;
-import qouteall.imm_ptl.core.ducks.IEClientPlayNetworkHandler;
-import qouteall.imm_ptl.core.ducks.IEMinecraftClient;
-import qouteall.imm_ptl.core.ducks.IEParticleManager;
-import qouteall.imm_ptl.core.render.context_management.PortalRendering;
-import qouteall.q_misc_util.api.DimensionAPI;
-import qouteall.q_misc_util.dimension.DimensionTypeSync;
-import qouteall.imm_ptl.core.ducks.IECamera;
-import qouteall.imm_ptl.core.ducks.IEClientWorld;
-import qouteall.imm_ptl.core.ducks.IEWorld;
-import qouteall.imm_ptl.core.ducks.IEWorldRenderer;
+import qouteall.imm_ptl.core.ducks.*;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.render.context_management.DimensionRenderHelper;
+import qouteall.imm_ptl.core.render.context_management.PortalRendering;
 import qouteall.q_misc_util.Helper;
+import qouteall.q_misc_util.dimension.DimensionTypeSync;
+import qouteall.q_misc_util.forge.events.ClientDimensionUpdateEvent;
 import qouteall.q_misc_util.my_util.LimitedLogger;
 import qouteall.q_misc_util.my_util.SignalArged;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-@Environment(EnvType.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class ClientWorldLoader {
     public static final SignalArged<ResourceKey<Level>> clientDimensionDynamicRemoveSignal =
         new SignalArged<>();
@@ -65,19 +57,33 @@ public class ClientWorldLoader {
         IPGlobal.postClientTickSignal.connect(ClientWorldLoader::tick);
         
         IPGlobal.clientCleanupSignal.connect(ClientWorldLoader::cleanUp);
+
+        MinecraftForge.EVENT_BUS.register(ClientWorldLoader.class);
         
-        DimensionAPI.clientDimensionUpdateEvent.register((serverDimensions) -> {
-            if (getIsInitialized()) {
-                List<ResourceKey<Level>> dimensionsToRemove =
-                    clientWorldMap.keySet().stream()
-                        .filter(dim -> !serverDimensions.contains(dim)).toList();
-                
-                for (ResourceKey<Level> dim : dimensionsToRemove) {
-                    disposeDimensionDynamically(dim);
-                }
-                
+//        DimensionAPI.clientDimensionUpdateEvent.register((serverDimensions) -> { //TODO Reimplement this !IMPORTANT
+//            if (getIsInitialized()) {
+//                List<ResourceKey<Level>> dimensionsToRemove =
+//                    clientWorldMap.keySet().stream()
+//                        .filter(dim -> !serverDimensions.contains(dim)).toList();
+//
+//                for (ResourceKey<Level> dim : dimensionsToRemove) {
+//                    disposeDimensionDynamically(dim);
+//                }
+//
+//            }
+//        });
+    }
+
+    @SubscribeEvent
+    public static void clientDimensionUpdate(ClientDimensionUpdateEvent event) {
+        if (getIsInitialized()) {
+            List<ResourceKey<Level>> dimensionsToRemove = clientWorldMap.keySet().stream()
+                    .filter(dim -> !event.dimIdSet.contains(dim)).toList();
+
+            for (ResourceKey<Level> dim : dimensionsToRemove) {
+                disposeDimensionDynamically(dim);
             }
-        });
+        }
     }
     
     public static boolean getIsInitialized() {

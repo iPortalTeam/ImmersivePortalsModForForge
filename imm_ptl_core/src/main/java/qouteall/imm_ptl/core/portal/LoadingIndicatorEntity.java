@@ -1,7 +1,5 @@
 package qouteall.imm_ptl.core.portal;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -20,15 +18,18 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import qouteall.imm_ptl.core.platform_specific.IPNetworking;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.network.NetworkDirection;
+import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
+import qouteall.imm_ptl.core.platform_specific.forge.networking.Spawn_Entity;
 import qouteall.imm_ptl.core.portal.nether_portal.BlockPortalShape;
 import qouteall.q_misc_util.my_util.IntBox;
 
 import java.util.Random;
 
 public class LoadingIndicatorEntity extends Entity {
-    public static EntityType<LoadingIndicatorEntity> entityType;
-    
+
     private static final EntityDataAccessor<Component> text = SynchedEntityData.defineId(
         LoadingIndicatorEntity.class, EntityDataSerializers.COMPONENT
     );
@@ -60,8 +61,8 @@ public class LoadingIndicatorEntity extends Entity {
             }
         }
     }
-    
-    @Environment(EnvType.CLIENT)
+
+    @OnlyIn(Dist.CLIENT)
     private void tickClient() {
         addParticles();
         
@@ -69,8 +70,8 @@ public class LoadingIndicatorEntity extends Entity {
             showMessageClient();
         }
     }
-    
-    @Environment(EnvType.CLIENT)
+
+    @OnlyIn(Dist.CLIENT)
     private void addParticles() {
         int num = tickCount < 100 ? 50 : 20;
         
@@ -120,7 +121,7 @@ public class LoadingIndicatorEntity extends Entity {
     
     @Override
     public Packet<?> getAddEntityPacket() {
-        return IPNetworking.createStcSpawnEntity(this);
+        return IPMessage.INSTANCE.toVanillaPacket(new Spawn_Entity(this), NetworkDirection.PLAY_TO_CLIENT);
     }
     
     public void inform(Component str) {
@@ -134,8 +135,8 @@ public class LoadingIndicatorEntity extends Entity {
     public Component getText() {
         return getEntityData().get(text);
     }
-    
-    @Environment(EnvType.CLIENT)
+
+    @OnlyIn(Dist.CLIENT)
     private void showMessageClient() {
         Gui inGameHud = Minecraft.getInstance().gui;
         inGameHud.handleChat(

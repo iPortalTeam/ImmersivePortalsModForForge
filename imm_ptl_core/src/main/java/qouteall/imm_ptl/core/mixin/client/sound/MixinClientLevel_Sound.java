@@ -26,7 +26,7 @@ public class MixinClientLevel_Sound {
     private Minecraft minecraft;
     
     @Inject(
-        method = "Lnet/minecraft/client/multiplayer/ClientLevel;playLocalSound(DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FFZ)V",
+        method = "playLocalSound(DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FFZ)V",
         at = @At("HEAD"),
         cancellable = true
     )
@@ -58,7 +58,7 @@ public class MixinClientLevel_Sound {
     }
     
     @Inject(
-        method = "Lnet/minecraft/client/multiplayer/ClientLevel;playSound(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V",
+        method = "playSound(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V",
         at = @At("HEAD"),
         cancellable = true
     )

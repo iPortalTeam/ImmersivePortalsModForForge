@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -27,9 +26,9 @@ import org.jetbrains.annotations.Nullable;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscGlobals;
 import qouteall.q_misc_util.MiscHelper;
-import qouteall.q_misc_util.MiscNetworking;
-import qouteall.q_misc_util.api.DimensionAPI;
 import qouteall.q_misc_util.ducks.IEMinecraftServer_Misc;
+import qouteall.q_misc_util.forge.networking.Dim_Sync;
+import qouteall.q_misc_util.forge.networking.Message;
 import qouteall.q_misc_util.mixin.dimension.IEWorldBorder;
 import qouteall.q_misc_util.my_util.MyTaskList;
 import qouteall.q_misc_util.my_util.SignalArged;
@@ -104,12 +103,13 @@ public class DynamicDimensionsImpl {
         
         DimensionIdManagement.updateAndSaveServerDimIdRecord();
         
-        Packet dimSyncPacket = MiscNetworking.createDimSyncPacket();
+        Dim_Sync dimSyncPacket = new Dim_Sync(); //MiscNetworking.createDimSyncPacket();
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            player.connection.send(dimSyncPacket);
+            Message.sendToPlayer(dimSyncPacket, player);
+            //player.connection.send(dimSyncPacket);
         }
     
-        DimensionAPI.serverDimensionDynamicUpdateEvent.invoker().run(server.levelKeys());
+//        DimensionAPI.serverDimensionDynamicUpdateEvent.invoker().run(server.levelKeys()); //TODO Reimplement this !Important
     }
     
     public static void removeDimensionDynamically(ServerLevel world) {
@@ -187,12 +187,14 @@ public class DynamicDimensionsImpl {
             
             Helper.log("Successfully Removed Dimension " + dimension.location());
             
-            Packet dimSyncPacket = MiscNetworking.createDimSyncPacket();
+            //Packet dimSyncPacket = MiscNetworking.createDimSyncPacket();
+            Dim_Sync dimSyncPacket = new Dim_Sync();
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                player.connection.send(dimSyncPacket);
+                //player.connection.send(dimSyncPacket);
+                Message.sendToPlayer(dimSyncPacket, player);
             }
     
-            DimensionAPI.serverDimensionDynamicUpdateEvent.invoker().run(server.levelKeys());
+//            DimensionAPI.serverDimensionDynamicUpdateEvent.invoker().run(server.levelKeys()); //TODO Reimplement this !IMPORTANT
         }));
     }
     

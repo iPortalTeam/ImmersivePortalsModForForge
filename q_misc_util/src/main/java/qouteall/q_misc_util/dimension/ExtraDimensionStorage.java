@@ -1,10 +1,8 @@
 package qouteall.q_misc_util.dimension;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.DataResult;
@@ -26,7 +24,6 @@ import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.api.DimensionAPI;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -35,9 +32,9 @@ import java.nio.file.Path;
 public class ExtraDimensionStorage {
     
     public static void init() {
-        DimensionAPI.serverDimensionsLoadEvent.register(
-            ExtraDimensionStorage::loadExtraDimensions
-        );
+//        DimensionAPI.serverDimensionsLoadEvent.register( //TODO Reimplement this !IMPORTANT
+//            ExtraDimensionStorage::loadExtraDimensions
+//        );
     }
     
     private static void loadExtraDimensions(WorldGenSettings worldGenSettings, RegistryAccess registryAccess) {

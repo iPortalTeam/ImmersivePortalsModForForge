@@ -6,13 +6,11 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.command.v1.ClientCommandManager;
-import net.fabricmc.fabric.api.client.command.v1.FabricClientCommandSource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
@@ -42,16 +40,16 @@ import net.minecraft.world.level.chunk.DataLayer;
 import net.minecraft.world.level.chunk.EmptyLevelChunk;
 import net.minecraft.world.level.entity.EntityTickList;
 import net.minecraft.world.phys.Vec3;
-import qouteall.imm_ptl.core.CHelper;
-import qouteall.imm_ptl.core.ClientWorldLoader;
-import qouteall.imm_ptl.core.IPCGlobal;
-import qouteall.imm_ptl.core.IPGlobal;
-import qouteall.imm_ptl.core.McHelper;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import qouteall.imm_ptl.core.*;
 import qouteall.imm_ptl.core.ducks.IEClientWorld;
 import qouteall.imm_ptl.core.ducks.IEEntity;
 import qouteall.imm_ptl.core.ducks.IEWorldRenderer;
 import qouteall.imm_ptl.core.platform_specific.IPConfig;
-import qouteall.imm_ptl.core.platform_specific.IPConfigGUI;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.PortalRenderInfo;
 import qouteall.imm_ptl.core.render.MyBuiltChunkStorage;
@@ -60,31 +58,31 @@ import qouteall.imm_ptl.core.render.context_management.RenderStates;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.api.McRemoteProcedureCall;
-import qouteall.q_misc_util.my_util.MyTaskList;
 
 import java.lang.ref.Reference;
 import java.net.URLClassLoader;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Environment(EnvType.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class ClientDebugCommand {
-    
-    public static void register(
-        CommandDispatcher<FabricClientCommandSource> dispatcher
-    ) {
-        LiteralArgumentBuilder<FabricClientCommandSource> builder = ClientCommandManager
+
+    @SubscribeEvent
+    public static void register(RegisterCommandsEvent event) {
+        if (FMLEnvironment.dist == Dist.DEDICATED_SERVER) {
+            return;
+        }
+
+        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
+
+        LiteralArgumentBuilder<CommandSourceStack> builder = Commands
             .literal("imm_ptl_client_debug")
             .requires(commandSource -> true)
-            .then(ClientCommandManager
+            .then(Commands
                 .literal("set_max_portal_layer")
-                .then(ClientCommandManager
+                .then(Commands
                     .argument(
                         "argMaxPortalLayer", IntegerArgumentType.integer()
                     )
@@ -93,20 +91,20 @@ public class ClientDebugCommand {
                     ))
                 )
             );
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal("list_portals")
             .executes(context -> {
                 RemoteCallables.doListPortals();
                 return 0;
             })
         );
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal("is_client_chunk_loaded")
-            .then(ClientCommandManager
+            .then(Commands
                 .argument(
                     "chunkX", IntegerArgumentType.integer()
                 )
-                .then(ClientCommandManager
+                .then(Commands
                     .argument(
                         "chunkZ", IntegerArgumentType.integer()
                     )
@@ -117,35 +115,35 @@ public class ClientDebugCommand {
             )
         );
         
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal("report_player_status")
             .executes(context -> {
                 RemoteCallables.reportClientPlayerStatus();
                 return 0;
             })
         );
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal("client_remote_ticking_enable")
             .executes(context -> {
                 IPCGlobal.isClientRemoteTickingEnabled = true;
                 return 0;
             })
         );
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal("client_remote_ticking_disable")
             .executes(context -> {
                 IPCGlobal.isClientRemoteTickingEnabled = false;
                 return 0;
             })
         );
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal("advanced_frustum_culling_enable")
             .executes(context -> {
                 IPCGlobal.doUseAdvancedFrustumCulling = true;
                 return 0;
             })
         );
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal("advanced_frustum_culling_disable")
             .executes(context -> {
                 IPCGlobal.doUseAdvancedFrustumCulling = false;
@@ -166,7 +164,7 @@ public class ClientDebugCommand {
 //                return 0;
 //            })
 //        );
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal("report_resource_consumption")
             .executes(context1 -> {
                 RemoteCallables.reportResourceConsumption();
@@ -174,15 +172,15 @@ public class ClientDebugCommand {
                 return 0;
             })
         );
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal("report_render_info_num")
             .executes(context -> {
                 String str = Helper.myToString(IPCGlobal.renderInfoNumMap.entrySet().stream());
-                context.getSource().getPlayer().displayClientMessage(new TextComponent(str), false);
+                context.getSource().getPlayerOrException().displayClientMessage(new TextComponent(str), false);
                 return 0;
             })
         );
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal("get_player_colliding_portal_client")
             .executes(context -> {
                 Portal collidingPortal =
@@ -193,7 +191,7 @@ public class ClientDebugCommand {
                 return 0;
             })
         );
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal("report_rendering")
             .executes(context -> {
                 String str = RenderStates.lastPortalRenderInfos
@@ -209,42 +207,42 @@ public class ClientDebugCommand {
                 return 0;
             })
         );
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal("vanilla_chunk_culling_enable")
             .executes(context -> {
                 Minecraft.getInstance().smartCull = true;
                 return 0;
             })
         );
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal("vanilla_chunk_culling_disable")
             .executes(context -> {
                 Minecraft.getInstance().smartCull = false;
                 return 0;
             })
         );
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal("render_mode_normal")
             .executes(context -> {
                 IPGlobal.renderMode = IPGlobal.RenderMode.normal;
                 return 0;
             })
         );
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal("render_mode_compatibility")
             .executes(context -> {
                 IPGlobal.renderMode = IPGlobal.RenderMode.compatibility;
                 return 0;
             })
         );
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal("render_mode_debug")
             .executes(context -> {
                 IPGlobal.renderMode = IPGlobal.RenderMode.debug;
                 return 0;
             })
         );
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal("render_mode_none")
             .executes(context -> {
                 IPGlobal.renderMode = IPGlobal.RenderMode.none;
@@ -252,7 +250,7 @@ public class ClientDebugCommand {
             })
         );
         
-        builder.then(ClientCommandManager
+        builder.then(Commands
             .literal("check_client_light")
             .executes(context -> {
                 Minecraft client = Minecraft.getInstance();
@@ -265,7 +263,7 @@ public class ClientDebugCommand {
                 return 0;
             })
         );
-        builder.then(ClientCommandManager
+        builder.then(Commands
             .literal("report_client_entities")
             .executes(context -> {
                 ClientLevel world = Minecraft.getInstance().level;
@@ -287,7 +285,7 @@ public class ClientDebugCommand {
                 return 0;
             })
         );
-        builder.then(ClientCommandManager
+        builder.then(Commands
             .literal("check_server_light")
             .executes(context -> {
                 MiscHelper.getServer().execute(() -> {
@@ -303,7 +301,7 @@ public class ClientDebugCommand {
                 return 0;
             })
         );
-        builder.then(ClientCommandManager
+        builder.then(Commands
                 .literal("update_server_light")
                 .executes(context -> {
                     MiscHelper.getServer().execute(() -> {
@@ -323,7 +321,7 @@ public class ClientDebugCommand {
                 })
         );
         
-        builder.then(ClientCommandManager
+        builder.then(Commands
             .literal("report_rebuild_status")
             .executes(context -> {
                 Minecraft.getInstance().execute(() -> {
@@ -341,7 +339,7 @@ public class ClientDebugCommand {
             })
         );
         
-        builder.then(ClientCommandManager
+        builder.then(Commands
             .literal("report_portal_groups")
             .executes(context -> {
                 for (ClientLevel clientWorld : ClientWorldLoader.getClientWorlds()) {
@@ -366,7 +364,7 @@ public class ClientDebugCommand {
                 return 0;
             })
         );
-        builder.then(ClientCommandManager
+        builder.then(Commands
             .literal("report_client_light_status")
             .executes(context -> {
                 Minecraft.getInstance().execute(() -> {
@@ -386,16 +384,16 @@ public class ClientDebugCommand {
                             }
                         }
                         
-                        context.getSource().sendFeedback(
+                        context.getSource().sendSuccess(
                             new TextComponent(
                                 "has light section " +
                                     (allZero ? "all zero" : "not all zero") +
                                     (uninitialized ? " uninitialized" : " fine")
                             )
-                        );
+                        , true);
                     }
                     else {
-                        context.getSource().sendFeedback(
+                        context.getSource().sendFailure(
                             new TextComponent("does not have light section")
                         );
                     }
@@ -404,7 +402,7 @@ public class ClientDebugCommand {
             })
         );
         
-        builder.then(ClientCommandManager
+        builder.then(Commands
             .literal("reload_world_renderer")
             .executes(context -> {
                 Minecraft.getInstance().execute(() -> {
@@ -415,24 +413,24 @@ public class ClientDebugCommand {
             })
         );
         
-        builder.then(ClientCommandManager
-            .literal("config")
-            .executes(context -> {
-                // works without modmenu
-                Minecraft client = Minecraft.getInstance();
-                
-                IPGlobal.clientTaskList.addTask(MyTaskList.oneShotTask(() -> {
-                    client.setScreen(IPConfigGUI.createClothConfigScreen(null));
-                }));
-                return 0;
-            })
-        );
+//        builder.then(Commands //TODO Reimplement !IMPORTANT
+//            .literal("config")
+//            .executes(context -> {
+//                // works without modmenu
+//                Minecraft client = Minecraft.getInstance();
+//
+//                IPGlobal.clientTaskList.addTask(MyTaskList.oneShotTask(() -> {
+//                    client.setScreen(IPConfigGUI.createClothConfigScreen(null));
+//                }));
+//                return 0;
+//            })
+//        );
         
-        builder.then(ClientCommandManager
+        builder.then(Commands
             .literal("disable_warning")
             .executes(context -> {
                 disableWarning();
-                context.getSource().sendFeedback(new TranslatableComponent("imm_ptl.warning_disabled"));
+                context.getSource().sendSuccess(new TranslatableComponent("imm_ptl.warning_disabled"), true);
                 return 0;
             })
         );
@@ -559,7 +557,7 @@ public class ClientDebugCommand {
             cond -> IPCGlobal.experimentalIrisPortalRenderer = cond
         );
         
-        builder.then(ClientCommandManager
+        builder.then(Commands
             .literal("print_class_path")
             .executes(context -> {
                 printClassPath();
@@ -567,7 +565,7 @@ public class ClientDebugCommand {
             })
         );
     
-        builder.then(ClientCommandManager
+        builder.then(Commands
             .literal("test_invalid_rpc")
             .executes(context -> {
                 McRemoteProcedureCall.tellServerToInvoke(
@@ -592,18 +590,18 @@ public class ClientDebugCommand {
     }
     
     private static void registerSwitchCommand(
-        LiteralArgumentBuilder<FabricClientCommandSource> builder,
+        LiteralArgumentBuilder<CommandSourceStack> builder,
         String name,
         Consumer<Boolean> setFunction
     ) {
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal(name + "_enable")
             .executes(context -> {
                 setFunction.accept(true);
                 return 0;
             })
         );
-        builder = builder.then(ClientCommandManager
+        builder = builder.then(Commands
             .literal(name + "_disable")
             .executes(context -> {
                 setFunction.accept(false);
@@ -612,7 +610,7 @@ public class ClientDebugCommand {
         );
     }
     
-    private static int isClientChunkLoaded(CommandContext<FabricClientCommandSource> context) throws CommandSyntaxException {
+    private static int isClientChunkLoaded(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         int chunkX = IntegerArgumentType.getInteger(context, "chunkX");
         int chunkZ = IntegerArgumentType.getInteger(context, "chunkZ");
         RemoteCallables.reportClientChunkLoadStatus(chunkX, chunkZ);
@@ -758,9 +756,7 @@ public class ClientDebugCommand {
     
     
     public static void disableWarning() {
-        IPConfig ipConfig = IPConfig.readConfig();
-        ipConfig.enableWarning = false;
-        ipConfig.saveConfigFile();
+        IPConfig.enableWarning.set(false);
     }
     
 }

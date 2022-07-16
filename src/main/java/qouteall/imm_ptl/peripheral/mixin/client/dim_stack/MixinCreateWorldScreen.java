@@ -12,13 +12,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.packs.repository.PackRepository;
-import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.level.DataPackConfig;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.WorldGenSettings;
-import net.minecraft.world.level.storage.PrimaryLevelData;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -26,16 +24,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import qouteall.imm_ptl.core.IPGlobal;
-import qouteall.q_misc_util.MiscHelper;
-import qouteall.q_misc_util.dimension.DimId;
 import qouteall.imm_ptl.peripheral.dim_stack.DimStackInfo;
 import qouteall.imm_ptl.peripheral.dim_stack.DimStackManagement;
 import qouteall.imm_ptl.peripheral.dim_stack.DimStackScreen;
 import qouteall.imm_ptl.peripheral.ducks.IECreateWorldScreen;
 import qouteall.q_misc_util.Helper;
-import qouteall.q_misc_util.api.DimensionAPI;
+import qouteall.q_misc_util.MiscHelper;
+import qouteall.q_misc_util.dimension.DimId;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -143,19 +139,19 @@ public abstract class MixinCreateWorldScreen extends Screen implements IECreateW
     }
     
     
-    @Inject(
-        method = "method_40209",
-        at = @At("RETURN")
-    )
-    private void onTryingApplyNewDatapackLoading(ResourceManager resourceManager, DataPackConfig dataPackConfig, CallbackInfoReturnable<Pair> cir) {
-        Pair<PrimaryLevelData, RegistryAccess> returnValue = cir.getReturnValue();
-        
-        PrimaryLevelData primaryLevelData = returnValue.getFirst();
-        
-        ip_lastWorldGenSettings = primaryLevelData.worldGenSettings();
-        
-        ip_lastRegistryAccess = returnValue.getSecond();
-    }
+//    @Inject(
+//        method = "method_40209",
+//        at = @At("RETURN")
+//    )
+//    private void onTryingApplyNewDatapackLoading(ResourceManager resourceManager, DataPackConfig dataPackConfig, CallbackInfoReturnable<Pair> cir) {
+//        Pair<PrimaryLevelData, RegistryAccess> returnValue = cir.getReturnValue();
+//
+//        PrimaryLevelData primaryLevelData = returnValue.getFirst();
+//
+//        ip_lastWorldGenSettings = primaryLevelData.worldGenSettings();
+//
+//        ip_lastRegistryAccess = returnValue.getSecond();
+//    }
     
     private void openDimStackScreen() {
         if (ip_dimStackScreen == null) {
@@ -203,7 +199,7 @@ public abstract class MixinCreateWorldScreen extends Screen implements IECreateW
         try {
             // register custom dimensions including alternate dimensions
             if (ip_lastRegistryAccess != null) {
-                DimensionAPI.serverDimensionsLoadEvent.invoker().run(copiedGeneratorOptions, ip_lastRegistryAccess);
+//                DimensionAPI.serverDimensionsLoadEvent.invoker().run(copiedGeneratorOptions, ip_lastRegistryAccess); //TODO Reimplement this !IMPORTANT
             }
             else {
                 Helper.err("Null registry access");

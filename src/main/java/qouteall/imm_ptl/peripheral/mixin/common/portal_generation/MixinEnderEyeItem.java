@@ -18,12 +18,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import qouteall.imm_ptl.core.IPGlobal;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.portal.EndPortalEntity;
 import qouteall.imm_ptl.core.portal.PortalPlaceholderBlock;
 
 @Mixin(EnderEyeItem.class)
 public class MixinEnderEyeItem {
-    @Inject(method = "Lnet/minecraft/world/item/EnderEyeItem;useOn(Lnet/minecraft/world/item/context/UseOnContext;)Lnet/minecraft/world/InteractionResult;", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "useOn(Lnet/minecraft/world/item/context/UseOnContext;)Lnet/minecraft/world/InteractionResult;", at = @At("HEAD"), cancellable = true)
     private void onUseOnBlock(
         UseOnContext itemUsageContext_1,
         CallbackInfoReturnable<InteractionResult> cir
@@ -62,7 +63,7 @@ public class MixinEnderEyeItem {
                         for (int dz = 0; dz < 3; ++dz) {
                             world.setBlock(
                                 blockPos_2.offset(dx, 0, dz),
-                                PortalPlaceholderBlock.instance.defaultBlockState().setValue(
+                                    IPRegistry.NETHER_PORTAL_BLOCK.get().defaultBlockState().setValue(
                                     PortalPlaceholderBlock.AXIS, Direction.Axis.Y
                                 ),
                                 2

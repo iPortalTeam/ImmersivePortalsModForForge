@@ -1,77 +1,61 @@
 package qouteall.imm_ptl.core.platform_specific;
 
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.rendereregistry.v1.EntityRendererRegistry;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.EntityType;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.commons.lang3.Validate;
-import qouteall.imm_ptl.core.CHelper;
-import qouteall.imm_ptl.core.IPGlobal;
-import qouteall.imm_ptl.core.IPMcHelper;
-import qouteall.imm_ptl.core.IPModMainClient;
+import qouteall.imm_ptl.core.*;
 import qouteall.imm_ptl.core.compat.IPModCompatibilityWarning;
-import qouteall.imm_ptl.core.compat.iris_compatibility.ExperimentalIrisPortalRenderer;
 import qouteall.imm_ptl.core.compat.iris_compatibility.IrisInterface;
 import qouteall.imm_ptl.core.compat.sodium_compatibility.SodiumInterface;
-import qouteall.imm_ptl.core.portal.BreakableMirror;
-import qouteall.imm_ptl.core.portal.EndPortalEntity;
-import qouteall.imm_ptl.core.portal.LoadingIndicatorEntity;
-import qouteall.imm_ptl.core.portal.Mirror;
-import qouteall.imm_ptl.core.portal.Portal;
-import qouteall.imm_ptl.core.portal.global_portals.GlobalTrackedPortal;
-import qouteall.imm_ptl.core.portal.global_portals.VerticalConnectingPortal;
-import qouteall.imm_ptl.core.portal.global_portals.WorldWrappingPortal;
-import qouteall.imm_ptl.core.portal.nether_portal.GeneralBreakablePortal;
-import qouteall.imm_ptl.core.portal.nether_portal.NetherPortalEntity;
-import qouteall.imm_ptl.core.render.LoadingIndicatorRenderer;
-import qouteall.imm_ptl.core.render.PortalEntityRenderer;
+import qouteall.imm_ptl.core.render.*;
+import qouteall.imm_ptl.core.teleportation.ClientTeleportationManager;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.my_util.MyTaskList;
 
 import java.util.Arrays;
 
-public class IPModEntryClient implements ClientModInitializer {
-    
-    public static void initPortalRenderers() {
+public class IPModEntryClient {
+
+    @SubscribeEvent
+    public static void initPortalRenderers(EntityRenderersEvent.RegisterRenderers event) {
         
         Arrays.stream(new EntityType<?>[]{
-            Portal.entityType,
-            NetherPortalEntity.entityType,
-            EndPortalEntity.entityType,
-            Mirror.entityType,
-            BreakableMirror.entityType,
-            GlobalTrackedPortal.entityType,
-            WorldWrappingPortal.entityType,
-            VerticalConnectingPortal.entityType,
-            GeneralBreakablePortal.entityType
+                IPRegistry.PORTAL.get(),
+                IPRegistry.NETHER_PORTAL_NEW.get(),
+                IPRegistry.END_PORTAL.get(),
+                IPRegistry.MIRROR.get(),
+                IPRegistry.BREAKABLE_MIRROR.get(),
+                IPRegistry.GLOBAL_TRACKED_PORTAL.get(),
+                IPRegistry.BORDER_PORTAL.get(),
+                IPRegistry.END_FLOOR_PORTAL.get(),
+                IPRegistry.GENERAL_BREAKABLE_PORTAL.get()
         }).peek(
             Validate::notNull
         ).forEach(
-            entityType -> EntityRendererRegistry.INSTANCE.register(
+            entityType -> event.registerEntityRenderer(
                 entityType,
                 (EntityRendererProvider) PortalEntityRenderer::new
             )
         );
-        
-        EntityRendererRegistry.INSTANCE.register(
-            LoadingIndicatorEntity.entityType,
-            LoadingIndicatorRenderer::new
-        );
+
+        event.registerEntityRenderer(IPRegistry.LOADING_INDICATOR.get(), LoadingIndicatorRenderer::new);
         
     }
-    
-    @Override
-    public void onInitializeClient() {
-        IPModMainClient.init();
-        
-        initPortalRenderers();
+
+    public static void onInitializeClient() {
+        FMLJavaModLoadingContext.get().getModEventBus().register(IPModMainClient.class);
+        FMLJavaModLoadingContext.get().getModEventBus().register(IPModEntryClient.class);
         
         boolean isSodiumPresent =
-            FabricLoader.getInstance().isModLoaded("sodium");
+                ModList.get().isLoaded("sodium");
         if (isSodiumPresent) {
             Helper.log("Sodium is present");
             
@@ -90,10 +74,10 @@ public class IPModEntryClient implements ClientModInitializer {
             Helper.log("Sodium is not present");
         }
         
-        if (FabricLoader.getInstance().isModLoaded("iris")) {
+        if (ModList.get().isLoaded("sodium")) {
             Helper.log("Iris is present");
             IrisInterface.invoker = new IrisInterface.OnIrisPresent();
-            ExperimentalIrisPortalRenderer.init();
+//DISABLED_COMPILE            ExperimentalIrisPortalRenderer.init();
             
             IPGlobal.clientTaskList.addTask(MyTaskList.oneShotTask(() -> {
                 if (IPGlobal.enableWarning) {
@@ -109,6 +93,20 @@ public class IPModEntryClient implements ClientModInitializer {
         }
         
         IPModCompatibilityWarning.initClient();
+
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            Minecraft.getInstance().execute(() -> {
+                ShaderCodeTransformation.init();
+
+                MyRenderHelper.init();
+
+                IPCGlobal.rendererUsingStencil = new RendererUsingStencil();
+                IPCGlobal.rendererUsingFrameBuffer = new RendererUsingFrameBuffer();
+
+                IPCGlobal.renderer = IPCGlobal.rendererUsingStencil;
+                IPCGlobal.clientTeleportationManager = new ClientTeleportationManager();
+            });
+        }
     }
     
 }

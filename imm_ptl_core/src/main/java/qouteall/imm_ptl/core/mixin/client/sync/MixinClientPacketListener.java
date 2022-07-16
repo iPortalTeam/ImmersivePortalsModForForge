@@ -12,7 +12,6 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundLightUpdatePacketData;
 import net.minecraft.network.protocol.game.ClientboundLoginPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
-import net.minecraft.network.protocol.game.ClientboundRespawnPacket;
 import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.Entity;
@@ -28,11 +27,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import qouteall.imm_ptl.core.ClientWorldLoader;
 import qouteall.imm_ptl.core.IPCGlobal;
 import qouteall.imm_ptl.core.IPGlobal;
-import qouteall.q_misc_util.dimension.DimensionTypeSync;
 import qouteall.imm_ptl.core.ducks.IEClientPlayNetworkHandler;
 import qouteall.imm_ptl.core.ducks.IEPlayerPositionLookS2CPacket;
 import qouteall.imm_ptl.core.network.IPNetworkAdapt;
 import qouteall.q_misc_util.Helper;
+import qouteall.q_misc_util.dimension.DimensionTypeSync;
 
 import java.util.Map;
 import java.util.UUID;
@@ -42,6 +41,7 @@ public abstract class MixinClientPacketListener implements IEClientPlayNetworkHa
     @Shadow
     private ClientLevel level;
     
+    @Final
     @Shadow
     private Minecraft minecraft;
     
@@ -87,14 +87,14 @@ public abstract class MixinClientPacketListener implements IEClientPlayNetworkHa
         isReProcessingPassengerPacket = false;
     }
     
-    @Inject(method = "Lnet/minecraft/client/multiplayer/ClientPacketListener;handleLogin(Lnet/minecraft/network/protocol/game/ClientboundLoginPacket;)V", at = @At("RETURN"))
+    @Inject(method = "handleLogin(Lnet/minecraft/network/protocol/game/ClientboundLoginPacket;)V", at = @At("RETURN"))
     private void onOnGameJoin(ClientboundLoginPacket packet, CallbackInfo ci) {
         ClientWorldLoader.isFlatWorld = packet.isFlat();
         DimensionTypeSync.onGameJoinPacketReceived(packet.registryHolder());
     }
     
     @Inject(
-        method = "Lnet/minecraft/client/multiplayer/ClientPacketListener;handleMovePlayer(Lnet/minecraft/network/protocol/game/ClientboundPlayerPositionPacket;)V",
+        method = "handleMovePlayer(Lnet/minecraft/network/protocol/game/ClientboundPlayerPositionPacket;)V",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/util/thread/BlockableEventLoop;)V",
@@ -134,7 +134,7 @@ public abstract class MixinClientPacketListener implements IEClientPlayNetworkHa
     private boolean isReProcessingPassengerPacket;
     
     @Inject(
-        method = "Lnet/minecraft/client/multiplayer/ClientPacketListener;handleSetEntityPassengersPacket(Lnet/minecraft/network/protocol/game/ClientboundSetPassengersPacket;)V",
+        method = "handleSetEntityPassengersPacket(Lnet/minecraft/network/protocol/game/ClientboundSetPassengersPacket;)V",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/util/thread/BlockableEventLoop;)V",
@@ -163,7 +163,7 @@ public abstract class MixinClientPacketListener implements IEClientPlayNetworkHa
     
     // for debug
     @Redirect(
-        method = "Lnet/minecraft/client/multiplayer/ClientPacketListener;handleSetEntityData(Lnet/minecraft/network/protocol/game/ClientboundSetEntityDataPacket;)V",
+        method = "handleSetEntityData(Lnet/minecraft/network/protocol/game/ClientboundSetEntityDataPacket;)V",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/multiplayer/ClientLevel;getEntity(I)Lnet/minecraft/world/entity/Entity;"
@@ -178,7 +178,7 @@ public abstract class MixinClientPacketListener implements IEClientPlayNetworkHa
     }
     
     @Redirect(
-        method = "Lnet/minecraft/client/multiplayer/ClientPacketListener;handleSetEntityMotion(Lnet/minecraft/network/protocol/game/ClientboundSetEntityMotionPacket;)V",
+        method = "handleSetEntityMotion(Lnet/minecraft/network/protocol/game/ClientboundSetEntityMotionPacket;)V",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/world/entity/Entity;lerpMotion(DDD)V"

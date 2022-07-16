@@ -19,8 +19,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.ducks.IERayTraceContext;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.portal.Portal;
-import qouteall.imm_ptl.core.portal.PortalPlaceholderBlock;
 
 @Mixin(ClipContext.class)
 public abstract class MixinClipContext implements IERayTraceContext {
@@ -58,7 +58,7 @@ public abstract class MixinClipContext implements IERayTraceContext {
     // placeholder blocks entity view
     @Inject(
         at = @At("HEAD"),
-        method = "Lnet/minecraft/world/level/ClipContext;getBlockShape(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/shapes/VoxelShape;",
+        method = "getBlockShape(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/shapes/VoxelShape;",
         cancellable = true
     )
     private void onGetBlockShape(
@@ -67,7 +67,7 @@ public abstract class MixinClipContext implements IERayTraceContext {
         BlockPos blockPos,
         CallbackInfoReturnable<VoxelShape> cir
     ) {
-        if (blockState.getBlock() == PortalPlaceholderBlock.instance) {
+        if (blockState.getBlock() == IPRegistry.NETHER_PORTAL_BLOCK.get()) {
             if (block == ClipContext.Block.OUTLINE) {
                 if (blockView instanceof Level) {
                     boolean isIntersectingWithPortal = McHelper.getEntitiesRegardingLargeEntities(
@@ -80,7 +80,7 @@ public abstract class MixinClipContext implements IERayTraceContext {
                 }
             }
             else if (block == ClipContext.Block.COLLIDER) {
-                cir.setReturnValue(PortalPlaceholderBlock.instance.getShape(
+                cir.setReturnValue(IPRegistry.NETHER_PORTAL_BLOCK.get().getShape(
                     blockState, blockView, blockPos, collisionContext
                 ));
             }
