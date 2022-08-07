@@ -1,5 +1,6 @@
 package qouteall.imm_ptl.core;
 
+import net.minecraftforge.fml.loading.LoadingModList;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -20,11 +21,11 @@ public class IPMixinPlugin implements IMixinConfigPlugin {
     
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-//        if (ModList.get().isLoaded("porting_lib")) { //TODO Reenable this
-//            if (mixinClassName.contains("MixinRenderTarget") || mixinClassName.contains("MixinMainTarget")) {
-//                return false;
-//            }
-//        }
+        if (LoadingModList.get().getModFileById("porting_lib") != null) { //TODO Reenable this
+            if (mixinClassName.contains("MixinRenderTarget") || mixinClassName.contains("MixinMainTarget")) {
+                return false;
+            }
+        }
         return true;
     }
     

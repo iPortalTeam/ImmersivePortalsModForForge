@@ -21,7 +21,7 @@ public class O_O {
     public static boolean isDimensionalThreadingPresent = false;
     
     public static boolean isForge() {
-        return false;
+        return true;
     }
     
     @OnlyIn(Dist.CLIENT)

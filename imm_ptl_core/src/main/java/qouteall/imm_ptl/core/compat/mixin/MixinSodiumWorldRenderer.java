@@ -1,17 +1,25 @@
 package qouteall.imm_ptl.core.compat.mixin;
 
-//DISABLED_COMPILEimport me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
-//DISABLED_COMPILEimport me.jellysquid.mods.sodium.client.util.frustum.Frustum;
+import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
+import me.jellysquid.mods.sodium.client.util.frustum.Frustum;
+import net.minecraft.client.Camera;
+import net.minecraft.world.phys.Vec3;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import qouteall.imm_ptl.core.compat.sodium_compatibility.SodiumInterface;
+import qouteall.imm_ptl.core.render.FrustumCuller;
 
-//DISABLED_COMPILE@Mixin(value = SodiumWorldRenderer.class, remap = false)
+@Mixin(value = SodiumWorldRenderer.class, remap = false)
 public class MixinSodiumWorldRenderer {
-//DISABLED_COMPILE    @Inject(
-//DISABLED_COMPILE        method = "updateChunks",
-//DISABLED_COMPILE        at = @At("HEAD")
-//DISABLED_COMPILE    )
-//DISABLED_COMPILE    private void onUpdateChunks(Camera camera, Frustum frustum, int frame, boolean spectator, CallbackInfo ci) {
-//DISABLED_COMPILE        SodiumInterface.frustumCuller = new FrustumCuller();
-//DISABLED_COMPILE        Vec3 cameraPos = camera.getPosition();
-//DISABLED_COMPILE        SodiumInterface.frustumCuller.update(cameraPos.x, cameraPos.y, cameraPos.z);
-//DISABLED_COMPILE    }
+    @Inject(
+        method = "updateChunks",
+        at = @At("HEAD")
+    )
+    private void onUpdateChunks(Camera camera, Frustum frustum, int frame, boolean spectator, CallbackInfo ci) {
+        SodiumInterface.frustumCuller = new FrustumCuller();
+        Vec3 cameraPos = camera.getPosition();
+        SodiumInterface.frustumCuller.update(cameraPos.x, cameraPos.y, cameraPos.z);
+    }
 }

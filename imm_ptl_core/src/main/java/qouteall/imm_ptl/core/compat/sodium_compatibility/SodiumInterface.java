@@ -1,13 +1,14 @@
 package qouteall.imm_ptl.core.compat.sodium_compatibility;
 
-//DISABLED_COMPILEimport me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
-//DISABLED_COMPILEimport me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
-//DISABLED_COMPILEimport me.jellysquid.mods.sodium.client.render.texture.SpriteUtil;
-//DISABLED_COMPILEimport me.jellysquid.mods.sodium.client.world.WorldRendererExtended;
-
+import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
+import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
+import me.jellysquid.mods.sodium.client.render.texture.SpriteUtil;
+import me.jellysquid.mods.sodium.client.world.WorldRendererExtended;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import qouteall.imm_ptl.core.compat.mixin.IESodiumWorldRenderer;
 import qouteall.imm_ptl.core.render.FrustumCuller;
 
 import javax.annotation.Nullable;
@@ -62,22 +63,20 @@ public class SodiumInterface {
         
         @Override
         public void switchContextWithCurrentWorldRenderer(Object context) {
-            //DISABLED_COMPILE           SodiumWorldRenderer swr =
-            //DISABLED_COMPILE     ((WorldRendererExtended) Minecraft.getInstance().levelRenderer).getSodiumWorldRenderer();
-            //DISABLED_COMPILE  swr.scheduleTerrainUpdate();
+            SodiumWorldRenderer swr = ((WorldRendererExtended) Minecraft.getInstance().levelRenderer).getSodiumWorldRenderer();
+            swr.scheduleTerrainUpdate();
 
-            //DISABLED_COMPILE    RenderSectionManager renderSectionManager =
-            //DISABLED_COMPILE      ((IESodiumWorldRenderer) swr).ip_getRenderSectionManager();
+            RenderSectionManager renderSectionManager = ((IESodiumWorldRenderer) swr).ip_getRenderSectionManager();
 
-            //DISABLED_COMPILE  ((IESodiumRenderSectionManager) renderSectionManager)
-            //DISABLED_COMPILE     .ip_swapContext(((SodiumRenderingContext) context));
+            ((IESodiumRenderSectionManager) renderSectionManager)
+                .ip_swapContext(((SodiumRenderingContext) context));
 
-            //DISABLED_COMPILE swr.scheduleTerrainUpdate();
+            swr.scheduleTerrainUpdate();
         }
         
         @Override
         public void markSpriteActive(TextureAtlasSprite sprite) {
-            //DISABLED_COMPILE     SpriteUtil.markSpriteActive(sprite);
+            SpriteUtil.markSpriteActive(sprite);
         }
     }
     

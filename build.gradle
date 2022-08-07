@@ -33,6 +33,12 @@ allprojects {
             name "tterrag maven"
             url "https://maven.tterrag.com/"
         }
+        maven {
+            url "https://cursemaven.com"
+            content {
+                includeGroup "curse.maven"
+            }
+        }
         //maven{url="https://minecraft.curseforge.com/api/maven/"}
         maven {
             url = "https://jitpack.io"
@@ -53,7 +59,14 @@ allprojects {
 
         // Pehkui
         api fg.deobf("com.github.Virtuoel:Pehkui:3.3.3-1.18.2-forge")
+        // Twilight Forest
         api fg.deobf("teamtwilight:twilightforest:4.1.999:universal")
+        // Flywheel
+        api fg.deobf("com.jozufozu.flywheel:Flywheel-Forge:1.18-0.6.4.87")
+        // Rubidium
+        api fg.deobf("curse.maven:rubidium-574856:3884715")
+        // Oculus
+        api fg.deobf("curse.maven:oculus-581495:3821406")
     }
 
     minecraft {
@@ -133,7 +146,8 @@ mixin {
     add sourceSets.main, 'mixins.imm_ptl.refmap.json'
     config 'imm_ptl.mixins.json'
     config 'imm_ptl_peripheral.mixins.json'
-    //config 'q_misc_util.mixins.json'
+    config 'imm_ptl_compat.mixins.json'
+    config 'q_misc_util.mixins.json'
     debug = false
 }
 

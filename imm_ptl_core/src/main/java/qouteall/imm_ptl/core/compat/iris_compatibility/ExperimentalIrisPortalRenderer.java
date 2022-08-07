@@ -3,6 +3,10 @@ package qouteall.imm_ptl.core.compat.iris_compatibility;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.pipeline.newshader.NewWorldRenderingPipeline;
+import net.coderbot.iris.uniforms.SystemTimeUniforms;
 import net.minecraft.world.phys.Vec3;
 import org.lwjgl.opengl.GL11;
 import qouteall.imm_ptl.core.IPGlobal;
@@ -52,8 +56,8 @@ public class ExperimentalIrisPortalRenderer extends PortalRenderer {
         doPortalRendering(matrixStack);
         
         // Resume Iris world rendering
-//DISABLED_COMPILE        ((IEIrisNewWorldRenderingPipeline) (Object) Iris.getPipelineManager().getPipeline().get())
-//DISABLED_COMPILE            .ip_setIsRenderingWorld(true);
+        ((IEIrisNewWorldRenderingPipeline) (Object) Iris.getPipelineManager().getPipeline().get())
+            .ip_setIsRenderingWorld(true);
     }
     
     @Override
@@ -112,7 +116,7 @@ public class ExperimentalIrisPortalRenderer extends PortalRenderer {
     
     @Override
     public void invokeWorldRendering(WorldRenderInfo worldRenderInfo) {
-//DISABLED_COMPILE        WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline().get();
+        WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline().get();
         
 //        ShadowMapSwapper.Storage shadowMapCache = null;
 //
@@ -130,18 +134,18 @@ public class ExperimentalIrisPortalRenderer extends PortalRenderer {
 //            }
 //        }
 
-//DISABLED_COMPILE        SystemTimeUniforms.COUNTER.beginFrame(); // is it necessary?
+        SystemTimeUniforms.COUNTER.beginFrame(); // is it necessary?
         super.invokeWorldRendering(worldRenderInfo);
-//DISABLED_COMPILE        SystemTimeUniforms.COUNTER.beginFrame(); // make Iris to update the uniforms
+        SystemTimeUniforms.COUNTER.beginFrame(); // make Iris to update the uniforms
 
-//DISABLED_COMPILE        if (pipeline instanceof NewWorldRenderingPipeline newWorldRenderingPipeline) {
+        if (pipeline instanceof NewWorldRenderingPipeline newWorldRenderingPipeline) {
             // this is important to hand rendering
-//DISABLED_COMPILE            newWorldRenderingPipeline.isBeforeTranslucent = true;
-//DISABLED_COMPILE        }
+            newWorldRenderingPipeline.isBeforeTranslucent = true;
+        }
         
         // Avoid Iris from force-disabling depth mask
-//DISABLED_COMPILE        ((IEIrisNewWorldRenderingPipeline) (Object) pipeline)
-//DISABLED_COMPILE            .ip_setIsRenderingWorld(false);
+        ((IEIrisNewWorldRenderingPipeline) (Object) pipeline)
+            .ip_setIsRenderingWorld(false);
         
 //        if (shadowMapCache != null) {
 //            shadowMapCache.copyToIrisShadowRenderTargets();

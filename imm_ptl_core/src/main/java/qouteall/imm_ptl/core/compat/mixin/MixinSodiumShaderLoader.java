@@ -1,11 +1,17 @@
 package qouteall.imm_ptl.core.compat.mixin;
 
+import com.mojang.blaze3d.shaders.Program;
+import me.jellysquid.mods.sodium.client.gl.shader.*;
 import net.minecraft.resources.ResourceLocation;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import qouteall.imm_ptl.core.render.ShaderCodeTransformation;
 
-//DISABLED_COMPILE@Mixin(value = ShaderLoader.class, remap = false)
+@Mixin(value = ShaderLoader.class, remap = false)
 public abstract class MixinSodiumShaderLoader {
 
-    //DISABLED_COMPILE    @Shadow
+    @Shadow
     public static String getShaderSource(ResourceLocation name) {
         throw new RuntimeException();
     }
@@ -14,13 +20,13 @@ public abstract class MixinSodiumShaderLoader {
      * @author qouteall
      * @reason hard to inject
      */
-//DISABLED_COMPILE    @Overwrite
-//DISABLED_COMPILE    public static GlShader loadShader(ShaderType type, ResourceLocation name, ShaderConstants constants) {
-//DISABLED_COMPILE        String shaderSource = getShaderSource(name);
-//DISABLED_COMPILE        shaderSource = ShaderCodeTransformation.transform(
-//DISABLED_COMPILE            type == ShaderType.VERTEX ? Program.Type.VERTEX : Program.Type.FRAGMENT,
-//DISABLED_COMPILE            name.toString(), shaderSource
-//DISABLED_COMPILE        );
-//DISABLED_COMPILE        return new GlShader(type, name, ShaderParser.parseShader(shaderSource, constants));
-//DISABLED_COMPILE    }
+    @Overwrite
+    public static GlShader loadShader(ShaderType type, ResourceLocation name, ShaderConstants constants) {
+        String shaderSource = getShaderSource(name);
+        shaderSource = ShaderCodeTransformation.transform(
+            type == ShaderType.VERTEX ? Program.Type.VERTEX : Program.Type.FRAGMENT,
+            name.toString(), shaderSource
+        );
+        return new GlShader(type, name, ShaderParser.parseShader(shaderSource, constants));
+    }
 }

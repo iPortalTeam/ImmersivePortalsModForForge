@@ -1,6 +1,6 @@
 package qouteall.imm_ptl.core.compat;
 
-import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.LoadingModList;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -24,23 +24,23 @@ public class IPCompatMixinPlugin implements IMixinConfigPlugin {
         
         
         if (mixinClassName.contains("IrisSodium")) {
-            boolean sodiumLoaded = ModList.get().isLoaded("sodium");
-            boolean irisLoaded = ModList.get().isLoaded("iris");
+            boolean sodiumLoaded = LoadingModList.get().getModFileById("rubidium") != null;
+            boolean irisLoaded = LoadingModList.get().getModFileById("oculus") != null;
             return sodiumLoaded && irisLoaded;
         }
         
         if (mixinClassName.contains("Iris")) {
-            boolean irisLoaded = ModList.get().isLoaded("iris");
+            boolean irisLoaded = LoadingModList.get().getModFileById("oculus") != null;
             return irisLoaded;
         }
         
         if (mixinClassName.contains("Sodium")) {
-            boolean sodiumLoaded = ModList.get().isLoaded("sodium");
+            boolean sodiumLoaded = LoadingModList.get().getModFileById("rubidium") != null;
             return sodiumLoaded;
         }
         
         if (mixinClassName.contains("Flywheel")) {
-            boolean flywheelLoaded = ModList.get().isLoaded("flywheel");
+            boolean flywheelLoaded = LoadingModList.get().getModFileById("flywheel") != null;
             return flywheelLoaded;
         }
         

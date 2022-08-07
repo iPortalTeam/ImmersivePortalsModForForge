@@ -13,6 +13,7 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.*;
 import qouteall.imm_ptl.core.compat.IPModCompatibilityWarning;
+import qouteall.imm_ptl.core.compat.iris_compatibility.ExperimentalIrisPortalRenderer;
 import qouteall.imm_ptl.core.compat.iris_compatibility.IrisInterface;
 import qouteall.imm_ptl.core.compat.sodium_compatibility.SodiumInterface;
 import qouteall.imm_ptl.core.render.*;
@@ -55,9 +56,9 @@ public class IPModEntryClient {
         FMLJavaModLoadingContext.get().getModEventBus().register(IPModEntryClient.class);
         
         boolean isSodiumPresent =
-                ModList.get().isLoaded("sodium");
+                ModList.get().isLoaded("rubidium");
         if (isSodiumPresent) {
-            Helper.log("Sodium is present");
+            Helper.log("Rubidium is present");
             
             SodiumInterface.invoker = new SodiumInterface.OnSodiumPresent();
             
@@ -71,13 +72,13 @@ public class IPModEntryClient {
             }));
         }
         else {
-            Helper.log("Sodium is not present");
+            Helper.log("Rubidium is not present");
         }
         
-        if (ModList.get().isLoaded("sodium")) {
-            Helper.log("Iris is present");
+        if (ModList.get().isLoaded("oculus")) {
+            Helper.log("Oculus is present");
             IrisInterface.invoker = new IrisInterface.OnIrisPresent();
-//DISABLED_COMPILE            ExperimentalIrisPortalRenderer.init();
+            ExperimentalIrisPortalRenderer.init();
             
             IPGlobal.clientTaskList.addTask(MyTaskList.oneShotTask(() -> {
                 if (IPGlobal.enableWarning) {
@@ -89,7 +90,7 @@ public class IPModEntryClient {
             }));
         }
         else {
-            Helper.log("Iris is not present");
+            Helper.log("Oculus is not present");
         }
         
         IPModCompatibilityWarning.initClient();

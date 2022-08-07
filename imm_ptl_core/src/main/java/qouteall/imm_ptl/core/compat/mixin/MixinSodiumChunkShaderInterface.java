@@ -1,13 +1,17 @@
 package qouteall.imm_ptl.core.compat.mixin;
 
-//DISABLED_COMPILEimport me.jellysquid.mods.sodium.client.gl.GlObject;
-//DISABLED_COMPILEimport me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
-//DISABLED_COMPILEimport me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderOptions;
-//DISABLED_COMPILEimport me.jellysquid.mods.sodium.client.render.chunk.shader.ShaderBindingContext;
+import me.jellysquid.mods.sodium.client.gl.GlObject;
+import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
+import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderOptions;
+import me.jellysquid.mods.sodium.client.render.chunk.shader.ShaderBindingContext;
 
 import org.lwjgl.opengl.GL20C;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import qouteall.imm_ptl.core.render.FrontClipping;
 import qouteall.q_misc_util.Helper;
 
 @Pseudo
@@ -23,43 +27,43 @@ public class MixinSodiumChunkShaderInterface {
         }
     }
 
-//DISABLED_COMPILE    @Inject(
-//DISABLED_COMPILE        method = "<init>",
-//DISABLED_COMPILE        at = @At("RETURN"),
-//DISABLED_COMPILE        require = 0,
-//DISABLED_COMPILE        remap = false
-//DISABLED_COMPILE    )
-//DISABLED_COMPILE    private void onInit(
-//DISABLED_COMPILE        ShaderBindingContext context,
-//DISABLED_COMPILE        ChunkShaderOptions options,
-//DISABLED_COMPILE        CallbackInfo ci
-//DISABLED_COMPILE    ) {
-//DISABLED_COMPILE        ip_init(((GlObject) context).handle());
-//DISABLED_COMPILE    }
+    @Inject(
+        method = "<init>",
+        at = @At("RETURN"),
+        require = 0,
+        remap = false
+    )
+    private void onInit(
+        ShaderBindingContext context,
+        ChunkShaderOptions options,
+        CallbackInfo ci
+    ) {
+        ip_init(((GlObject) context).handle());
+    }
 
-//DISABLED_COMPILE    @Inject(
-//DISABLED_COMPILE        method = "setup",
-//DISABLED_COMPILE        at = @At("RETURN"),
-//DISABLED_COMPILE        remap = false
-//DISABLED_COMPILE    )
-//DISABLED_COMPILE    private void onSetup(ChunkVertexType vertexType, CallbackInfo ci) {
-//DISABLED_COMPILE        if (uIPClippingEquation != -1) {
-//DISABLED_COMPILE            if (FrontClipping.isClippingEnabled) {
-//DISABLED_COMPILE                double[] equation = FrontClipping.getActiveClipPlaneEquationForEntities();
-//DISABLED_COMPILE                GL20C.glUniform4f(
-//DISABLED_COMPILE                    uIPClippingEquation,
-    //DISABLED_COMPILE                   (float) equation[0],
-    //DISABLED_COMPILE                   (float) equation[1],
-    //DISABLED_COMPILE                   (float) equation[2],
-    //DISABLED_COMPILE                   (float) equation[3]
-    //DISABLED_COMPILE               );
-    //DISABLED_COMPILE           }
-//DISABLED_COMPILE           else {
-//DISABLED_COMPILE                GL20C.glUniform4f(
-//DISABLED_COMPILE                    uIPClippingEquation,
-//DISABLED_COMPILE                    0, 0, 0, 1
-    //DISABLED_COMPILE               );
-    //DISABLED_COMPILE           }
-    //DISABLED_COMPILE       }
-//DISABLED_COMPILE    }
+    @Inject(
+        method = "setup",
+        at = @At("RETURN"),
+        remap = false
+    )
+    private void onSetup(ChunkVertexType vertexType, CallbackInfo ci) {
+        if (uIPClippingEquation != -1) {
+            if (FrontClipping.isClippingEnabled) {
+                double[] equation = FrontClipping.getActiveClipPlaneEquationForEntities();
+                GL20C.glUniform4f(
+                    uIPClippingEquation,
+                       (float) equation[0],
+                       (float) equation[1],
+                       (float) equation[2],
+                       (float) equation[3]
+                   );
+               }
+           else {
+                GL20C.glUniform4f(
+                    uIPClippingEquation,
+                    0, 0, 0, 1
+                   );
+               }
+           }
+    }
 }

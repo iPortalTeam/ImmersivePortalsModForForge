@@ -1,8 +1,8 @@
 package qouteall.imm_ptl.core.compat.iris_compatibility;
 
-//DISABLED_COMPILEimport net.coderbot.iris.Iris;
-//DISABLED_COMPILEimport net.coderbot.iris.pipeline.ShadowRenderer;
-//DISABLED_COMPILEimport net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.pipeline.ShadowRenderer;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.renderer.LevelRenderer;
 import qouteall.q_misc_util.Helper;
 
@@ -48,23 +48,21 @@ public class IrisInterface {
             return true;
         }
 
-//DISABLED_COMPILE        @Override
-//DISABLED_COMPILE        public boolean isShaders() {
-//DISABLED_COMPILE            return Iris.getCurrentPack().isPresent();
-//DISABLED_COMPILE        }
+        @Override
+        public boolean isShaders() {
+            return Iris.getCurrentPack().isPresent();
+        }
         
         @Override
         public boolean isRenderingShadowMap() {
-            return false; //TODO RECOMMENT
-//DISABLED_COMPILE            return ShadowRenderer.ACTIVE;
+            return ShadowRenderer.ACTIVE;
         }
         
         @Override
         public Object getPipeline(LevelRenderer worldRenderer) {
-            return null; //TODO RECOMMENT
-//DISABLED_COMPILE            return Helper.noError(() ->
-//DISABLED_COMPILE                ((WorldRenderingPipeline) worldRendererPipelineField.get(worldRenderer))
-//DISABLED_COMPILE            );
+            return Helper.noError(() ->
+                ((WorldRenderingPipeline) worldRendererPipelineField.get(worldRenderer))
+            );
         }
         
         // the pipeline switching is unnecessary when using shaders
@@ -79,7 +77,7 @@ public class IrisInterface {
         
         @Override
         public void reloadPipelines() {
-//DISABLED_COMPILE            Iris.getPipelineManager().destroyPipeline();
+            Iris.getPipelineManager().destroyPipeline();
         }
     }
     

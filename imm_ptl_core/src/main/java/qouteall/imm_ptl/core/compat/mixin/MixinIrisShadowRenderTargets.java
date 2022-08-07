@@ -1,11 +1,12 @@
 package qouteall.imm_ptl.core.compat.mixin;
 
-//DISABLED_COMPILEimport net.coderbot.iris.gl.texture.InternalTextureFormat;
-//DISABLED_COMPILEimport net.coderbot.iris.shadows.ShadowRenderTargets;
+import net.coderbot.iris.gl.texture.InternalTextureFormat;
+import net.coderbot.iris.shadows.ShadowRenderTargets;
 
+import org.spongepowered.asm.mixin.Mixin;
 import qouteall.imm_ptl.core.compat.iris_compatibility.IEIrisShadowRenderTargets;
 
-//DISABLED_COMPILE@Mixin(value = ShadowRenderTargets.class, remap = false)
+@Mixin(value = ShadowRenderTargets.class, remap = false)
 public class MixinIrisShadowRenderTargets implements IEIrisShadowRenderTargets {
 //    ShadowMapSwapper ip_shadowMapSwapper;
 //
