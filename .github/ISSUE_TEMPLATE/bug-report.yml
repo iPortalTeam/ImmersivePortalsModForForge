@@ -1,0 +1,83 @@
+name: Bug Report
+description: Create an issue about a bug
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "If the same issue occurs in the Fabric version of Immersive Portals, please open an issue to the Fabric version repo:  https://github.com/iPortalTeam/ImmersivePortalsMod/issues"
+  - type: markdown
+    attributes:
+      value: "To know whether it's a mod compatibility issue, please remove all other mods and keep only Immersive Portals mod, backup your world, and then test again whether the issue occurs. Thanks for cooperation. \nIf Immersive Portals mod makes other mod's functionality break, you don't need to test it, simply select No below."
+  - type: dropdown
+    id: only_immptl
+    attributes:
+      label: According to your testing, does the issue occur with ONLY Immersive Portals mod?
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Forge Version
+      description: What version of Forge are you running? This can be found on the installation jar you have downloaded, in the Mod Options menu, or the profile's version. Please note "latest" is NOT a version. *If you are reporting a bug that also exists on the Fabric version, please report it **[here](https://github.com/iPortalTeam/ImmersivePortalsMod/issues)** instead.*
+      placeholder: "36.2.39"
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: ImmersivePortals Version
+      description: What version of ImmersivePortals are you running? This can be found on the jar file you have downloaded or the Mod Options menu. Please note "latest" is NOT a version.
+      placeholder: "1.4.9-mc1.18.2"
+    validations:
+      required: true
+  - type: input
+    id: logs
+    attributes:
+      label: Latest Log
+      description: A **[Gist](https://gist.github.com/)** link to the full game log. This can be found in the game files under the `logs` folder. Though not necessary, a log can help diagnose an issue better in case a bug is caused by a reported error. Provide the `latest.log` or `debug.log` file as a Gist as soon as you find the bug, as these files are reset every time the game is opened.
+    validations:
+      required: true  
+  - type: input
+    attributes:
+      label: Crash Report (if applicable)
+      description: A **[Gist](https://gist.github.com/)** link to the crash report. This can be found in the game files under the `crash-reports` folder, and all the contents of the file should be pasted into the Gist file. If the bug does not result in a crash, ignore this field.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Steps to Reproduce
+      description: A detailed list of how you encountered this bug if it is not immediately obvious. If the bug is immediately obvious, briefly mention how to replicate it.
+      placeholder: |
+        1. Step 1
+        2. Step 2
+        3. Step 3, etc.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: What You Expected
+      description: Describe what you thought was supposed to have happened. Don't worry if you think what you expected may be wrong.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: What Happened Instead
+      description: Describe what happened to you that wasn't to expectations.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Additional Details
+      description: Provide any other information you think might be useful for this report. This may include screenshots, video footage, other mod details, anything you think might be relevant.
+  - type: checkboxes
+    attributes:
+      label: Please Read and Confirm The Following
+      options:
+        - label: I have confirmed this bug can be replicated without the use of Optifine.
+          required: true
+        - label: I have confirmed the details provided in this report are concise as possible and does not contained vague information (ie. Versions are properly recorded, answers to questions are clear).
+          required: true
+        - label: I have confirmed this does not happen on the fabric version (If it does please report to **[here](https://github.com/iPortalTeam/ImmersivePortalsMod/issues)** instead).
+          required: true
+        - label: I have confirmed this issue is unique and has not been reported already.
+          required: true
