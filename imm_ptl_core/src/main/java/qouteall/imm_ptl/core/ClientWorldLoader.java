@@ -60,7 +60,7 @@ public class ClientWorldLoader {
 
         MinecraftForge.EVENT_BUS.register(ClientWorldLoader.class);
         
-//        DimensionAPI.clientDimensionUpdateEvent.register((serverDimensions) -> { //TODO Reimplement this !IMPORTANT
+//        DimensionAPI.clientDimensionUpdateEvent.register((serverDimensions) -> { //TODO Reimplement this !DONE
 //            if (getIsInitialized()) {
 //                List<ResourceKey<Level>> dimensionsToRemove =
 //                    clientWorldMap.keySet().stream()
@@ -76,7 +76,7 @@ public class ClientWorldLoader {
 
     @SubscribeEvent
     public static void clientDimensionUpdate(ClientDimensionUpdateEvent event) {
-        if (getIsInitialized()) {
+        if (getIsInitialized()) { // TODO Find out why this is false @Nick1st
             List<ResourceKey<Level>> dimensionsToRemove = clientWorldMap.keySet().stream()
                     .filter(dim -> !event.dimIdSet.contains(dim)).toList();
 

@@ -21,12 +21,14 @@ import net.minecraft.world.level.levelgen.WorldGenSettings;
 import net.minecraft.world.level.storage.DerivedLevelData;
 import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.level.storage.WorldData;
+import net.minecraftforge.common.MinecraftForge;
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.Nullable;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscGlobals;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.ducks.IEMinecraftServer_Misc;
+import qouteall.q_misc_util.forge.events.ServerDimensionDynamicUpdateEvent;
 import qouteall.q_misc_util.forge.networking.Dim_Sync;
 import qouteall.q_misc_util.forge.networking.Message;
 import qouteall.q_misc_util.mixin.dimension.IEWorldBorder;
@@ -186,15 +188,14 @@ public class DynamicDimensionsImpl {
             resetWorldBorderListener(server);
             
             Helper.log("Successfully Removed Dimension " + dimension.location());
-            
-            //Packet dimSyncPacket = MiscNetworking.createDimSyncPacket();
+
             Dim_Sync dimSyncPacket = new Dim_Sync();
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                //player.connection.send(dimSyncPacket);
                 Message.sendToPlayer(dimSyncPacket, player);
             }
-    
-//            DimensionAPI.serverDimensionDynamicUpdateEvent.invoker().run(server.levelKeys()); //TODO Reimplement this !IMPORTANT
+
+            MinecraftForge.EVENT_BUS.post(new ServerDimensionDynamicUpdateEvent(server.levelKeys()));
+//            DimensionAPI.serverDimensionDynamicUpdateEvent.invoker().run(server.levelKeys()); //TODO Reimplement this !DONE
         }));
     }
     

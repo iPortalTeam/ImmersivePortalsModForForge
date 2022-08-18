@@ -33,7 +33,7 @@ public class DimensionAPI {
         void run(WorldGenSettings worldGenSettings, RegistryAccess registryAccess);
     }
     
-//    public static final Event<ServerDimensionsLoadCallback> serverDimensionsLoadEvent = //TODO Reimplement this !DONE
+//    public static final Event<ServerDimensionsLoadCallback> serverDimensionsLoadEvent = //TODO Reimplement this !IMPORTANT
 //        EventFactory.createArrayBacked(
 //            ServerDimensionsLoadCallback.class,
 //            (listeners) -> ((generatorOptions, registryManager) -> {

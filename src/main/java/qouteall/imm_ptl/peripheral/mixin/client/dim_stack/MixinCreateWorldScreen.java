@@ -17,6 +17,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.WorldGenSettings;
+import net.minecraftforge.common.MinecraftForge;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -32,6 +33,7 @@ import qouteall.imm_ptl.peripheral.ducks.IECreateWorldScreen;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.dimension.DimId;
+import qouteall.q_misc_util.forge.events.ServerDimensionsLoadEvent;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -85,7 +87,7 @@ public abstract class MixinCreateWorldScreen extends Screen implements IECreateW
     }
     
     @Inject(
-        method = "Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;init()V",
+        method = "init()V",
         at = @At("HEAD")
     )
     private void onInitEnded(CallbackInfo ci) {
@@ -102,7 +104,7 @@ public abstract class MixinCreateWorldScreen extends Screen implements IECreateW
     }
     
     @Inject(
-        method = "Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;setWorldGenSettingsVisible(Z)V",
+        method = "setWorldGenSettingsVisible(Z)V",
         at = @At("RETURN")
     )
     private void onMoreOptionsOpen(boolean moreOptionsOpen, CallbackInfo ci) {
@@ -115,7 +117,7 @@ public abstract class MixinCreateWorldScreen extends Screen implements IECreateW
     }
     
     @Redirect(
-        method = "Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;onCreate()V",
+        method = "onCreate()V",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/Minecraft;createLevel(Ljava/lang/String;Lnet/minecraft/world/level/LevelSettings;Lnet/minecraft/core/RegistryAccess;Lnet/minecraft/world/level/levelgen/WorldGenSettings;)V"
@@ -199,7 +201,8 @@ public abstract class MixinCreateWorldScreen extends Screen implements IECreateW
         try {
             // register custom dimensions including alternate dimensions
             if (ip_lastRegistryAccess != null) {
-//                DimensionAPI.serverDimensionsLoadEvent.invoker().run(copiedGeneratorOptions, ip_lastRegistryAccess); //TODO Reimplement this !IMPORTANT
+                MinecraftForge.EVENT_BUS.post(new ServerDimensionsLoadEvent(copiedGeneratorOptions, ip_lastRegistryAccess));
+//                DimensionAPI.serverDimensionsLoadEvent.invoker().run(copiedGeneratorOptions, ip_lastRegistryAccess); //TODO Reimplement this !DONE
             }
             else {
                 Helper.err("Null registry access");

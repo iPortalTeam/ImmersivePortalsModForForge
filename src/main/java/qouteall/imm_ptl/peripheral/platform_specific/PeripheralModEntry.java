@@ -66,8 +66,7 @@ public class PeripheralModEntry {
 
     public PeripheralModEntry() {
         FMLJavaModLoadingContext.get().getModEventBus().register(PeripheralModEntry.class);
-        PeripheralModEntry.registerBlockItems(); //TODO Move this to a DeferredRegistry !IMPORTANT
-        //CommandStickItem.CommandStickData.register(FMLJavaModLoadingContext.get().getModEventBus());
+        PeripheralModEntry.registerBlockItems(); //TODO Move this to a real DeferredRegistry @Nick1st
         BLOCKS.register(FMLJavaModLoadingContext.get().getModEventBus());
         ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
         

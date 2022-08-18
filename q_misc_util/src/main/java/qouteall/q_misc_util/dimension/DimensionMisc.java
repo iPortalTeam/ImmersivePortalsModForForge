@@ -7,11 +7,14 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.WorldGenSettings;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.api.DimensionAPI;
+import qouteall.q_misc_util.forge.events.ServerDimensionsLoadEvent;
 import qouteall.q_misc_util.mixin.dimension.IEMappedRegistry;
 
 import java.util.HashSet;
@@ -71,7 +74,13 @@ public class DimensionMisc {
     }
     
     public static void init() {
-//        DimensionAPI.serverDimensionsLoadEvent.register(DimensionMisc::addMissingVanillaDimensions); //TODO Reimplement this !IMPORTANT
+        MinecraftForge.EVENT_BUS.register(DimensionMisc.class);
+//        DimensionAPI.serverDimensionsLoadEvent.register(DimensionMisc::addMissingVanillaDimensions); //TODO Reimplement this !DONE
+    }
+
+    @SubscribeEvent
+    public static void onServerDimensionsLoad(ServerDimensionsLoadEvent event) {
+        addMissingVanillaDimensions(event.generatorOptions, event.registryManager);
     }
     
     // When DFU does not recognize a mod dimension (in level.dat) it will throw an error
