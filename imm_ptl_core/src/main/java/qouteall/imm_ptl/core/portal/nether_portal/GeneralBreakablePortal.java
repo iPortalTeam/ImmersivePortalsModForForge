@@ -6,7 +6,7 @@ import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 
 public class GeneralBreakablePortal extends BreakablePortalEntity {
     
-    public static EntityType<GeneralBreakablePortal> entityType;
+    public static EntityType<GeneralBreakablePortal> entityType = IPRegistry.GENERAL_BREAKABLE_PORTAL.get();
     
     public GeneralBreakablePortal(
         EntityType<?> entityType_1,

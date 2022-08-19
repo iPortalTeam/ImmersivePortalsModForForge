@@ -20,7 +20,7 @@ import qouteall.imm_ptl.core.platform_specific.O_O;
 import java.util.Random;
 
 public class NetherPortalEntity extends BreakablePortalEntity {
-    public static EntityType<NetherPortalEntity> entityType;
+    public static EntityType<NetherPortalEntity> entityType = IPRegistry.NETHER_PORTAL_NEW.get();
     
     public NetherPortalEntity(
         EntityType<?> entityType_1,
