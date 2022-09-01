@@ -28,11 +28,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Mixin(value = ChunkMap.class, priority = 1100)
 public abstract class MixinChunkMap_C implements IEThreadedAnvilChunkStorage {
     @Shadow
-    private int viewDistance;
+    int viewDistance;
     
     @Shadow
     @Final
-    private ServerLevel level;
+    ServerLevel level;
     
     @Shadow
     protected abstract ChunkHolder getVisibleChunkIfPresent(long long_1);
@@ -104,7 +104,7 @@ public abstract class MixinChunkMap_C implements IEThreadedAnvilChunkStorage {
      * @reason make mod incompatibility fail fast
      */
     @Overwrite
-    private void playerLoadedChunk(
+    public void playerLoadedChunk( //TODO @Nick1st Make this usefull again
         ServerPlayer player, MutableObject<ClientboundLevelChunkWithLightPacket> cachedDataPacket, LevelChunk chunk
     ) {
         //chunk data packets will be sent on ChunkDataSyncManager

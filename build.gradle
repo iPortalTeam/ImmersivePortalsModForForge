@@ -39,6 +39,10 @@ allprojects {
                 includeGroup "curse.maven"
             }
         }
+        maven {
+            name "theillusivec4"
+            url = "https://maven.theillusivec4.top/"
+        }
         //maven{url="https://minecraft.curseforge.com/api/maven/"}
         maven {
             url = "https://jitpack.io"
@@ -68,6 +72,14 @@ allprojects {
         api fg.deobf("curse.maven:rubidium-574856:${project.rubidium_fileid}")
         // Oculus
         api fg.deobf("curse.maven:oculus-581495:${project.oculus_fileid}")
+        // Curios
+        runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${project.curios_version}")
+        compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${project.curios_version}:api")
+        // Tinkers Construct
+        api fg.deobf("curse.maven:tconstruct-74072:${project.tconstruct_fileid}")
+        api fg.deobf("curse.maven:mantle-74924:${project.mantle_fileid}")
+        // Serene Seasons
+        api fg.deobf("curse.maven:sereneseasons-291874:${project.sereneseasons_fileid}")
     }
 
     minecraft {

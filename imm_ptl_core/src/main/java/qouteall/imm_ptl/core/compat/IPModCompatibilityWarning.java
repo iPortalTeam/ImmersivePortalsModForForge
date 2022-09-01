@@ -27,7 +27,8 @@ public class IPModCompatibilityWarning {
         new ModInfo("tweakeroo", "Tweakeroo"),
         new ModInfo("replaymod", "Replay Mod"),
         new ModInfo("twilightforest", "Twilight Forest"),
-        new ModInfo("c2me", "C2ME")
+        new ModInfo("c2me", "C2ME"),
+        new ModInfo("sereneseasons", "Serene Seasons")
     );
     
     private static final List<ModInfo> maybeIncompatibleMods = Lists.newArrayList(
