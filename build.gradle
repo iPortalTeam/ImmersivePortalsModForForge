@@ -58,15 +58,16 @@ allprojects {
         annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
         // Pehkui
-        api fg.deobf("com.github.Virtuoel:Pehkui:3.3.3-1.18.2-forge")
+        api fg.deobf("com.github.Virtuoel:Pehkui:${project.pehkui_version}")
         // Twilight Forest
-        api fg.deobf("teamtwilight:twilightforest:4.1.999:universal")
+        //api fg.deobf("teamtwilight:twilightforest:${project.twilightforest_version}:universal")
+        api fg.deobf("curse.maven:twilightforest-227639:${project.twilightforest_fileid}")
         // Flywheel
-        api fg.deobf("com.jozufozu.flywheel:Flywheel-Forge:1.18-0.6.4.87")
+        api fg.deobf("com.jozufozu.flywheel:flywheel-forge-1.18.2:${project.flywheel_version}")
         // Rubidium
-        api fg.deobf("curse.maven:rubidium-574856:3884715")
+        api fg.deobf("curse.maven:rubidium-574856:${project.rubidium_fileid}")
         // Oculus
-        api fg.deobf("curse.maven:oculus-581495:3821406")
+        api fg.deobf("curse.maven:oculus-581495:${project.oculus_fileid}")
     }
 
     minecraft {
