@@ -1,5 +1,8 @@
 package qouteall.imm_ptl.core;
 
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import qouteall.imm_ptl.core.chunk_loading.*;
 import qouteall.imm_ptl.core.compat.IPPortingLibCompat;
 import qouteall.imm_ptl.core.miscellaneous.GcMonitor;
@@ -51,6 +54,13 @@ public class IPModMain {
         
         LifecycleHack.markNamespaceStable("immersive_portals");
         LifecycleHack.markNamespaceStable("imm_ptl");
+
+        MinecraftForge.EVENT_BUS.register(IPModMain.class);
+    }
+
+    @SubscribeEvent
+    public static void playerRespawn(PlayerEvent.Clone event) {
+        System.out.println("Test");
     }
     
 }

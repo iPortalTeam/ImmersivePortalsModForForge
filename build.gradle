@@ -78,8 +78,8 @@ allprojects {
         // Tinkers Construct
         api fg.deobf("curse.maven:tconstruct-74072:${project.tconstruct_fileid}")
         api fg.deobf("curse.maven:mantle-74924:${project.mantle_fileid}")
-        // Serene Seasons
-        api fg.deobf("curse.maven:sereneseasons-291874:${project.sereneseasons_fileid}")
+        // Serene Seasons (Disabled: Incompatible unless compat render mode)
+        // api fg.deobf("curse.maven:sereneseasons-291874:${project.sereneseasons_fileid}")
     }
 
     minecraft {
