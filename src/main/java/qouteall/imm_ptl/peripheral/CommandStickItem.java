@@ -45,6 +45,7 @@ public class CommandStickItem extends Item {
 
     public static final DeferredRegister<Data> CommandStickData = DeferredRegister.create(new ResourceLocation("immersive_portals", "command_stick_type"), "imm_ptl");
 
+
     public static final Supplier<IForgeRegistry<Data>> REGISTRY = CommandStickData.makeRegistry(Data.class, RegistryBuilder::new);
 
     public static final RegistryObject<Data> delete_portal = CommandStickData.register("delete_portal", () -> createData("delete_portal"));
@@ -72,8 +73,8 @@ public class CommandStickItem extends Item {
     public static final RegistryObject<Data> accelerate200 = CommandStickData.register("accelerate200", () -> createData("accelerate200", "debug accelerate 200"));
     public static final RegistryObject<Data> reverse_accelerate50 = CommandStickData.register("reverse_accelerate50", () -> createData("reverse_accelerate50", "debug accelerate -50"));
     public static final RegistryObject<Data> enable_gravity_change = CommandStickData.register("enable_gravity_change", () -> createData("enable_gravity_change", "set_portal_nbt {teleportChangesGravity:true}"));
-    public static final RegistryObject<Data> reset_scale = CommandStickData.register("reset_scale", () -> new CommandStickItem.Data("/scale set pehkui:base 1", "imm_ptl.command.reset_scale", Lists.newArrayList("imm_ptl.command_desc.reset_scale")));
-    public static final RegistryObject<Data> long_reach = CommandStickData.register("long_reach", () -> new CommandStickItem.Data("/scale set pehkui:reach 5", "imm_ptl.command.long_reach", Lists.newArrayList("imm_ptl.command_desc.long_reach")));
+    public static final RegistryObject<Data> reset_scale = CommandStickData.register("reset_scale", () -> new CommandStickItem.Data("/scale set pehkui:base 1", "imm_ptl.command.reset_scale", Lists.newArrayList("imm_ptl.command_desc.reset_scale"),true));
+    public static final RegistryObject<Data> long_reach = CommandStickData.register("long_reach", () -> new CommandStickItem.Data("/scale set pehkui:reach 5", "imm_ptl.command.long_reach", Lists.newArrayList("imm_ptl.command_desc.long_reach"), true));
     public static final RegistryObject<Data> goback = CommandStickData.register("goback", () -> createData("goback"));
     public static final RegistryObject<Data> show_wiki = CommandStickData.register("show_wiki", () -> createData("show_wiki", "wiki"));
 
@@ -85,13 +86,14 @@ public class CommandStickItem extends Item {
         public final List<String> descriptionTranslationKeys;
         
         public Data(
-            String command, String nameTranslationKey, List<String> descriptionTranslationKeys
+            String command, String nameTranslationKey, List<String> descriptionTranslationKeys, boolean addToMenu
         ) {
             this.command = command;
             this.nameTranslationKey = nameTranslationKey;
             this.descriptionTranslationKeys = descriptionTranslationKeys;
 
-            cmd_stick_data.add(this);
+            if (addToMenu)
+                cmd_stick_data.add(this);
         }
         
         public void serialize(CompoundTag tag) {
@@ -114,7 +116,8 @@ public class CommandStickItem extends Item {
                     )
                     .stream()
                     .map(tag1 -> ((StringTag) tag1).getAsString())
-                    .collect(Collectors.toList())
+                    .collect(Collectors.toList()),
+                    false
             );
         }
     }
@@ -140,7 +143,7 @@ public class CommandStickItem extends Item {
         return new CommandStickItem.Data(
                 "/portal " + subCommand,
                 "imm_ptl.command." + name,
-                Lists.newArrayList("imm_ptl.command_desc." + name)
+                Lists.newArrayList("imm_ptl.command_desc." + name), true
         );
     }
     
@@ -205,7 +208,7 @@ public class CommandStickItem extends Item {
     @Override
     public void fillItemCategory(CreativeModeTab group, NonNullList<ItemStack> stacks) {
         if (allowdedIn(group)) {
-            cmd_stick_data.forEach(data -> { //TODO stop faking around deferred Registries
+            cmd_stick_data.forEach(data -> { //TODO @Nick1st stop faking around deferred Registries
                 ItemStack stack = new ItemStack(PeripheralModEntry.COMMAND_STICK_ITEM.get());
                 data.serialize(stack.getOrCreateTag());
                 stacks.add(stack);
@@ -228,7 +231,7 @@ public class CommandStickItem extends Item {
             ItemStack itemStack = new ItemStack(PeripheralModEntry.COMMAND_STICK_ITEM.get(), 1);
             Data data = new Data(
                 command,
-                command, new ArrayList<>()
+                command, new ArrayList<>(), false
             );
             data.serialize(itemStack.getOrCreateTag());
             

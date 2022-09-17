@@ -11,8 +11,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
@@ -25,6 +25,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkDirection;
+import net.minecraftforge.network.PacketDistributor;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.ClientWorldLoader;
@@ -44,6 +45,8 @@ import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.api.McRemoteProcedureCall;
 import qouteall.q_misc_util.dimension.DimId;
+import qouteall.q_misc_util.forge.networking.Message;
+import qouteall.q_misc_util.forge.networking.Remote_StC;
 import qouteall.q_misc_util.my_util.*;
 
 import javax.annotation.Nullable;
@@ -51,6 +54,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
+import static qouteall.imm_ptl.core.McHelper.getIEStorage;
 
 /**
  * Portal entity. Global portals are also entities but not added into world.
@@ -276,7 +281,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         CompoundTag customData = new CompoundTag();
         addAdditionalSaveData(customData);
         
-        ClientboundCustomPayloadPacket packet = McRemoteProcedureCall.createPacketToSendToClient(
+        Packet packet = McRemoteProcedureCall.createPacketToSendToClient(
             "qouteall.imm_ptl.core.portal.Portal.RemoteCallables.acceptPortalDataSync",
             level.dimension(),
             getId(),

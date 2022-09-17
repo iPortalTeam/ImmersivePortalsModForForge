@@ -1,6 +1,7 @@
 package qouteall.q_misc_util.api;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
 import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
 import net.minecraft.server.level.ServerPlayer;
@@ -107,17 +108,17 @@ public class McRemoteProcedureCall {
         String methodPath,
         Object... arguments
     ) {
-        ClientboundCustomPayloadPacket packet = createPacketToSendToClient(methodPath, arguments);
+        Packet packet = createPacketToSendToClient(methodPath, arguments);
         player.connection.send(packet);
     }
     
     /**
      * Same as the above, but only creates packet and does not send.
      */
-    public static ClientboundCustomPayloadPacket createPacketToSendToClient(
+    public static Packet createPacketToSendToClient(
         String methodPath, Object... arguments
     ) {
-        ClientboundCustomPayloadPacket packet =
+        Packet packet =
             ImplRemoteProcedureCall.createS2CPacket(methodPath, arguments);
         return packet;
     }

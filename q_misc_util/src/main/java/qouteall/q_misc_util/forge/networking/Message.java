@@ -8,7 +8,7 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public class Message {
-    private static SimpleChannel INSTANCE;
+    public static SimpleChannel INSTANCE;
 
     // Every packet needs a unique ID (unique for this channel)
     private static int packetId = 0;
@@ -33,6 +33,12 @@ public class Message {
                 .decoder(Dim_Sync::new)
                 .encoder(Dim_Sync::toBytes)
                 .consumer(Dim_Sync::handle)
+                .add();
+
+        INSTANCE.messageBuilder(Remote_StC.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(Remote_StC::new)
+                .encoder(Remote_StC::toBytes)
+                .consumer(Remote_StC::handle)
                 .add();
     }
 

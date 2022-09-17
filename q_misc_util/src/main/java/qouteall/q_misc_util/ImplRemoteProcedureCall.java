@@ -14,6 +14,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
 import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
 import net.minecraft.resources.ResourceKey;
@@ -28,7 +29,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.network.NetworkDirection;
 import org.apache.commons.lang3.Validate;
+import qouteall.q_misc_util.forge.networking.Message;
+import qouteall.q_misc_util.forge.networking.Remote_StC;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -166,15 +170,11 @@ public class ImplRemoteProcedureCall {
         return new ServerboundCustomPayloadPacket(MiscNetworking.id_ctsRemote, buf);
     }
     
-    public static ClientboundCustomPayloadPacket createS2CPacket(
+    public static Packet createS2CPacket(
         String methodPath,
         Object... arguments
     ) {
-        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-        
-        serializeStringWithArguments(methodPath, arguments, buf);
-        
-        return new ClientboundCustomPayloadPacket(MiscNetworking.id_stcRemote, buf);
+        return Message.INSTANCE.toVanillaPacket(new Remote_StC(methodPath, arguments), NetworkDirection.PLAY_TO_CLIENT);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -230,8 +230,8 @@ public class ImplRemoteProcedureCall {
         };
     }
     
-    private static void serializeStringWithArguments(
-        String methodPath, Object[] arguments, FriendlyByteBuf buf
+    public static void serializeStringWithArguments(
+            String methodPath, Object[] arguments, FriendlyByteBuf buf
     ) {
         buf.writeUtf(methodPath);
         

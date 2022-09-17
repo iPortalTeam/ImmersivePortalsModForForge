@@ -106,7 +106,7 @@ public class PeripheralModMain {
         CommandStickItem.registerType("imm_ptl:" + name, new CommandStickItem.Data(
             "/portal " + subCommand,
             "imm_ptl.command." + name,
-            Lists.newArrayList("imm_ptl.command_desc." + name)
+            Lists.newArrayList("imm_ptl.command_desc." + name), true
         ));
     }
 }
