@@ -13,13 +13,15 @@ import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.StainedGlassBlock;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import qouteall.imm_ptl.core.IPModMain;
 import qouteall.imm_ptl.core.McHelper;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.my_util.IntBox;
 
 public class BreakableMirror extends Mirror {
     
-    public static EntityType<BreakableMirror> entityType;
+    public static EntityType<BreakableMirror> entityType = IPRegistry.BREAKABLE_MIRROR.get();
     
     public IntBox wallArea;
     public boolean unbreakable = false;
