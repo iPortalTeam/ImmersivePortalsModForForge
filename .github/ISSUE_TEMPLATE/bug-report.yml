@@ -11,7 +11,7 @@ body:
   - type: dropdown
     id: only_immptl
     attributes:
-      label: According to your testing, does the issue occur with ONLY Immersive Portals mod?
+      label: According to your testing, does the issue occur with ONLY Immersive Portals mod installed?
       options:
         - "Yes"
         - "No"
@@ -78,6 +78,8 @@ body:
         - label: I have confirmed the details provided in this report are concise as possible and does not contained vague information (ie. Versions are properly recorded, answers to questions are clear).
           required: true
         - label: I have confirmed this does not happen on the fabric version (If it does please report to **[here](https://github.com/iPortalTeam/ImmersivePortalsMod/issues)** instead).
+          required: true
+        - label: I have confirmed I'm not using a hybrid server (Magma, Cauldron) or a different (non official) Forge Server release.
           required: true
         - label: I have confirmed this issue is unique and has not been reported already.
           required: true
