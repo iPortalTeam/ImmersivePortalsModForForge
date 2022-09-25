@@ -124,6 +124,8 @@ public class IPGlobal {
     public static boolean enableServerPerformanceAdjustment = true;
     
     public static boolean enableCrossPortalSound = true;
+
+    public static boolean enableModelDataFix = true;
     
     public static enum RenderMode {
         normal,

@@ -16,6 +16,7 @@
     "common.portal_generation.MixinNetherPortalBlock"
   ],
   "client": [
+    "client.model.MixinForgeModelDataManager",
     "client.MixinBossHealthOverlay",
     "client.MixinSplashManager",
     "client.alternate_dimension.MixinClientLevelData",
