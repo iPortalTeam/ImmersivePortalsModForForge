@@ -44,6 +44,7 @@ public class IPConfig {
     public static ForgeConfigSpec.BooleanValue enableServerPerformanceAdjustment;
     public static ForgeConfigSpec.EnumValue<IPGlobal.NetherPortalMode> netherPortalMode;
     public static ForgeConfigSpec.EnumValue<IPGlobal.EndPortalMode> endPortalMode;
+    public static ForgeConfigSpec.BooleanValue enableModelDataFix;
 
     public static void register(ForgeConfigSpec.Builder builder) {
         builder.comment("Check the wiki at https://qouteall.fun/immptl/wiki/Config-Options for more information");
@@ -55,6 +56,7 @@ public class IPConfig {
         portalRenderLimit = builder.defineInRange("portalRenderLimit", 200, 0, Integer.MAX_VALUE);
         indirectLoadingRadiusCap = builder.defineInRange("indirectLoadingRadiusCap", 8, 0, Integer.MAX_VALUE);
         enableCrossPortalSound = builder.define("enableCrossPortalSound", true);
+        enableModelDataFix = builder.define("enableModelDataFix", true);
         compatibilityRenderMode = builder.define("compatibilityRenderMode", false);
         doCheckGlError = builder.define("doCheckGlError", false);
         portalSearchingRange = builder.defineInRange("portalSearchingRange", 128, 0, Integer.MAX_VALUE);
@@ -134,6 +136,7 @@ public class IPConfig {
         IPGlobal.enableClientPerformanceAdjustment = enableClientPerformanceAdjustment.get();
         IPGlobal.enableServerPerformanceAdjustment = enableServerPerformanceAdjustment.get();
         IPGlobal.enableCrossPortalSound = enableCrossPortalSound.get();
+        IPGlobal.enableModelDataFix = enableModelDataFix.get();
 
         if (Boolean.TRUE.equals(enableDepthClampForPortalRendering.get())) {
             IPGlobal.enableDepthClampForPortalRendering = true;

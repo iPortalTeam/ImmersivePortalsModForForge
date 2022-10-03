@@ -80,6 +80,10 @@ allprojects {
         api fg.deobf("curse.maven:mantle-74924:${project.mantle_fileid}")
         // Serene Seasons (Disabled: Incompatible unless compat render mode)
         // api fg.deobf("curse.maven:sereneseasons-291874:${project.sereneseasons_fileid}")
+        // Mekanism
+        api fg.deobf("curse.maven:mekanism-268560:${project.mekanism_fileid}")
+        // Immersive Engineering
+        api fg.deobf("curse.maven:immersiveengineering-231951:${project.immersiveengineering_fileid}")
     }
 
     minecraft {
