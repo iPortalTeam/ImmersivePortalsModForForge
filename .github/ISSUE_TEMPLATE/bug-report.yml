@@ -28,7 +28,7 @@ body:
     attributes:
       label: ImmersivePortals Version
       description: What version of ImmersivePortals are you running? This can be found on the jar file you have downloaded or the Mod Options menu. Please note "latest" is NOT a version.
-      placeholder: "1.4.9-mc1.18.2"
+      placeholder: "1.4.12-mc1.18.2"
     validations:
       required: true
   - type: input
