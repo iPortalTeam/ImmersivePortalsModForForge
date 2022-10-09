@@ -12,11 +12,13 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.packs.repository.PackRepository;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.level.DataPackConfig;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.WorldGenSettings;
+import net.minecraft.world.level.storage.PrimaryLevelData;
 import net.minecraftforge.common.MinecraftForge;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,6 +27,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.peripheral.dim_stack.DimStackInfo;
 import qouteall.imm_ptl.peripheral.dim_stack.DimStackManagement;
@@ -141,19 +144,19 @@ public abstract class MixinCreateWorldScreen extends Screen implements IECreateW
     }
     
     
-//    @Inject(
-//        method = "method_40209",
-//        at = @At("RETURN")
-//    )
-//    private void onTryingApplyNewDatapackLoading(ResourceManager resourceManager, DataPackConfig dataPackConfig, CallbackInfoReturnable<Pair> cir) {
-//        Pair<PrimaryLevelData, RegistryAccess> returnValue = cir.getReturnValue();
-//
-//        PrimaryLevelData primaryLevelData = returnValue.getFirst();
-//
-//        ip_lastWorldGenSettings = primaryLevelData.worldGenSettings();
-//
-//        ip_lastRegistryAccess = returnValue.getSecond();
-//    }
+    @Inject(
+        method = "lambda$tryApplyNewDataPacks$19",
+        at = @At("RETURN")
+    )
+    private void onTryingApplyNewDatapackLoading(ResourceManager resourceManager, DataPackConfig dataPackConfig, CallbackInfoReturnable<Pair> cir) {
+        Pair<PrimaryLevelData, RegistryAccess> returnValue = cir.getReturnValue();
+
+        PrimaryLevelData primaryLevelData = returnValue.getFirst();
+
+        ip_lastWorldGenSettings = primaryLevelData.worldGenSettings();
+
+        ip_lastRegistryAccess = returnValue.getSecond();
+    }
     
     private void openDimStackScreen() {
         if (ip_dimStackScreen == null) {
