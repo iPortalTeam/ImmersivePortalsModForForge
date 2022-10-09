@@ -93,7 +93,7 @@ public class IPModMainClient {
                     Minecraft.getInstance().gui.handleChat(
                         ChatType.CHAT,
                         new TranslatableComponent("imm_ptl.preview_warning").append(
-                            McHelper.getLinkText("https://github.com/qouteall/ImmersivePortalsMod/issues")
+                            McHelper.getLinkText("https://github.com/iPortalTeam/ImmersivePortalsModForForge/issues")
                         ),
                         UUID.randomUUID()
                     );
