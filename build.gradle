@@ -84,6 +84,8 @@ allprojects {
         api fg.deobf("curse.maven:mekanism-268560:${project.mekanism_fileid}")
         // Immersive Engineering
         api fg.deobf("curse.maven:immersiveengineering-231951:${project.immersiveengineering_fileid}")
+
+        compileOnly 'com.demonwav.mcdev:annotations:1.0'
     }
 
     minecraft {
