@@ -42,7 +42,7 @@ import net.minecraft.world.level.entity.EntityTickList;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import qouteall.imm_ptl.core.*;
@@ -70,7 +70,7 @@ import java.util.stream.Stream;
 public class ClientDebugCommand {
 
     @SubscribeEvent
-    public static void register(RegisterCommandsEvent event) {
+    public static void register(RegisterClientCommandsEvent event) {
         if (FMLEnvironment.dist == Dist.DEDICATED_SERVER) {
             return;
         }
