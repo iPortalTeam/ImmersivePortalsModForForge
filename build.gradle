@@ -33,6 +33,16 @@ allprojects {
             name "tterrag maven"
             url "https://maven.tterrag.com/"
         }
+        maven {
+            url "https://cursemaven.com"
+            content {
+                includeGroup "curse.maven"
+            }
+        }
+        maven {
+            name "theillusivec4"
+            url = "https://maven.theillusivec4.top/"
+        }
         //maven{url="https://minecraft.curseforge.com/api/maven/"}
         maven {
             url = "https://jitpack.io"
@@ -52,8 +62,30 @@ allprojects {
         annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
         // Pehkui
-        //api fg.deobf("com.github.Virtuoel:Pehkui:3.3.3-1.18.2-forge")
-        //api fg.deobf("teamtwilight:twilightforest:4.1.999:universal")
+        api fg.deobf("com.github.Virtuoel:Pehkui:${project.pehkui_version}")
+        // Twilight Forest
+        //api fg.deobf("teamtwilight:twilightforest:${project.twilightforest_version}:universal")
+        api fg.deobf("curse.maven:twilightforest-227639:${project.twilightforest_fileid}")
+        // Flywheel
+        api fg.deobf("com.jozufozu.flywheel:flywheel-forge-1.19.2:${project.flywheel_version}")
+        // Rubidium
+        api fg.deobf("curse.maven:rubidium-574856:${project.rubidium_fileid}")
+        // Oculus
+        api fg.deobf("curse.maven:oculus-581495:${project.oculus_fileid}")
+        // Curios
+        runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${project.curios_version}")
+        compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${project.curios_version}:api")
+        // Tinkers Construct
+            //api fg.deobf("curse.maven:tconstruct-74072:${project.tconstruct_fileid}")
+            //api fg.deobf("curse.maven:mantle-74924:${project.mantle_fileid}")
+        // Serene Seasons (Disabled: Incompatible unless compat render mode)
+            // api fg.deobf("curse.maven:sereneseasons-291874:${project.sereneseasons_fileid}")
+        // Mekanism
+        api fg.deobf("curse.maven:mekanism-268560:${project.mekanism_fileid}")
+        // Immersive Engineering
+        api fg.deobf("curse.maven:immersiveengineering-231951:${project.immersiveengineering_fileid}")
+
+        compileOnly 'com.demonwav.mcdev:annotations:1.0'
     }
 
     minecraft {
