@@ -1,10 +1,18 @@
 archivesBaseName = "imm_ptl_core"
 group = "qouteall"
 
-loom {
-    accessWidenerPath = file("src/main/resources/imm_ptl.accesswidener")
+dependencies {
+    compileOnly project(":q_misc_util")
 }
 
-dependencies {
-    implementation project(path: ":q_misc_util", configuration: "namedElements")
+minecraft {
+    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+}
+
+tasks.withType(JavaCompile) {
+    source(project(":q_misc_util").sourceSets.main.allSource)
+}
+
+processResources {
+    //from project(":q_misc_util").sourceSets.main.resources
 }

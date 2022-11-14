@@ -1,314 +1,161 @@
-plugins {
-    id 'java-library'
-    id 'fabric-loom' version '0.12-SNAPSHOT' apply(false)
-    id 'maven-publish'
-
-    id "com.modrinth.minotaur" version "2.+"
-
-//    id 'io.github.juuxel.loom-quiltflower' version '1.6.0'  // https://github.com/Juuxel/LoomQuiltflower
-}
-
-allprojects {
-    apply plugin: 'java-library'
-    apply plugin: 'fabric-loom'
-    apply plugin: 'maven-publish'
-}
-
-archivesBaseName = project.archives_base_name
-version = project.mod_version
-group = project.maven_group
-
-loom {
-    accessWidenerPath = file("src/main/resources/imm_ptl_peripheral.accesswidener")
-}
-
-repositories {
-    flatDir {
-        dirs 'deps'
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net' }
+        maven { url = 'https://maven.parchmentmc.org' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.+', changing: true
+        classpath 'org.spongepowered:mixingradle:0.7.+' // MixinGradle
+        classpath 'org.parchmentmc:librarian:1.+'
     }
 }
 
 allprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'net.minecraftforge.gradle'
+    apply plugin: 'org.parchmentmc.librarian.forgegradle'
+    apply plugin: 'org.spongepowered.mixin'
+    apply plugin: 'maven-publish'
 
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = 17
+    targetCompatibility = 17
 
-    version = rootProject.mod_version
+    version = project.mod_version
 
     repositories {
+        maven { url = 'https://files.minecraftforge.net/maven' }
         mavenCentral()
-        mavenLocal()
-        maven {
-            name = 'JitPack'
-            url = 'https://jitpack.io'
-        }
-        maven { url "https://maven.shedaniel.me/" }
 
-        // for sodium
-        maven {
-            name = "Modrinth"
-            url = "https://api.modrinth.com/maven"
-            content {
-                includeGroup "maven.modrinth"
-            }
-        }
+        maven { url = 'https://dist.creeper.host/Sponge/maven' }
 
-        // for parchment
         maven {
-            url = "https://maven.parchmentmc.org"
+            name "tterrag maven"
+            url "https://maven.tterrag.com/"
+        }
+        //maven{url="https://minecraft.curseforge.com/api/maven/"}
+        maven {
+            url = "https://jitpack.io"
+        }
+        maven {
+            url = "https://modmaven.dev/"
         }
 
-        // for cardinal components that fusions gravity api uses
-        maven {
-            name = 'Ladysnake Mods'
-            url = 'https://ladysnake.jfrog.io/artifactory/mods'
+        flatDir {
+            dirs 'deps'
         }
 
-        // for test with create
-//        maven { url = "https://cursemaven.com" }
-//        maven { url = "https://maven.parchmentmc.org" }
-//        maven { url = "https://maven.tterrag.com/" }
-//        maven { url = "https://storage.googleapis.com/devan-maven/" }
-//        maven { url = "https://maven.shedaniel.me/" }
-//        maven { url = "https://aperlambda.github.io/maven" }
-//        maven { url = "https://ladysnake.jfrog.io/artifactory/mods" }
-//        maven { url = "https://maven.kotlindiscord.com/repository/terraformers/" }
-//        maven { url = "https://mvn.devos.one/releases/" }
-//        maven { url = "https://mvn.devos.one/snapshots/" }
-//        maven { url = "https://maven.terraformersmc.com/" }
-//        maven { url = "https://maven.cafeteria.dev" }
-//        maven { url = "https://jitpack.io/" }
-//        maven { url = "https://maven.jamieswhiteshirt.com/libs-release" }
-//        maven { url = "https://maven.gegy.dev" }
+    }
 
-        // for test with twilight forest
-//        maven { url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven/" } // Forge Config API Port
-//        maven { url = "https://api.modrinth.com/maven" } // LazyDFU, Suggestion Tweaker
-//        maven { url = "https://maven.shedaniel.me/" } // Cloth Config
-//        maven { url = "https://maven.wispforest.io" } // TOP
-//        maven { url = "https://storage.googleapis.com/devan-maven/" }
-//        maven { url = "https://maven.terraformersmc.com/releases/" } // Mod Menu, Trinkets, EMI
-//        maven { url = "https://mvn.devos.one/snapshots/" } // Porting Lib, Forge Tags, Tinkers, Mantle
-//        maven { url = "https://ladysnake.jfrog.io/artifactory/mods" } // Cardinal Components API
-//        maven { url = "https://maven.parchmentmc.net/" } // Parchment
-//        maven { url = "https://maven.jamieswhiteshirt.com/libs-release" } // Reach Entity Attributes
-//        maven { url = "https://jitpack.io" } // Fabric ASM, Mixin Extras
-//        maven { url = "https://dvs1.progwml6.com/files/maven/" } // JEI
-//        maven { url 'https://maven.blamejared.com' } // Botany Pots, Bookself
-//        maven { // Jade
-//            url "https://www.cursemaven.com"
-//            content {
-//                includeGroup "curse.maven"
-//            }
-//        }
+    dependencies {
+        minecraft "net.minecraftforge:forge:${project.minecraft_version}-${project.loader_version}"
+        annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
+        // Pehkui
+        //api fg.deobf("com.github.Virtuoel:Pehkui:3.3.3-1.18.2-forge")
+        //api fg.deobf("teamtwilight:twilightforest:4.1.999:universal")
+    }
+
+    minecraft {
+        mappings channel: 'parchment', version: "${project.mapping_version}-${project.minecraft_version}"
+        accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
     }
 
     tasks.withType(JavaCompile).configureEach {
         options.encoding = "UTF-8"
         it.options.release = 17
     }
+}
 
-    dependencies {
-        minecraft "com.mojang:minecraft:${project.minecraft_version}"
+archivesBaseName = project.archives_base_name
+group = project.maven_group
 
-        mappings loom.layered() {
-            officialMojangMappings() {
-                setNameSyntheticMembers(false)
+minecraft {
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            mods {
+                examplemod {
+                    source sourceSets.main
+                }
             }
-            parchment("org.parchmentmc.data:parchment-1.18.2:2022.06.26@zip")
         }
-
-//        mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-
-        modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-        modImplementation("net.fabricmc.fabric-api:fabric-api:${project.fabric_version}") {
-            exclude module: "fabric-gametest-api-v1"
-            // for now, the gametest module makes client unable to login dev env server
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            mods {
+                examplemod {
+                    source sourceSets.main
+                }
+            }
         }
-
-        //For Nullable
-        compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
-
-        modImplementation("me.shedaniel.cloth:cloth-config-fabric:${cloth_config_version}") {
-            exclude(group: "net.fabricmc.fabric-api")
-        }
-        modCompileOnly "maven.modrinth:modmenu:${modmenu_version}"
-
-        modApi("com.github.Virtuoel:Pehkui:3.4.1", {
-            exclude group: "net.fabricmc.fabric-api"
-        })
-
-        modImplementation "maven.modrinth:sodium:mc1.19.2-0.4.4"
-        implementation "org.joml:joml:1.10.2" // for sodium
-
-        modCompileOnly 'maven.modrinth:iris:1.19.x-v1.4.0'
-//        implementation "org.anarres:jcpp:1.4.14" // for iris
-//        implementation 'org.slf4j:slf4j-api:1.7.12' // for iris
-//        implementation 'io.github.douira:glsl-transformer:1.0.0-pre21.2' // for iris
-
-        modImplementation("maven.modrinth:gravity-api:0.7.18+fabric") {
-            transitive = false
-            exclude(group: "net.fabricmc.fabric-api")
-        }
-        modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-base:4.1.4"
-        modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-entity:4.1.4"
-    }
-
-    processResources {
-        inputs.property "version", project.version
-
-        filesMatching("fabric.mod.json") {
-            expand "version": project.version
-        }
-    }
-
-    java {
-        // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-        // if it is present.
-        // If you remove this line, sources will not be generated.
-        withSourcesJar()
-    }
-
-}
-
-// change the output file name
-remapJar {
-    afterEvaluate {
-        archiveFileName = "${project.archives_base_name}-${project.mod_version}-mc${project.minecraft_version}-fabric.jar"
     }
 }
 
+dependencies {
+    compileOnly project(":imm_ptl_core")
+    compileOnly project(":q_misc_util")
+}
+tasks.withType(JavaCompile) {
+    source(project(":imm_ptl_core").sourceSets.main.allSource)
+    source(project(":q_misc_util").sourceSets.main.allSource)
+}
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from project(":imm_ptl_core").sourceSets.main.resources
+    from project(":q_misc_util").sourceSets.main.resources
+}
 
 jar {
-    from "LICENSE"
-}
-
-subprojects {
-    publishing {
-        publications {
-            mavenJava(MavenPublication) {
-                from components.java
-            }
-        }
-        // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-        repositories {
-            // Add repositories to publish to here.
-            // Notice: This block does NOT have the same function as the block in the top level.
-            // The repositories here will be used for publishing your artifact, not for
-            // retrieving dependencies.
-        }
+    manifest {
+        attributes([
+                "Specification-Title"     : "Immersive Portals",
+                "Specification-Vendor"    : "qouteall",
+                "Specification-Version"   : "1", // We are version 1 of ourselves
+                "Implementation-Title"    : project.name,
+                "Implementation-Version"  : "${version}",
+                "Implementation-Vendor"   : "qouteall, Nick1st",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
     }
+    from "LICENSE"
+
+    archiveFileName = "${project.archives_base_name}-${project.mod_version}-mc${project.minecraft_version}-forge.jar"
+}
+mixin {
+    add sourceSets.main, 'mixins.imm_ptl.refmap.json'
+    config 'imm_ptl.mixins.json'
+    config 'imm_ptl_peripheral.mixins.json'
+    //config 'q_misc_util.mixins.json'
+    debug = false
 }
 
-subprojects.each { remapJar.dependsOn("${it.path}:remapJar") }
+// Example configuration to allow publishing using the maven-publish task
+// This is the preferred method to reobfuscate your jar file
+jar.finalizedBy('reobfJar')
+// However if you are in a multi-project build, dev time needs unobfed jar files, so you can delay the obfuscation until publishing by doing
+//publish.dependsOn('reobfJar')
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            from components.java
+            artifact jar
+        }
+    }
+    repositories {
+        maven {
+            url "file:///${project.projectDir}/mcmodsrepo"
         }
     }
 }
-
-dependencies {
-
-    // for testing with dimthread
-//    implementation "com.github.wearblackallday:JavaUtils:bd58640372"
-
-//    modRuntimeOnly ("supercoder79:databreaker:0.2.8") {
-//        exclude module: "fabric-loader"
-//    }
-
-    modImplementation ("me.shedaniel.cloth:cloth-config-fabric:${cloth_config_version}") {
-        transitive = false
-        exclude(group: "net.fabricmc.fabric-api")
-    }
-    include "me.shedaniel.cloth:cloth-config-fabric:${cloth_config_version}"
-
-    fileTree(dir: 'deps', include: '*.jar').each {
-        String baseName = it.name.replace(".jar", "")
-        String version = "0.1.0"
-        int split = baseName.lastIndexOf('-')
-
-        if (split != -1) {
-            version = baseName.substring(split + 1)
-            baseName = baseName.substring(0, split)
-        }
-
-        String name = "testmod:${baseName}:${version}"
-
-        System.out.println("Found test mod: " + it.name.replace(".jar", "") + " -> " + name)
-
-        modImplementation name
-//        modCompileOnly name
-//        modRuntime name
-    }
-
-    // for test with create
-//    modImplementation(include("io.github.fabricators_of_create:Porting-Lib:${project.port_lib_version}+${project.minecraft_version}.${project.port_lib_hash}"))
-//    modImplementation(include("me.alphamode:ForgeTags:${project.forge_tags_version}"))
-//    modImplementation(include("com.electronwill.night-config:core:${project.night_config_core_version}"))
-//    modImplementation(include("com.electronwill.night-config:toml:${project.night_config_toml_version}"))
-//    modImplementation(include("curse.maven:forge-config-api-port-fabric-547434:${project.config_api_id}")) { transitive = false }
-//    modImplementation(include("com.tterrag.registrate:Registrate:${project.registrate_version}"))
-//    modImplementation(include("com.jozufozu.flywheel:Flywheel-Fabric:${project.flywheel_version}"))
-//    modImplementation(include("com.jamieswhiteshirt:reach-entity-attributes:${project.reach_entity_attributes_version}"))
-//    modImplementation(include("dev.cafeteria:fake-player-api:${project.fake_player_api_version}"))
-//    modImplementation(include("io.github.tropheusj:milk-lib:${project.milk_lib_version}"))
-//    modImplementation(include("me.luligabi:NoIndium:${project.no_indium_version}"))
-//
-//    modImplementation("com.simibubi:Create:mc1.18.2_v0.4.1")
-
-    // twilight forest
-//    modImplementation("com.github.teamtwilight.twilightforest:twilightforest-fabric:4.2"){
-//        exclude(group:"com.terraformersmc")
-//    }
-}
-
-dependencies {
-    subprojects.each {
-        implementation project(path: ":${it.name}", configuration: "namedElements")
-        include project("${it.name}:")
-    }
-}
-
-// miscellaneous
 
 task printClasspath {
     doLast {
-        // NOTE don't forget to exclude the submod dev jar
-        configurations.compileClasspath.each { println "\"" + (it.toString().replace("\\", "/")) + "\"," }
+        configurations.compileClasspath.each { println "\""+ (it.toString().replace("\\","/")) + "\"," }
     }
 }
-
-task additionalCopy(type: Copy) {
-    dependsOn(remapJar)
-    from file("${project.buildDir}/libs/$archivesBaseName-${version}-mc${project.minecraft_version}-fabric.jar")
-    into file("${project.buildDir}/to_upload")
-    rename { n -> "$archivesBaseName-${version}-mc${project.minecraft_version}-fabric.jar" }
-}
-
-
-// modrinth
-
-modrinth {
-    token = System.getenv("MODRINTH")
-    // This is the default. Remember to have the MODRINTH_TOKEN environment variable set or else this will fail, or set it to whatever you want - just make sure it stays private!
-    projectId = "zJpHMkdD"
-    versionNumber = "${project.version}-${project.minecraft_version}"
-    // You don't need to set this manually. Will fail if Modrinth has this version already
-    versionType = "release" // This is the default -- can also be `beta` or `alpha`
-    uploadFile = remapJar
-    gameVersions = ["${project.minecraft_version}"] // Must be an array, even with only one version
-    loaders = ["fabric"] // Must also be an array - no need to specify this if you're using Loom or ForgeGradle
-    dependencies { // A special DSL for creating dependencies
-        // scope.type
-        // The scope can be `required`, `optional`, or `incompatible`
-        // The type can either be `project` or `version`
-        required.project "P7dR8mSH" // Creates a new required dependency on Fabric API
-    }
-}
-
-// Enable ZGC: -XX:+UseZGC

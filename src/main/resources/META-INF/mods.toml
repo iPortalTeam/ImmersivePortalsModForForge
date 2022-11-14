@@ -1,0 +1,55 @@
+modLoader="javafml" #mandatory
+loaderVersion="[40,)"
+license="Apache-2.0"
+issueTrackerURL="https://github.com/Nick1st/SeeThroughPortals/issues" #optional
+showAsResourcePack=false
+
+[[mods]]
+modId="immersive_portals"
+version="${file.jarVersion}"
+displayName="Immersive Portals"
+displayURL="https://qouteall.fun/immptl"
+logoFile="icon.png"
+authors="qouteall"
+credits="Nick1st (Trying to keep the forge version alive)"
+description='''
+See through portals and travel between dimensions seamlessly.
+'''
+
+[[mods]]
+modId="imm_ptl_core"
+version="${file.jarVersion}"
+displayName="Immersive Portals Core"
+displayURL="https://qouteall.fun/immptl"
+logoFile="icon.png"
+authors="qouteall"
+credits="Nick1st (Trying to keep the forge version alive)"
+description='''
+The core functionality of see-through portals and seamless teleportation.
+Provide the portal commands and datapack-based custom portal generation.
+The core does not change vanilla nether portal and end portal mechanics.
+'''
+
+[[mods]]
+modId="q_misc_util"
+version="${file.jarVersion}"
+displayName="QMiscUtil"
+logoFile="icon.png"
+authors="qouteall"
+credits="Nick1st (Trying to keep the forge version alive)"
+description='''
+A miscellaneous library from qouteall. Used by Immersive Portals.
+'''
+
+
+
+[[dependencies.immersive_portals]]
+modId="imm_ptl_core" #mandatory
+mandatory=true #mandatory
+versionRange="[0.0.0,)" #mandatory
+
+[[dependencies.immersive_portals]]
+modId="q_misc_util"
+mandatory=true
+versionRange="[0.0.0,)"
+
