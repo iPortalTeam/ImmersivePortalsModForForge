@@ -19,11 +19,14 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.WorldGenSettings;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.Validate;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.api.DimensionAPI;
+import qouteall.q_misc_util.forge.events.ServerDimensionsLoadEvent;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -35,9 +38,15 @@ import java.nio.file.Path;
 public class ExtraDimensionStorage {
     
     public static void init() {
-        DimensionAPI.serverDimensionsLoadEvent.register(
-            ExtraDimensionStorage::loadExtraDimensions
-        );
+        MinecraftForge.EVENT_BUS.register(ExtraDimensionStorage.class);
+//        DimensionAPI.serverDimensionsLoadEvent.register( //TODO Reimplement this !DONE
+//            ExtraDimensionStorage::loadExtraDimensions
+//        );
+    }
+
+    @SubscribeEvent
+    public static void serverDimensionsLoad(ServerDimensionsLoadEvent event) {
+        loadExtraDimensions(event.generatorOptions, event.registryManager);
     }
     
     private static void loadExtraDimensions(WorldGenSettings worldGenSettings, RegistryAccess registryAccess) {

@@ -30,6 +30,8 @@ import net.minecraft.world.level.levelgen.flat.FlatLayerInfo;
 import net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
 import net.minecraft.world.level.levelgen.synth.NormalNoise;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.ducks.IEWorld;
@@ -37,6 +39,7 @@ import qouteall.imm_ptl.peripheral.mixin.common.alternate_dimension.IENoiseGener
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.api.DimensionAPI;
+import qouteall.q_misc_util.forge.events.ServerDimensionsLoadEvent;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -47,11 +50,16 @@ import java.util.stream.Collectors;
 public class AlternateDimensions {
     
     public static void init() {
-        DimensionAPI.serverDimensionsLoadEvent.register(AlternateDimensions::initializeAlternateDimensions);
+        MinecraftForge.EVENT_BUS.register(AlternateDimensions.class);
         
         IPGlobal.postServerTickSignal.connect(AlternateDimensions::tick);
     }
-    
+
+    @SubscribeEvent
+    public static void onServerDimensionsLoad(ServerDimensionsLoadEvent event) {
+        initializeAlternateDimensions(event.generatorOptions, event.registryManager);
+    }
+
     private static void initializeAlternateDimensions(
         WorldGenSettings generatorOptions, RegistryAccess registryManager
     ) {

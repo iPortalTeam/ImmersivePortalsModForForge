@@ -22,6 +22,7 @@ import net.minecraft.world.level.levelgen.WorldGenSettings;
 import net.minecraft.world.level.storage.DerivedLevelData;
 import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.level.storage.WorldData;
+import net.minecraftforge.common.MinecraftForge;
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.Nullable;
 import qouteall.q_misc_util.Helper;
@@ -30,6 +31,7 @@ import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.MiscNetworking;
 import qouteall.q_misc_util.api.DimensionAPI;
 import qouteall.q_misc_util.ducks.IEMinecraftServer_Misc;
+import qouteall.q_misc_util.forge.events.ServerDimensionDynamicUpdateEvent;
 import qouteall.q_misc_util.mixin.dimension.IEWorldBorder;
 import qouteall.q_misc_util.my_util.MyTaskList;
 import qouteall.q_misc_util.my_util.SignalArged;
@@ -107,8 +109,8 @@ public class DynamicDimensionsImpl {
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             player.connection.send(dimSyncPacket);
         }
-        
-        DimensionAPI.serverDimensionDynamicUpdateEvent.invoker().run(server.levelKeys());
+
+//        DimensionAPI.serverDimensionDynamicUpdateEvent.invoker().run(server.levelKeys()); //TODO Reimplement this !Important
     }
     
     public static void removeDimensionDynamically(ServerLevel world) {
@@ -190,8 +192,9 @@ public class DynamicDimensionsImpl {
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 player.connection.send(dimSyncPacket);
             }
-            
-            DimensionAPI.serverDimensionDynamicUpdateEvent.invoker().run(server.levelKeys());
+
+            MinecraftForge.EVENT_BUS.post(new ServerDimensionDynamicUpdateEvent(server.levelKeys()));
+//            DimensionAPI.serverDimensionDynamicUpdateEvent.invoker().run(server.levelKeys()); //TODO Reimplement this !DONE
         }));
     }
     

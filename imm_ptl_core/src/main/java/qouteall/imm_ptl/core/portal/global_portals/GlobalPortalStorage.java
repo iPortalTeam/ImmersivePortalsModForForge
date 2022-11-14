@@ -18,6 +18,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.ClientWorldLoader;
@@ -30,6 +32,7 @@ import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.api.DimensionAPI;
+import qouteall.q_misc_util.forge.events.ServerDimensionDynamicUpdateEvent;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -65,18 +68,29 @@ public class GlobalPortalStorage extends SavedData {
                 get(world).onServerClose();
             }
         });
-        
-        DimensionAPI.serverDimensionDynamicUpdateEvent.register(dims -> {
-            for (ServerLevel world : MiscHelper.getServer().getAllLevels()) {
+
+        MinecraftForge.EVENT_BUS.register(GlobalPortalStorage.class);
+
+//        DimensionAPI.serverDimensionDynamicUpdateEvent.register(dims -> { //TODO Reimplement this !DONE
+//            for (ServerLevel world : MiscHelper.getServer().getAllLevels()) {
+//                GlobalPortalStorage gps = get(world);
+//                gps.clearAbnormalPortals();
+//                gps.syncToAllPlayers();
+//            }
+//        });
+
+        if (!O_O.isDedicatedServer()) {
+            initClient();
+        }
+    }
+
+    @SubscribeEvent
+    public static void serverDimensionDynamicUpdate(ServerDimensionDynamicUpdateEvent event) {
+        for (ServerLevel world : MiscHelper.getServer().getAllLevels()) {
                 GlobalPortalStorage gps = get(world);
                 gps.clearAbnormalPortals();
                 gps.syncToAllPlayers();
             }
-        });
-        
-        if (!O_O.isDedicatedServer()) {
-            initClient();
-        }
     }
     
     public static GlobalPortalStorage get(

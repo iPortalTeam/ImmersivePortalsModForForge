@@ -14,6 +14,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.ducks.IEClientPlayNetworkHandler;
 import qouteall.imm_ptl.core.ducks.IEMinecraftClient;
@@ -28,6 +30,7 @@ import qouteall.imm_ptl.core.ducks.IEWorldRenderer;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.render.context_management.DimensionRenderHelper;
 import qouteall.q_misc_util.Helper;
+import qouteall.q_misc_util.forge.events.ClientDimensionUpdateEvent;
 import qouteall.q_misc_util.my_util.LimitedLogger;
 import qouteall.q_misc_util.my_util.SignalArged;
 
@@ -65,19 +68,33 @@ public class ClientWorldLoader {
         IPGlobal.postClientTickSignal.connect(ClientWorldLoader::tick);
         
         IPGlobal.clientCleanupSignal.connect(ClientWorldLoader::cleanUp);
-        
-        DimensionAPI.clientDimensionUpdateEvent.register((serverDimensions) -> {
-            if (getIsInitialized()) {
-                List<ResourceKey<Level>> dimensionsToRemove =
-                    clientWorldMap.keySet().stream()
-                        .filter(dim -> !serverDimensions.contains(dim)).toList();
-                
-                for (ResourceKey<Level> dim : dimensionsToRemove) {
-                    disposeDimensionDynamically(dim);
-                }
-                
+
+        MinecraftForge.EVENT_BUS.register(ClientWorldLoader.class);
+
+//        DimensionAPI.clientDimensionUpdateEvent.register((serverDimensions) -> { //TODO Reimplement this !DONE
+//            if (getIsInitialized()) {
+//                List<ResourceKey<Level>> dimensionsToRemove =
+//                    clientWorldMap.keySet().stream()
+//                        .filter(dim -> !serverDimensions.contains(dim)).toList();
+//
+//                for (ResourceKey<Level> dim : dimensionsToRemove) {
+//                    disposeDimensionDynamically(dim);
+//                }
+//
+//            }
+//        });
+    }
+
+    @SubscribeEvent
+    public static void clientDimensionUpdate(ClientDimensionUpdateEvent event) {
+        if (getIsInitialized()) { // TODO Find out why this is false @Nick1st
+            List<ResourceKey<Level>> dimensionsToRemove = clientWorldMap.keySet().stream()
+                    .filter(dim -> !event.dimIdSet.contains(dim)).toList();
+
+            for (ResourceKey<Level> dim : dimensionsToRemove) {
+                disposeDimensionDynamically(dim);
             }
-        });
+        }
     }
     
     public static boolean getIsInitialized() {

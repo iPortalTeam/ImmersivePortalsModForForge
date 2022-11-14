@@ -779,9 +779,7 @@ public class ClientDebugCommand {
     
     
     public static void disableWarning() {
-        IPConfig ipConfig = IPConfig.readConfig();
-        ipConfig.enableWarning = false;
-        ipConfig.saveConfigFile();
+        IPConfig.enableWarning.set(false);
     }
     
 }

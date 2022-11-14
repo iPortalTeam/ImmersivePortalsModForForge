@@ -1,8 +1,6 @@
 package qouteall.q_misc_util.api;
 
 import com.mojang.serialization.Lifecycle;
-import net.fabricmc.fabric.api.event.Event;
-import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.core.Holder;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
@@ -35,17 +33,17 @@ public class DimensionAPI {
         void run(WorldGenSettings worldGenSettings, RegistryAccess registryAccess);
     }
     
-    public static final Event<ServerDimensionsLoadCallback> serverDimensionsLoadEvent =
-        EventFactory.createArrayBacked(
-            ServerDimensionsLoadCallback.class,
-            (listeners) -> ((generatorOptions, registryManager) -> {
-                for (ServerDimensionsLoadCallback listener : listeners) {
-                    DimensionMisc.ensureRegistryNotFrozen(generatorOptions);
-                    listener.run(generatorOptions, registryManager);
-                }
-                DimensionMisc.ensureRegistryFrozen(generatorOptions);
-            })
-        );
+//    public static final Event<ServerDimensionsLoadCallback> serverDimensionsLoadEvent =
+//        EventFactory.createArrayBacked(
+//            ServerDimensionsLoadCallback.class,
+//            (listeners) -> ((generatorOptions, registryManager) -> {
+//                for (ServerDimensionsLoadCallback listener : listeners) {
+//                    DimensionMisc.ensureRegistryNotFrozen(generatorOptions);
+//                    listener.run(generatorOptions, registryManager);
+//                }
+//                DimensionMisc.ensureRegistryFrozen(generatorOptions);
+//            })
+//        );
     
     /**
      * Add a new dimension during server initialization.
@@ -163,30 +161,30 @@ public class DimensionAPI {
         void run(Set<ResourceKey<Level>> dimensions);
     }
     
-    /**
-     * Will be triggered when the server dynamically add or remove a dimension
-     * Does not get triggered during server initialization
-     */
-    public static final Event<DynamicUpdateListener> serverDimensionDynamicUpdateEvent =
-        EventFactory.createArrayBacked(
-            DynamicUpdateListener.class,
-            arr -> (set) -> {
-                for (DynamicUpdateListener runnable : arr) {
-                    runnable.run(set);
-                }
-            }
-        );
+//    /**
+//     * Will be triggered when the server dynamically add or remove a dimension
+//     * Does not get triggered during server initialization
+//     */
+//    public static final Event<DynamicUpdateListener> serverDimensionDynamicUpdateEvent = //TODO Reimplement this !IMPORTANT
+//        EventFactory.createArrayBacked(
+//            DynamicUpdateListener.class,
+//            arr -> (set) -> {
+//                for (DynamicUpdateListener runnable : arr) {
+//                    runnable.run(set);
+//                }
+//            }
+//        );
     
-    /**
-     * Will be triggered when the client receives dimension data synchronization
-     */
-    public static final Event<DynamicUpdateListener> clientDimensionUpdateEvent =
-        EventFactory.createArrayBacked(
-            DynamicUpdateListener.class,
-            arr -> (set) -> {
-                for (DynamicUpdateListener runnable : arr) {
-                    runnable.run(set);
-                }
-            }
-        );
+//    /**
+//     * Will be triggered when the client receives dimension data synchronization
+//     */
+//    public static final Event<DynamicUpdateListener> clientDimensionUpdateEvent = //TODO Reimplement this !IMPORTANT
+//        EventFactory.createArrayBacked(
+//            DynamicUpdateListener.class,
+//            arr -> (set) -> {
+//                for (DynamicUpdateListener runnable : arr) {
+//                    runnable.run(set);
+//                }
+//            }
+//        );
 }
