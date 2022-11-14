@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.teleportation;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
@@ -50,7 +50,7 @@ public class AnimatedPortalTeleportationManager {
 //        lastStateTickDelta = 0;
 //    }
 //
-//    @Environment(EnvType.CLIENT)
+//    @OnlyIn(Dist.CLIENT)
 //    private void updateClient() {
 //        Validate.isTrue(portal.level.isClientSide());
 //        lastState = portal.getPortalState();

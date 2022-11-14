@@ -1,8 +1,8 @@
 package qouteall.q_misc_util;
 
 import io.netty.buffer.Unpooled;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -30,7 +30,7 @@ public class MiscNetworking {
     public static final ResourceLocation id_stcDimSync =
         new ResourceLocation("imm_ptl", "dim_sync");
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void initClient() {
         ClientPlayNetworking.registerGlobalReceiver(
             MiscNetworking.id_stcRemote,
@@ -78,7 +78,7 @@ public class MiscNetworking {
         return new ClientboundCustomPayloadPacket(id_stcDimSync, buf);
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     private static void processDimSync(
         FriendlyByteBuf buf,
         ClientPacketListener packetListener

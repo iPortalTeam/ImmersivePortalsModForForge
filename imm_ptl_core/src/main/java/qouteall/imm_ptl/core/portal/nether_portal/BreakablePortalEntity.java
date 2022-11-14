@@ -1,8 +1,6 @@
 package qouteall.imm_ptl.core.portal.nether_portal;
 
 import com.mojang.math.Quaternion;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -10,11 +8,12 @@ import net.minecraft.nbt.NbtUtils;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
@@ -188,7 +187,7 @@ public abstract class BreakablePortalEntity extends Portal {
     
     protected abstract boolean isPortalIntactOnThisSide();
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     protected abstract void addSoundAndParticle();
     
     private static final LimitedLogger limitedLogger = new LimitedLogger(20);

@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.portal.animation;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import qouteall.imm_ptl.core.ClientWorldLoader;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.portal.Portal;
@@ -13,7 +13,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.function.Consumer;
 
-@Environment(EnvType.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class ClientPortalAnimationManagement {
     private static final Map<Portal, RunningDefaultAnimation> defaultAnimatedPortals = new HashMap<>();
     private static final HashSet<Portal> customAnimatedPortals = new HashSet<>();

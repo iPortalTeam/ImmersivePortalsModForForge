@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.platform_specific;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientChunkEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
@@ -31,14 +31,14 @@ public class O_O {
         return false;
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void onPlayerChangeDimensionClient(
         ResourceKey<Level> from, ResourceKey<Level> to
     ) {
         RequiemCompat.onPlayerTeleportedClient();
     }
 
-//    @Environment(EnvType.CLIENT)
+//    @OnlyIn(Dist.CLIENT)
 //    public static void segregateClientEntity(
 //        ClientWorld fromWorld,
 //        Entity entity
@@ -108,7 +108,7 @@ public class O_O {
     
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static ClientChunkCache createMyClientChunkManager(ClientLevel world, int loadDistance) {
         return new MyClientChunkManager(world, loadDistance);
     }

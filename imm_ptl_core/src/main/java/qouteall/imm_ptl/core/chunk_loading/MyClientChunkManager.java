@@ -1,8 +1,8 @@
 package qouteall.imm_ptl.core.chunk_loading;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.multiplayer.ClientChunkCache;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.Registry;
@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 // allow storing chunks that are far away from the player
-@Environment(EnvType.CLIENT)
+@OnlyIn(Dist.CLIENT)
 @IPVanillaCopy
 public class MyClientChunkManager extends ClientChunkCache {
     private static final Logger LOGGER = LogManager.getLogger();

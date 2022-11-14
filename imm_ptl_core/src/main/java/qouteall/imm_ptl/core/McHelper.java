@@ -7,8 +7,8 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.JsonOps;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -375,7 +375,7 @@ public class McHelper {
     }
     
     // because withUnderline is client only
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static MutableComponent getLinkText(String link) {
         return Component.literal(link).withStyle(
             style -> style.withClickEvent(new ClickEvent(

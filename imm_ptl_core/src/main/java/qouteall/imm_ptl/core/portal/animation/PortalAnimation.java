@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.portal.animation;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import org.apache.commons.lang3.Validate;
@@ -47,15 +47,15 @@ public class PortalAnimation {
     public PortalState thisTickAnimatedState;
     
     // for client player teleportation
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @Nullable
     public PortalState clientLastFramePortalState;
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public long clientLastFramePortalStateCounter = -1;
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @Nullable
     public PortalState clientCurrentFramePortalState;
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public long clientCurrentFramePortalStateCounter = -1;
     
     public void readFromTag(CompoundTag tag) {
@@ -206,7 +206,7 @@ public class PortalAnimation {
         }
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     private static void markRequiresClientAnimationUpdate(Portal portal) {
         ClientPortalAnimationManagement.markRequiresCustomAnimationUpdate(portal);
     }
@@ -410,7 +410,7 @@ public class PortalAnimation {
         return UnilateralPortalState.combine(from.build(), to.build());
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public void updateClientState(Portal portal, long currentTeleportationCounter) {
         if (currentTeleportationCounter == clientCurrentFramePortalStateCounter) {
             return;

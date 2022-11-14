@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.platform_specific;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -59,7 +59,7 @@ public class RequiemCompat {
         return (Mob) possessedEntity;
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void onPlayerTeleportedClient() {
         if (!isRequiemPresent) {
             return;

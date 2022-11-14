@@ -3,8 +3,8 @@ package qouteall.imm_ptl.core.portal;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Quaternion;
 import com.mojang.math.Vector3f;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.Util;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -202,7 +202,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     @Nullable
     public List<String> commandsOnTeleported;
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     PortalRenderInfo portalRenderInfo;
     
     public final PortalAnimation animation = new PortalAnimation();
@@ -405,7 +405,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
      *                                  Every 3 vertices correspond to a triangle.
      *                                  In camera-centered coordinate.
      */
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @Override
     public void renderViewAreaMesh(Vec3 portalPosRelativeToCamera, Consumer<Vec3> vertexOutput) {
         if (this instanceof Mirror) {
@@ -945,7 +945,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         return false;
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     private boolean isPortalValidClient() {
         boolean contains = ClientWorldLoader.getServerDimensions().contains(dimensionTo);
         if (!contains) {
@@ -1349,7 +1349,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     
     
     // function return true for culled
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @Override
     public BoxPredicate getInnerFrustumCullingFunc(
         double cameraX, double cameraY, double cameraZ
@@ -1453,7 +1453,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         unsetRemoved();
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public PortalLike getRenderingDelegate() {
         if (IPGlobal.enablePortalRenderingMerge) {
             PortalGroup group = PortalRenderInfo.getGroupOf(this);
@@ -1606,7 +1606,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     }
     
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     private void acceptDataSync(Vec3 pos, CompoundTag customData) {
         PortalState oldState = getPortalState();
         

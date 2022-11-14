@@ -1,14 +1,14 @@
 package qouteall.imm_ptl.core.compat;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.fabricmc.loader.api.FabricLoader;
 import qouteall.q_misc_util.Helper;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-@Environment(EnvType.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class IPFlywheelCompat {
     
     public static boolean isFlywheelPresent = false;

@@ -3,8 +3,8 @@ package qouteall.imm_ptl.core.portal;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Quaternion;
 import it.unimi.dsi.fastutil.objects.ObjectList;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -23,7 +23,7 @@ import java.util.function.Consumer;
  * You probably need to manipulate portal entities, not PortalLike
  */
 public interface PortalLike {
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     BoxPredicate getInnerFrustumCullingFunc(
         double cameraX, double cameraY, double cameraZ
     );
@@ -77,7 +77,7 @@ public interface PortalLike {
     @Nullable
     Vec3[] getOuterFrustumCullingVertices();
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     void renderViewAreaMesh(Vec3 portalPosRelativeToCamera, Consumer<Vec3> vertexOutput);
     
     // Scaling does not interfere camera transformation

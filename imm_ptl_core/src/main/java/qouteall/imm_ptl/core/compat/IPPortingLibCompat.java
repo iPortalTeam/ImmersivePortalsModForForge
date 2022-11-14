@@ -1,8 +1,8 @@
 package qouteall.imm_ptl.core.compat;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import qouteall.imm_ptl.core.ducks.IEFrameBuffer;
@@ -31,7 +31,7 @@ public class IPPortingLibCompat {
         }
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static boolean getIsStencilEnabled(RenderTarget renderTarget) {
         if (isPortingLibPresent) {
             return Helper.noError(
@@ -43,7 +43,7 @@ public class IPPortingLibCompat {
         }
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void setIsStencilEnabled(RenderTarget renderTarget, boolean cond) {
         if (isPortingLibPresent) {
             

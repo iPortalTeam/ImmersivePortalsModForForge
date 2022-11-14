@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.compat;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.ChatFormatting;
@@ -128,7 +128,7 @@ public class IPModInfoChecking {
     
     // NOTE do not run it on render thread
     @Nullable
-    @Environment(EnvType.CLIENT) // TODO do it on dedicated server
+    @OnlyIn(Dist.CLIENT) // TODO do it on dedicated server
     public static ImmPtlInfo fetchImmPtlInfoFromInternet() {
         String url = O_O.getImmPtlModInfoUrl();
         
@@ -207,7 +207,7 @@ public class IPModInfoChecking {
         
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void initClient() {
         Util.backgroundExecutor().execute(() -> {
             if (!IPGlobal.checkModInfoFromInternet) {

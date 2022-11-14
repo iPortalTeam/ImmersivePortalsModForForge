@@ -1,8 +1,8 @@
 package qouteall.imm_ptl.core.render;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.CHelper;
@@ -17,7 +17,7 @@ import qouteall.q_misc_util.my_util.LimitedLogger;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 
-@Environment(EnvType.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class GuiPortalRendering {
     private static final LimitedLogger limitedLogger = new LimitedLogger(10);
     

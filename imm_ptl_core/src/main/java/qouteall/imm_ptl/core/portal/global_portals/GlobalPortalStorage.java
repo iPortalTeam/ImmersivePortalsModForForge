@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.portal.global_portals;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
@@ -96,12 +96,12 @@ public class GlobalPortalStorage extends SavedData {
         );
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     private static void initClient() {
         IPGlobal.clientCleanupSignal.connect(GlobalPortalStorage::onClientCleanup);
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     private static void onClientCleanup() {
         if (ClientWorldLoader.getIsInitialized()) {
             for (ClientLevel clientWorld : ClientWorldLoader.getClientWorlds()) {
@@ -296,7 +296,7 @@ public class GlobalPortalStorage extends SavedData {
         //removed
     }
     
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void receiveGlobalPortalSync(ResourceKey<Level> dimension, CompoundTag compoundTag) {
         ClientLevel world = ClientWorldLoader.getWorld(dimension);
         
