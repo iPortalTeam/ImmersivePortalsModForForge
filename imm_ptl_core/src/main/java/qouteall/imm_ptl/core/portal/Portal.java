@@ -1712,6 +1712,48 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         );
     }
     
+    @Nullable
+    public Portal getAnimationHolder() {
+        if (animation.hasAnimationDriver()) {
+            return this;
+        }
+        
+        PortalExtension portalExtension = PortalExtension.get(this);
+        
+        if (portalExtension.flippedPortal != null) {
+            if (portalExtension.flippedPortal.animation.hasAnimationDriver()) {
+                return portalExtension.flippedPortal;
+            }
+        }
+        
+        if (portalExtension.reversePortal != null) {
+            if (portalExtension.reversePortal.animation.hasAnimationDriver()) {
+                return portalExtension.reversePortal;
+            }
+        }
+        
+        if (portalExtension.parallelPortal != null) {
+            if (portalExtension.parallelPortal.animation.hasAnimationDriver()) {
+                return portalExtension.parallelPortal;
+            }
+        }
+        
+        return null;
+    }
+    
+    public Portal getPossibleAnimationHolder() {
+        Portal holder = getAnimationHolder();
+        if (holder != null) {
+            return holder;
+        }
+        return this;
+    }
+    
+    public long getAnimationEffectiveTime() {
+        Portal holder = getPossibleAnimationHolder();
+        return holder.animation.getEffectiveTime(holder.level.getGameTime());
+    }
+    
     public static class RemoteCallables {
         public static void acceptPortalDataSync(
             ResourceKey<Level> dim,

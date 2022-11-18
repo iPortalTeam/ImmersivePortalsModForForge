@@ -4,12 +4,14 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.coordinates.Vec3Argument;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import qouteall.imm_ptl.core.McHelper;
@@ -18,10 +20,8 @@ import qouteall.imm_ptl.core.portal.PortalExtension;
 import qouteall.imm_ptl.core.portal.PortalState;
 import qouteall.imm_ptl.core.portal.animation.*;
 import qouteall.q_misc_util.my_util.Access;
-import qouteall.q_misc_util.my_util.DQuaternion;
 import qouteall.q_misc_util.my_util.Vec2d;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -38,6 +38,7 @@ public class PortalAnimationCommand {
                 );
                 
                 PortalCommand.reloadPortal(portal);
+                context.getSource().sendSuccess(getAnimationInfo(portal), false);
             }))
         );
         
@@ -47,6 +48,7 @@ public class PortalAnimationCommand {
                     portal, Portal::pauseAnimation
                 );
                 PortalCommand.reloadPortal(portal);
+                context.getSource().sendSuccess(Component.literal("Paused"), false);
             }))
         );
         
@@ -56,7 +58,26 @@ public class PortalAnimationCommand {
                     portal, Portal::resumeAnimation
                 );
                 PortalCommand.reloadPortal(portal);
+                context.getSource().sendSuccess(Component.literal("Resumed"), false);
             }))
+        );
+        
+        builder.then(Commands.literal("all_pause")
+            .executes(context -> {
+                ServerLevel level = context.getSource().getLevel();
+                for (Entity entity : level.getAllEntities()) {
+                    if (entity instanceof Portal portal) {
+                        PortalExtension.forClusterPortals(
+                            portal, Portal::pauseAnimation
+                        );
+                        context.getSource().sendSuccess(
+                            Component.literal("Paused " + portal.toString()),
+                            false
+                        );
+                    }
+                }
+                return 0;
+            })
         );
         
         builder.then(Commands.literal("rotate_infinitely")
@@ -72,6 +93,7 @@ public class PortalAnimationCommand {
                             giveRotationAnimation(portal, rotationCenter, axis, angularVelocity);
                             
                             PortalCommand.reloadPortal(portal);
+                            context.getSource().sendSuccess(getAnimationInfo(portal), false);
                         }))
                     )
                 )
@@ -91,6 +113,7 @@ public class PortalAnimationCommand {
                 giveRotationAnimation(portal, rotationCenter, axis, angularVelocity);
                 
                 PortalCommand.reloadPortal(portal);
+                context.getSource().sendSuccess(getAnimationInfo(portal), false);
             }))
         );
         
@@ -191,6 +214,7 @@ public class PortalAnimationCommand {
                     giveRotationAnimation(portal, portal.getOriginPos(), portal.getNormal(), angularVelocity);
                     
                     PortalCommand.reloadPortal(portal);
+                    context.getSource().sendSuccess(getAnimationInfo(portal), false);
                 }))
             )
         );
@@ -202,28 +226,50 @@ public class PortalAnimationCommand {
                     
                     double animationScale = 10;
                     
-                    PortalState endingState = portal.getAnimationEndingState();
-                    
                     portal.addThisSideAnimationDriver(NormalAnimation.createSizeAnimation(
                         portal,
                         new Vec2d(1.0 / animationScale, 1.0 / animationScale),
                         new Vec2d(1, 1),
-                        portal.animation.getEffectiveTime(portal.level.getGameTime()),
+                        portal.getAnimationEffectiveTime(),
                         durationTicks,
                         TimingFunction.sine
                     ));
                     PortalCommand.reloadPortal(portal);
+                    context.getSource().sendSuccess(getAnimationInfo(portal), false);
                 }))
             )
         );
         
-        LiteralArgumentBuilder<CommandSourceStack> builderBuilder =
-            Commands.literal("builder");
+        LiteralArgumentBuilder<CommandSourceStack> buildBuilder =
+            Commands.literal("build");
         
-        builderBuilder.then(Commands.literal("begin")
+        buildBuilder.then(Commands.literal("begin")
             .executes(context -> PortalCommand.processPortalTargetedCommand(context, portal -> {
+                Portal animationHolder = portal.getAnimationHolder();
+                if (animationHolder != null && animationHolder != portal) {
+                    sendAnimationHolderFailure(context, animationHolder);
+                    return;
+                }
+                
                 PortalAnimation animation = portal.animation;
                 animation.setPaused(portal, true);
+                
+                PortalState portalState = portal.getPortalState();
+                assert portalState != null;
+                if (animation.thisSideReferenceState != null && animation.otherSideReferenceState != null) {
+                    // set this side state back to reference state
+                    PortalState newState = UnilateralPortalState.combine(
+                        animation.thisSideReferenceState, animation.otherSideReferenceState
+                    );
+                    portal.setPortalState(newState);
+                }
+                else {
+                    // initialize reference state
+                    animation.thisSideReferenceState =
+                        UnilateralPortalState.extractThisSide(portalState);
+                    animation.otherSideReferenceState =
+                        UnilateralPortalState.extractOtherSide(portalState);
+                }
                 
                 NormalAnimation.Phase dummyPhase = new NormalAnimation.Phase.Builder()
                     .durationTicks(0)
@@ -231,26 +277,32 @@ public class PortalAnimationCommand {
                 NormalAnimation newNormalAnimation = new NormalAnimation.Builder()
                     .phases(List.of(dummyPhase))
                     .loopCount(1)
-                    .startingGameTime(animation.getEffectiveTime(portal.level.getGameTime()))
+                    .startingGameTime(portal.getAnimationEffectiveTime())
                     .build();
-                portal.animation.thisSideReferenceState = UnilateralPortalState.extractThisSide(portal.getPortalState());
-                portal.animation.thisSideAnimations.add(newNormalAnimation);
+                animation.thisSideAnimations.add(newNormalAnimation);
+                animation.otherSideAnimations.add(newNormalAnimation); // reusing immutable object
                 
                 PortalCommand.reloadPortal(portal);
-                context.getSource().sendSuccess(getAnimationNbtInfo(portal), false);
+                context.getSource().sendSuccess(getAnimationInfo(portal), false);
             }))
         );
         
-        builderBuilder.then(Commands.literal("append_phase")
+        buildBuilder.then(Commands.literal("append_phase")
             .then(Commands.argument("durationTicks", IntegerArgumentType.integer(0, 1000))
                 .executes(context -> PortalCommand.processPortalTargetedCommand(context, portal -> {
+                    Portal animationHolder = portal.getAnimationHolder();
+                    if (animationHolder != null && animationHolder != portal) {
+                        sendAnimationHolderFailure(context, animationHolder);
+                        return;
+                    }
+                    
                     int durationTicks = IntegerArgumentType.getInteger(context, "durationTicks");
                     
                     PortalAnimation animation = portal.animation;
                     
-                    Access<NormalAnimation> animationToBuild = getAnimationToBuild(animation);
+                    AnimationBuilderContext animationBuilderContext = getAnimationBuilderContext(portal);
                     
-                    if (animationToBuild == null) {
+                    if (animationBuilderContext == null) {
                         context.getSource().sendFailure(Component.literal("No animation to build"));
                         return;
                     }
@@ -258,97 +310,201 @@ public class PortalAnimationCommand {
                     PortalState currentPortalState = portal.getPortalState();
                     assert currentPortalState != null;
                     
-                    UnilateralPortalState referenceState = animation.thisSideReferenceState;
-                    if (referenceState == null) {
+                    UnilateralPortalState thisSideReferenceState = animation.thisSideReferenceState;
+                    if (thisSideReferenceState == null) {
                         context.getSource().sendFailure(Component.literal("No reference state"));
                         return;
                     }
-                    
-                    DeltaUnilateralPortalState delta =
+                    DeltaUnilateralPortalState thisSideDelta =
                         UnilateralPortalState.extractThisSide(currentPortalState)
-                            .subtract(referenceState);
+                            .subtract(thisSideReferenceState);
                     
-                    NormalAnimation.Phase newPhase = new NormalAnimation.Phase.Builder()
-                        .durationTicks(durationTicks)
-                        .timingFunction(TimingFunction.sine)
-                        .delta(delta)
-                        .build();
-                    ImmutableList<NormalAnimation.Phase> newPhases = ImmutableList.<NormalAnimation.Phase>builder()
-                        .addAll(animationToBuild.get().phases)
-                        .add(newPhase)
-                        .build();
+                    UnilateralPortalState otherSideReferenceState = animation.otherSideReferenceState;
+                    if (otherSideReferenceState == null) {
+                        context.getSource().sendFailure(Component.literal("No reference state"));
+                        return;
+                    }
+                    DeltaUnilateralPortalState otherSideDelta =
+                        UnilateralPortalState.extractOtherSide(currentPortalState)
+                            .subtract(otherSideReferenceState);
                     
-                    animationToBuild.set(new NormalAnimation.Builder()
-                        .phases(newPhases)
-                        .loopCount(animationToBuild.get().loopCount)
-                        .startingGameTime(animationToBuild.get().startingGameTime)
+                    NormalAnimation thisSideAnimation = animationBuilderContext.thisSideAnimation().get();
+                    animationBuilderContext.thisSideAnimation().set(new NormalAnimation.Builder()
+                        .phases(ImmutableList.<NormalAnimation.Phase>builder()
+                            .addAll(thisSideAnimation.phases)
+                            .add(new NormalAnimation.Phase.Builder()
+                                .durationTicks(durationTicks)
+                                .timingFunction(TimingFunction.sine)
+                                .delta(thisSideDelta)
+                                .build())
+                            .build())
+                        .loopCount(thisSideAnimation.loopCount)
+                        .startingGameTime(thisSideAnimation.startingGameTime)
+                        .build()
+                    );
+                    NormalAnimation otherSideAnimation = animationBuilderContext.otherSideAnimation().get();
+                    animationBuilderContext.otherSideAnimation().set(new NormalAnimation.Builder()
+                        .phases(ImmutableList.<NormalAnimation.Phase>builder()
+                            .addAll(otherSideAnimation.phases)
+                            .add(new NormalAnimation.Phase.Builder()
+                                .durationTicks(durationTicks)
+                                .timingFunction(TimingFunction.sine)
+                                .delta(otherSideDelta)
+                                .build())
+                            .build())
+                        .loopCount(otherSideAnimation.loopCount)
+                        .startingGameTime(otherSideAnimation.startingGameTime)
                         .build()
                     );
                     
                     PortalCommand.reloadPortal(portal);
-                    context.getSource().sendSuccess(getAnimationNbtInfo(portal), false);
+                    context.getSource().sendSuccess(getAnimationInfo(portal), false);
                 }))
             )
         );
         
-        builderBuilder.then(Commands.literal("create_loop")
+        buildBuilder.then(Commands.literal("finish")
+            .executes(context -> PortalCommand.processPortalTargetedCommand(context, portal -> {
+                finishBuildingNormalAnimation(context, portal, 100000);
+            }))
             .then(Commands.argument("loopCount", IntegerArgumentType.integer(0, 100000))
                 .executes(context -> PortalCommand.processPortalTargetedCommand(context, portal -> {
-                    // generated by GitHub copilot
                     int loopCount = IntegerArgumentType.getInteger(context, "loopCount");
                     
-                    PortalAnimation animation = portal.animation;
-                    
-                    Access<NormalAnimation> animationToBuild = getAnimationToBuild(animation);
-                    
-                    if (animationToBuild == null) {
-                        context.getSource().sendFailure(Component.literal("No animation to build"));
-                        return;
-                    }
-                    
-                    List<NormalAnimation.Phase> phases = animationToBuild.get().phases;
-                    
-                    if (phases.isEmpty()) {
-                        context.getSource().sendFailure(Component.literal("No phases to loop"));
-                        return;
-                    }
-                    
-                    NormalAnimation.Phase lastPhase = phases.get(phases.size() - 1);
-                    DeltaUnilateralPortalState lastPhaseDelta = lastPhase.delta().purgeFPError();
-                    
-                    if (!lastPhaseDelta.isIdentity()) {
-                        // the animation does not return to the beginning state
-                        // insert another stage to make it return to the beginning state
-                        // otherwise it will abruptly jump
-                        NormalAnimation.Phase newPhase = new NormalAnimation.Phase.Builder()
-                            .durationTicks(5)
-                            .timingFunction(TimingFunction.sine)
-                            .delta(DeltaUnilateralPortalState.identity)
-                            .build();
-                        phases = ImmutableList.<NormalAnimation.Phase>builder()
-                            .addAll(phases)
-                            .add(newPhase)
-                            .build();
-                    }
-                    
-                    animationToBuild.set(
-                        new NormalAnimation.Builder()
-                            .phases(phases)
-                            .loopCount(loopCount)
-                            .startingGameTime(animationToBuild.get().startingGameTime)
-                            .build()
-                    );
-                    
-                    animation.setPaused(portal, false);
-                    
-                    PortalCommand.reloadPortal(portal);
-                    context.getSource().sendSuccess(getAnimationNbtInfo(portal), false);
+                    finishBuildingNormalAnimation(context, portal, loopCount);
                 }))
             )
         );
         
-        builder.then(builderBuilder);
+        builder.then(buildBuilder);
+    }
+    
+    private static AnimationBuilderContext getAnimationBuilderContext(
+        Portal portal
+    ) {
+        PortalAnimation animation = portal.animation;
+        if (animation.thisSideAnimations.isEmpty() || animation.otherSideAnimations.isEmpty()) {
+            return null;
+        }
         
+        int thisSideIndex = animation.thisSideAnimations.size() - 1;
+        PortalAnimationDriver lastThisSideAnimation = animation.thisSideAnimations.get(thisSideIndex);
+        if (!(lastThisSideAnimation instanceof NormalAnimation thisSideNormalAnimation)) {
+            return null;
+        }
+        
+        int otherSideIndex = animation.otherSideAnimations.size() - 1;
+        PortalAnimationDriver lastOtherSideAnimation = animation.otherSideAnimations.get(otherSideIndex);
+        if (!(lastOtherSideAnimation instanceof NormalAnimation otherSideNormalAnimation)) {
+            return null;
+        }
+        
+        return new AnimationBuilderContext(
+            portal,
+            new Access<NormalAnimation>() {
+                @Override
+                public NormalAnimation get() {
+                    return thisSideNormalAnimation;
+                }
+                
+                @Override
+                public void set(NormalAnimation normalAnimation) {
+                    animation.thisSideAnimations.set(thisSideIndex, normalAnimation);
+                }
+            },
+            new Access<NormalAnimation>() {
+                @Override
+                public NormalAnimation get() {
+                    return otherSideNormalAnimation;
+                }
+                
+                @Override
+                public void set(NormalAnimation normalAnimation) {
+                    animation.otherSideAnimations.set(otherSideIndex, normalAnimation);
+                }
+            }
+        );
+    }
+    
+    private static void sendAnimationHolderFailure(CommandContext<CommandSourceStack> context, Portal animationHolder) {
+        context.getSource().sendFailure(Component.literal(
+            "This portal entity is not animation holder. Use this command to " + animationHolder
+        ));
+    }
+    
+    private static void finishBuildingNormalAnimation(CommandContext<CommandSourceStack> context, Portal portal, int loopCount) {
+        Portal animationHolder = portal.getAnimationHolder();
+        if (animationHolder != null && animationHolder != portal) {
+            sendAnimationHolderFailure(context, animationHolder);
+            return;
+        }
+        
+        PortalAnimation animation = portal.animation;
+        
+        AnimationBuilderContext animationBuilderContext = getAnimationBuilderContext(portal);
+        
+        if (animationBuilderContext == null) {
+            context.getSource().sendFailure(Component.literal("No animation to build"));
+            return;
+        }
+        
+        List<NormalAnimation.Phase> thisSidePhases = animationBuilderContext.thisSideAnimation().get().phases;
+        List<NormalAnimation.Phase> otherSidePhases = animationBuilderContext.otherSideAnimation().get().phases;
+        
+        if (thisSidePhases.isEmpty() || otherSidePhases.isEmpty()) {
+            context.getSource().sendFailure(Component.literal("No phase"));
+            return;
+        }
+        
+        NormalAnimation.Phase lastThisSidePhase = thisSidePhases.get(thisSidePhases.size() - 1);
+        DeltaUnilateralPortalState lastThisSidePhaseDelta = lastThisSidePhase.delta().purgeFPError();
+        NormalAnimation.Phase lastOtherSidePhase = otherSidePhases.get(otherSidePhases.size() - 1);
+        DeltaUnilateralPortalState lastOtherSidePhaseDelta = lastOtherSidePhase.delta().purgeFPError();
+        
+        if (loopCount > 1 && !lastThisSidePhaseDelta.isIdentity() || !lastOtherSidePhaseDelta.isIdentity()) {
+            // the animation does not return to the beginning state
+            // insert another stage to make it return to the beginning state
+            // otherwise it will abruptly jump
+            thisSidePhases = ImmutableList.<NormalAnimation.Phase>builder()
+                .addAll(thisSidePhases)
+                .add(new NormalAnimation.Phase.Builder()
+                    .durationTicks(5)
+                    .timingFunction(TimingFunction.sine)
+                    .delta(DeltaUnilateralPortalState.identity)
+                    .build())
+                .build();
+            otherSidePhases = ImmutableList.<NormalAnimation.Phase>builder()
+                .addAll(otherSidePhases)
+                .add(new NormalAnimation.Phase.Builder()
+                    .durationTicks(5)
+                    .timingFunction(TimingFunction.sine)
+                    .delta(DeltaUnilateralPortalState.identity)
+                    .build())
+                .build();
+        }
+        
+        animationBuilderContext.thisSideAnimation().set(
+            new NormalAnimation.Builder()
+                .phases(thisSidePhases)
+                .loopCount(loopCount)
+                .startingGameTime(animationBuilderContext.thisSideAnimation().get().startingGameTime)
+                .build()
+        );
+        animationBuilderContext.otherSideAnimation().set(
+            new NormalAnimation.Builder()
+                .phases(otherSidePhases)
+                .loopCount(loopCount)
+                .startingGameTime(animationBuilderContext.otherSideAnimation().get().startingGameTime)
+                .build()
+        );
+        
+        animation.setBackToPausingState(portal);
+        
+        animation.setPaused(portal, false);
+        
+        PortalExtension.forClusterPortals(portal, Portal::reloadAndSyncToClientNextTick);
+        
+        context.getSource().sendSuccess(getAnimationInfo(portal), false);
     }
     
     private static void giveRotationAnimation(Portal portal, Vec3 rotationCenter, Vec3 axis, double angularVelocity) {
@@ -359,44 +515,21 @@ public class PortalAnimationCommand {
                 .setRotationCenter(rotationCenter)
                 .setRotationAxis(axis)
                 .setDegreesPerTick(angularVelocity)
-                .setStartGameTime(portal.level.getGameTime())
+                .setStartGameTime(portal.getAnimationEffectiveTime())
                 .setEndGameTime(Long.MAX_VALUE)
                 .build()
         );
     }
     
-    @Nullable
-    private static Access<NormalAnimation> getAnimationToBuild(PortalAnimation animation) {
-        if (animation.thisSideAnimations.isEmpty()) {
-            return null;
-        }
-        
-        int index = animation.thisSideAnimations.size() - 1;
-        PortalAnimationDriver lastAnimation = animation.thisSideAnimations.get(index);
-        if (!(lastAnimation instanceof NormalAnimation normalAnimation)) {
-            return null;
-        }
-        
-        return new Access<NormalAnimation>() {
-            @Override
-            public NormalAnimation get() {
-                return normalAnimation;
-            }
-            
-            @Override
-            public void set(NormalAnimation normalAnimation) {
-                animation.thisSideAnimations.set(index, normalAnimation);
-            }
-        };
+    private static Component getAnimationInfo(Portal portal) {
+        return portal.animation.getInfo(portal);
     }
     
-    private static Component getAnimationNbtInfo(Portal portal) {
-        CompoundTag tag = new CompoundTag();
-        portal.animation.writeToTag(tag);
-        return McHelper.compoundTagToTextSorted(
-            tag,
-            " ",
-            0
-        );
+    private static record AnimationBuilderContext(
+        Portal portal,
+        Access<NormalAnimation> thisSideAnimation,
+        Access<NormalAnimation> otherSideAnimation
+    ) {
+    
     }
 }

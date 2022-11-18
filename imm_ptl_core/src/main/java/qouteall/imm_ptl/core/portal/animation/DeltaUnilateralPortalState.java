@@ -8,6 +8,8 @@ import qouteall.q_misc_util.my_util.DQuaternion;
 import qouteall.q_misc_util.my_util.Vec2d;
 
 import javax.annotation.Nullable;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 public record DeltaUnilateralPortalState(
     @Nullable Vec3 offset,
@@ -70,8 +72,8 @@ public record DeltaUnilateralPortalState(
             offset == null ? null : offset.scale(progress),
             rotation == null ? null : DQuaternion.interpolate(DQuaternion.identity, rotation, progress),
             sizeScaling == null ? null : new Vec2d(
-                Mth.lerp(progress, sizeScaling.x(), 1),
-                Mth.lerp(progress, sizeScaling.y(), 1)
+                Mth.lerp(progress, 1, sizeScaling.x()),
+                Mth.lerp(progress, 1, sizeScaling.y())
             )
         );
     }
@@ -128,6 +130,22 @@ public record DeltaUnilateralPortalState(
     
     public boolean isIdentity() {
         return offset == null && rotation == null && sizeScaling == null;
+    }
+    
+    @Override
+    public String toString() {
+        String str = Stream.of(
+            offset == null ? null : "offset=(%.3f,%.3f,%.3f)".formatted(
+                offset.x(), offset.y(), offset.z()
+            ),
+            rotation == null ? null : "rotation=(%.3f,%.3f,%.3f,%.3f)".formatted(
+                rotation.x, rotation.y, rotation.z, rotation.w
+            ),
+            sizeScaling == null ? null : "sizeScaling=(%.3f,%.3f)".formatted(
+                sizeScaling.x(), sizeScaling.y()
+            )
+        ).filter(Objects::nonNull).reduce((a, b) -> a + ", " + b).orElse("");
+        return "Delta(" + str + ')';
     }
     
     public static class Builder {
