@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraftforge.common.MinecraftForge;
 import qouteall.imm_ptl.core.chunk_loading.ChunkDataSyncManager;
 import qouteall.imm_ptl.core.chunk_loading.EntitySync;
 import qouteall.imm_ptl.core.chunk_loading.MyLoadingTicket;
@@ -81,6 +82,8 @@ public class IPModMain {
         
         LifecycleHack.markNamespaceStable("immersive_portals");
         LifecycleHack.markNamespaceStable("imm_ptl");
+
+        MinecraftForge.EVENT_BUS.register(IPModMain.class);
     }
     
 }

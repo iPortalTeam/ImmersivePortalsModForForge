@@ -1,13 +1,14 @@
 package qouteall.imm_ptl.core.compat;
 
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.forgespi.language.IModFileInfo;
 import org.apache.commons.lang3.Validate;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
@@ -26,7 +27,6 @@ import qouteall.q_misc_util.my_util.MyTaskList;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class IPModInfoChecking {
@@ -273,9 +273,9 @@ public class IPModInfoChecking {
         IPGlobal.clientTaskList.addTask(MyTaskList.withDelayCondition(
             () -> Minecraft.getInstance().level == null,
             MyTaskList.oneShotTask(() -> {
-                if (IPGlobal.enableWarning && !FabricLoader.getInstance().isDevelopmentEnvironment()) {
-                    List<ModContainer> topLevelMods = FabricLoader.getInstance().getAllMods().stream()
-                        .filter(modContainer -> modContainer.getContainingMod().isEmpty())
+                if (IPGlobal.enableWarning && FMLEnvironment.production) {
+                    List<IModFileInfo> topLevelMods = ModList.get().getModFiles().stream()
+                        .filter(modContainer -> modContainer.getMods().isEmpty())
                         .collect(Collectors.toList());
                     
                     if (topLevelMods.size() > 20) {

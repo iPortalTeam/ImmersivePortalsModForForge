@@ -1,14 +1,14 @@
 package qouteall.imm_ptl.core.platform_specific;
 
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.ModList;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
@@ -29,7 +29,7 @@ public class RequiemCompat {
     }
     
     public static void init() {
-        isRequiemPresent = FabricLoader.getInstance().isModLoaded("requiem");
+        isRequiemPresent = ModList.get().isLoaded("requiem");
         
         if (!isRequiemPresent) {
             return;

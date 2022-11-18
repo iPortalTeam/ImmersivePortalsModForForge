@@ -1,14 +1,10 @@
 package qouteall.imm_ptl.core.platform_specific;
 
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientChunkEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.VersionParsingException;
 import net.minecraft.SharedConstants;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientChunkCache;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.resources.ResourceKey;
@@ -17,6 +13,12 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.level.ChunkEvent;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import qouteall.imm_ptl.core.chunk_loading.MyClientChunkManager;
 import qouteall.imm_ptl.core.portal.custom_portal_gen.PortalGenInfo;
 import qouteall.q_misc_util.Helper;
@@ -28,7 +30,7 @@ public class O_O {
     public static boolean isDimensionalThreadingPresent = false;
     
     public static boolean isForge() {
-        return false;
+        return true;
     }
     
     @OnlyIn(Dist.CLIENT)
@@ -89,19 +91,15 @@ public class O_O {
     }
     
     public static void postClientChunkLoadEvent(LevelChunk chunk) {
-        ClientChunkEvents.CHUNK_LOAD.invoker().onChunkLoad(
-            ((ClientLevel) chunk.getLevel()), chunk
-        );
+        MinecraftForge.EVENT_BUS.post(new ChunkEvent.Load(chunk));
     }
     
     public static void postClientChunkUnloadEvent(LevelChunk chunk) {
-        ClientChunkEvents.CHUNK_UNLOAD.invoker().onChunkUnload(
-            ((ClientLevel) chunk.getLevel()), chunk
-        );
+        MinecraftForge.EVENT_BUS.post(new ChunkEvent.Unload(chunk));
     }
     
     public static boolean isDedicatedServer() {
-        return FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER;
+        return FMLEnvironment.dist == Dist.DEDICATED_SERVER;
     }
     
     public static void postPortalSpawnEventForge(PortalGenInfo info) {
@@ -114,7 +112,7 @@ public class O_O {
     }
     
     public static boolean getIsPehkuiPresent() {
-        return FabricLoader.getInstance().isModLoaded("pehkui");
+        return ModList.get().isLoaded("pehkui");
     }
     
     @Nullable

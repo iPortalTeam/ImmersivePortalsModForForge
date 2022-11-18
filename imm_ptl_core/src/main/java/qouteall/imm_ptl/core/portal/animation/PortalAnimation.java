@@ -1,5 +1,6 @@
 package qouteall.imm_ptl.core.portal.animation;
 
+import net.minecraft.ChatFormatting;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.nbt.CompoundTag;
