@@ -70,13 +70,10 @@ import java.util.stream.Stream;
 @OnlyIn(Dist.CLIENT)
 public class ClientDebugCommand {
 
-    @SubscribeEvent // TODO @Nick1st register this methode
-    public static void register(RegisterClientCommandsEvent event) {
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         if (FMLEnvironment.dist == Dist.DEDICATED_SERVER) {
             return;
         }
-
-        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         
         LiteralArgumentBuilder<CommandSourceStack> builder = Commands
             .literal("imm_ptl_client_debug")

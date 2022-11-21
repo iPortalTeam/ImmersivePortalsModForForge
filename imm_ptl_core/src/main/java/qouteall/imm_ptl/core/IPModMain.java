@@ -1,17 +1,9 @@
 package qouteall.imm_ptl.core;
 
-import com.mojang.brigadier.CommandDispatcher;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.minecraft.commands.CommandBuildContext;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
 import net.minecraftforge.common.MinecraftForge;
-import qouteall.imm_ptl.core.chunk_loading.ChunkDataSyncManager;
-import qouteall.imm_ptl.core.chunk_loading.EntitySync;
-import qouteall.imm_ptl.core.chunk_loading.MyLoadingTicket;
-import qouteall.imm_ptl.core.chunk_loading.NewChunkTrackingGraph;
-import qouteall.imm_ptl.core.chunk_loading.ServerPerformanceMonitor;
-import qouteall.imm_ptl.core.chunk_loading.WorldInfoSender;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import qouteall.imm_ptl.core.chunk_loading.*;
 import qouteall.imm_ptl.core.commands.PortalCommand;
 import qouteall.imm_ptl.core.commands.SubCommandArgumentType;
 import qouteall.imm_ptl.core.compat.IPPortingLibCompat;
@@ -22,7 +14,6 @@ import qouteall.imm_ptl.core.portal.PortalExtension;
 import qouteall.imm_ptl.core.portal.animation.NormalAnimation;
 import qouteall.imm_ptl.core.portal.animation.RotationAnimation;
 import qouteall.imm_ptl.core.portal.global_portals.GlobalPortalStorage;
-import qouteall.imm_ptl.core.render.VisibleSectionDiscovery;
 import qouteall.imm_ptl.core.teleportation.CollisionHelper;
 import qouteall.imm_ptl.core.teleportation.ServerTeleportationManager;
 import qouteall.q_misc_util.Helper;
@@ -71,9 +62,9 @@ public class IPModMain {
         
         IPPortingLibCompat.init();
         
-        CommandRegistrationCallback.EVENT.register(
-            (dispatcher, registryAccess, environment) -> PortalCommand.register(dispatcher)
-        );
+//        CommandRegistrationCallback.EVENT.register(
+//            (dispatcher, registryAccess, environment) -> PortalCommand.register(dispatcher)
+//        );
         SubCommandArgumentType.init();
         
         // intrinsic animation driver types
@@ -84,6 +75,12 @@ public class IPModMain {
         LifecycleHack.markNamespaceStable("imm_ptl");
 
         MinecraftForge.EVENT_BUS.register(IPModMain.class);
+        MinecraftForge.EVENT_BUS.register(IPModMainClient.class);
+    }
+
+    @SubscribeEvent
+    public static void registerCommands(RegisterCommandsEvent event) {
+        PortalCommand.register(event.getDispatcher());
     }
     
 }

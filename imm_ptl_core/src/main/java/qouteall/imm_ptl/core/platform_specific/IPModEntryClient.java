@@ -1,11 +1,12 @@
 package qouteall.imm_ptl.core.platform_specific;
 
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EntityType;
+import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.IPGlobal;
@@ -17,7 +18,6 @@ import qouteall.imm_ptl.core.compat.iris_compatibility.IrisInterface;
 import qouteall.imm_ptl.core.compat.sodium_compatibility.SodiumInterface;
 import qouteall.imm_ptl.core.portal.BreakableMirror;
 import qouteall.imm_ptl.core.portal.EndPortalEntity;
-import qouteall.imm_ptl.core.portal.LoadingIndicatorEntity;
 import qouteall.imm_ptl.core.portal.Mirror;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.global_portals.GlobalTrackedPortal;
@@ -32,9 +32,10 @@ import qouteall.q_misc_util.my_util.MyTaskList;
 
 import java.util.Arrays;
 
-public class IPModEntryClient implements ClientModInitializer {
-    
-    public static void initPortalRenderers() {
+public class IPModEntryClient {
+
+    @SubscribeEvent
+    public static void initPortalRenderers(EntityRenderersEvent.RegisterRenderers event) {
         
         Arrays.stream(new EntityType<?>[]{
             Portal.entityType,
@@ -49,29 +50,24 @@ public class IPModEntryClient implements ClientModInitializer {
         }).peek(
             Validate::notNull
         ).forEach(
-            entityType -> EntityRendererRegistry.register(
+            entityType -> event.registerEntityRenderer(
                 entityType,
                 (EntityRendererProvider) PortalEntityRenderer::new
             )
         );
-        
-        EntityRendererRegistry.register(
-            LoadingIndicatorEntity.entityType,
-            LoadingIndicatorRenderer::new
-        );
+
+        event.registerEntityRenderer(IPRegistry.LOADING_INDICATOR.get(), LoadingIndicatorRenderer::new);
         
     }
-    
-    @Override
-    public void onInitializeClient() {
-        IPModMainClient.init();
-        
-        initPortalRenderers();
-        
+
+    public static void onInitializeClient() {
+        FMLJavaModLoadingContext.get().getModEventBus().register(IPModMainClient.class);
+        FMLJavaModLoadingContext.get().getModEventBus().register(IPModEntryClient.class);
+
         boolean isSodiumPresent =
-            FabricLoader.getInstance().isModLoaded("sodium");
+                ModList.get().isLoaded("rubidium");
         if (isSodiumPresent) {
-            Helper.log("Sodium is present");
+            Helper.log("Rubidium is present");
             
             SodiumInterface.invoker = new SodiumInterface.OnSodiumPresent();
             
@@ -86,11 +82,11 @@ public class IPModEntryClient implements ClientModInitializer {
 //            }));
         }
         else {
-            Helper.log("Sodium is not present");
+            Helper.log("Rubidium is not present");
         }
         
-        if (FabricLoader.getInstance().isModLoaded("iris")) {
-            Helper.log("Iris is present");
+        if (ModList.get().isLoaded("oculus")) {
+            Helper.log("Oculus is present");
             IrisInterface.invoker = new IrisInterface.OnIrisPresent();
             ExperimentalIrisPortalRenderer.init();
             
