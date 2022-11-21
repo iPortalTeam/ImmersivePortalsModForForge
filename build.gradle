@@ -39,6 +39,9 @@ allprojects {
                 includeGroup "curse.maven"
             }
         }
+        repositories {
+            maven { url "https://maven.shedaniel.me/" }
+        }
         maven {
             name "theillusivec4"
             url = "https://maven.theillusivec4.top/"
@@ -86,6 +89,9 @@ allprojects {
         api fg.deobf("curse.maven:immersiveengineering-231951:${project.immersiveengineering_fileid}")
 
         compileOnly 'com.demonwav.mcdev:annotations:1.0'
+
+        // Cloth config
+        api(fg.deobf("me.shedaniel.cloth:cloth-config-forge:${project.cloth_config}"))
     }
 
     minecraft {
