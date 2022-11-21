@@ -35,11 +35,6 @@ public class MiscUtilModEntry {
         MiscUtilModEntryClient.onInitializeClient();
     }
 
-    @SubscribeEvent
-    public static void commonSetup(FMLCommonSetupEvent event) {
-        Message.register();
-    }
-
     public static void serverTick(TickEvent.ServerTickEvent event) {
         MiscGlobals.serverTaskList.processTasks();
     }

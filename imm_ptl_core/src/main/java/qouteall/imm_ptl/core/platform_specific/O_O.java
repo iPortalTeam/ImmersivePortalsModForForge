@@ -1,9 +1,5 @@
 package qouteall.imm_ptl.core.platform_specific;
 
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
-import net.fabricmc.loader.api.Version;
-import net.fabricmc.loader.api.VersionParsingException;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.multiplayer.ClientChunkCache;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -19,12 +15,13 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import qouteall.imm_ptl.core.chunk_loading.MyClientChunkManager;
 import qouteall.imm_ptl.core.portal.custom_portal_gen.PortalGenInfo;
 import qouteall.q_misc_util.Helper;
 
 import javax.annotation.Nullable;
-import java.util.Optional;
 
 public class O_O {
     public static boolean isDimensionalThreadingPresent = false;
@@ -129,26 +126,22 @@ public class O_O {
     }
     
     public static boolean isModLoadedWithinVersion(String modId, @Nullable String startVersion, @Nullable String endVersion) {
-        Optional<ModContainer> modContainer = FabricLoader.getInstance().getModContainer(modId);
-        if (modContainer.isPresent()) {
-            Version version = modContainer.get().getMetadata().getVersion();
-            
-            try {
-                if (startVersion != null) {
-                    int i = Version.parse(startVersion).compareTo(version);
-                    if (i > 0) {
-                        return false;
-                    }
+
+        if (ModList.get().isLoaded(modId)) { // TODO @Nick1st hopefully I didn't mess this up
+            ArtifactVersion version = ModList.get().getModContainerById(modId).get().getModInfo().getVersion();
+
+            if (startVersion != null) {
+                int i = version.compareTo(new DefaultArtifactVersion(startVersion));
+                if (i < 0) {
+                    return false;
                 }
-                
-                if (endVersion != null) {
-                    int i = Version.parse(endVersion).compareTo(version);
-                    if (i < 0) {
-                        return false;
-                    }
+            }
+
+            if (endVersion != null) {
+                int i = version.compareTo(new DefaultArtifactVersion(endVersion));
+                if (i > 0) {
+                    return false;
                 }
-            } catch (VersionParsingException e) {
-                e.printStackTrace();
             }
             
             return true;
@@ -159,21 +152,21 @@ public class O_O {
         }
     }
     
-    public static boolean shouldUpdateImmPtl(String latestReleaseVersion) {
-        Version currentVersion = FabricLoader.getInstance()
-            .getModContainer("imm_ptl_core").get().getMetadata().getVersion();
-        try {
-            Version latestVersion = Version.parse(latestReleaseVersion);
-            
-            if (latestVersion.compareTo(currentVersion) > 0) {
-                return true;
-            }
-        } catch (VersionParsingException e) {
-            e.printStackTrace();
-        }
-        
-        return false;
-    }
+//    public static boolean shouldUpdateImmPtl(String latestReleaseVersion) { // TODO @Nick1st Implement Forge Version checking
+//        Version currentVersion = FabricLoader.getInstance()
+//            .getModContainer("imm_ptl_core").get().getMetadata().getVersion();
+//        try {
+//            Version latestVersion = Version.parse(latestReleaseVersion);
+//
+//            if (latestVersion.compareTo(currentVersion) > 0) {
+//                return true;
+//            }
+//        } catch (VersionParsingException e) {
+//            e.printStackTrace();
+//        }
+//
+//        return false;
+//    }
     
     public static String getModDownloadLink() {
         return "https://www.curseforge.com/minecraft/mc-mods/immersive-portals-mod";
