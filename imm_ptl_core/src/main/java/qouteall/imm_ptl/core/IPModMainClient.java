@@ -7,6 +7,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import qouteall.imm_ptl.core.commands.ClientDebugCommand;
 import qouteall.imm_ptl.core.compat.IPFlywheelCompat;
 import qouteall.imm_ptl.core.compat.iris_compatibility.ExperimentalIrisPortalRenderer;
@@ -15,7 +16,6 @@ import qouteall.imm_ptl.core.compat.iris_compatibility.IrisInterface;
 import qouteall.imm_ptl.core.compat.iris_compatibility.IrisPortalRenderer;
 import qouteall.imm_ptl.core.miscellaneous.DubiousThings;
 import qouteall.imm_ptl.core.miscellaneous.GcMonitor;
-import qouteall.imm_ptl.core.platform_specific.IPNetworkingClient;
 import qouteall.imm_ptl.core.portal.PortalRenderInfo;
 import qouteall.imm_ptl.core.portal.animation.ClientPortalAnimationManagement;
 import qouteall.imm_ptl.core.portal.animation.StableClientTimer;
@@ -109,10 +109,9 @@ public class IPModMainClient {
             })
         ));
     }
-    
-    public static void init() {
-        IPNetworkingClient.init();
-        
+
+    @SubscribeEvent
+    public static void init(FMLClientSetupEvent event) {
         ClientWorldLoader.init();
         
         Minecraft.getInstance().execute(() -> {

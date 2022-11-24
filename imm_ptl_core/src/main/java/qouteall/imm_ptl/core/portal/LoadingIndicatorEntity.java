@@ -1,14 +1,10 @@
 package qouteall.imm_ptl.core.portal;
 
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -20,12 +16,13 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import qouteall.imm_ptl.core.CHelper;
-import qouteall.imm_ptl.core.platform_specific.IPNetworking;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.network.NetworkDirection;
+import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
+import qouteall.imm_ptl.core.platform_specific.forge.networking.Spawn_Entity;
 import qouteall.imm_ptl.core.portal.nether_portal.BlockPortalShape;
 import qouteall.q_misc_util.my_util.IntBox;
-
-import java.util.Random;
 
 public class LoadingIndicatorEntity extends Entity {
     public static EntityType<LoadingIndicatorEntity> entityType;
@@ -121,7 +118,7 @@ public class LoadingIndicatorEntity extends Entity {
     
     @Override
     public Packet<?> getAddEntityPacket() {
-        return IPNetworking.createStcSpawnEntity(this);
+        return IPMessage.INSTANCE.toVanillaPacket(new Spawn_Entity(this), NetworkDirection.PLAY_TO_CLIENT);
     }
     
     public void inform(Component str) {

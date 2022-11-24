@@ -8,7 +8,6 @@ import qouteall.imm_ptl.core.commands.PortalCommand;
 import qouteall.imm_ptl.core.commands.SubCommandArgumentType;
 import qouteall.imm_ptl.core.compat.IPPortingLibCompat;
 import qouteall.imm_ptl.core.miscellaneous.GcMonitor;
-import qouteall.imm_ptl.core.platform_specific.IPNetworking;
 import qouteall.imm_ptl.core.platform_specific.O_O;
 import qouteall.imm_ptl.core.portal.PortalExtension;
 import qouteall.imm_ptl.core.portal.animation.NormalAnimation;
@@ -25,9 +24,7 @@ public class IPModMain {
         O_O.loadConfigFabric();
         
         Helper.log("Immersive Portals Mod Initializing");
-        
-        IPNetworking.init();
-        
+
         IPGlobal.postClientTickSignal.connect(IPGlobal.clientTaskList::processTasks);
         IPGlobal.postServerTickSignal.connect(IPGlobal.serverTaskList::processTasks);
         IPGlobal.preGameRenderSignal.connect(IPGlobal.preGameRenderTaskList::processTasks);

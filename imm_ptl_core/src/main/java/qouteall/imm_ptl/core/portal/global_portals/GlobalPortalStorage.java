@@ -1,16 +1,12 @@
 package qouteall.imm_ptl.core.portal.global_portals;
 
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -18,6 +14,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.commons.lang3.Validate;
@@ -26,12 +24,12 @@ import qouteall.imm_ptl.core.ClientWorldLoader;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.ducks.IEClientWorld;
-import qouteall.imm_ptl.core.platform_specific.IPNetworking;
 import qouteall.imm_ptl.core.platform_specific.O_O;
+import qouteall.imm_ptl.core.platform_specific.forge.networking.GlobalPortalUpdate;
+import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
-import qouteall.q_misc_util.api.DimensionAPI;
 import qouteall.q_misc_util.forge.events.ServerDimensionDynamicUpdateEvent;
 
 import javax.annotation.Nonnull;
@@ -136,11 +134,7 @@ public class GlobalPortalStorage extends SavedData {
             world -> {
                 GlobalPortalStorage storage = get(world);
                 if (!storage.data.isEmpty()) {
-                    player.connection.send(
-                        IPNetworking.createGlobalPortalUpdate(
-                            storage
-                        )
-                    );
+                    IPMessage.sendToPlayer(new GlobalPortalUpdate(storage), player);
                 }
             }
         );
@@ -184,9 +178,9 @@ public class GlobalPortalStorage extends SavedData {
     }
     
     private void syncToAllPlayers() {
-        Packet packet = IPNetworking.createGlobalPortalUpdate(this);
+        GlobalPortalUpdate gpu = new GlobalPortalUpdate(this);
         McHelper.getCopiedPlayerList().forEach(
-            player -> player.connection.send(packet)
+                player -> IPMessage.sendToPlayer(gpu, player)
         );
     }
     
