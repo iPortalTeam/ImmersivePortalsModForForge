@@ -2,11 +2,7 @@ package qouteall.imm_ptl.core.platform_specific;
 
 //import com.fusionflux.gravity_api.util.GravityChannel;
 //import com.fusionflux.gravity_api.util.packet.DefaultGravityPacket;
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
+
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.MinecraftForge;
@@ -19,7 +15,6 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import qouteall.imm_ptl.core.IPModMain;
 import qouteall.imm_ptl.core.commands.PortalCommand;
-import qouteall.imm_ptl.core.compat.GravityChangerInterface;
 import qouteall.q_misc_util.Helper;
 
 import static qouteall.imm_ptl.core.platform_specific.IPModEntry.MODID;
@@ -78,8 +73,8 @@ public class IPModEntry {
     @SubscribeEvent
     public static void commonSetup(FMLCommonSetupEvent event) {
         Helper.log(MODID + " commonSetup called");
-        IPMessage.register();
-        IPModCompatibilityWarning.initDedicatedServer();
+//        IPMessage.register();
+//        IPModCompatibilityWarning.initDedicatedServer();
     }
 
     public static void registerCommands(RegisterCommandsEvent event) {

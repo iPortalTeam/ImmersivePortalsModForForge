@@ -3,11 +3,8 @@ package qouteall.imm_ptl.core.platform_specific;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.ConnectionProtocol;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.PacketFlow;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
@@ -20,10 +17,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.block_manipulation.BlockManipulationServer;
-import qouteall.imm_ptl.core.ducks.IECustomPayloadPacket;
-import qouteall.q_misc_util.dimension.DimId;
 import qouteall.imm_ptl.core.portal.global_portals.GlobalPortalStorage;
 import qouteall.q_misc_util.MiscHelper;
+import qouteall.q_misc_util.dimension.DimId;
 
 import java.util.UUID;
 

@@ -20,7 +20,6 @@ import org.apache.http.util.EntityUtils;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.IPMcHelper;
-import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.platform_specific.O_O;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.my_util.MyTaskList;
@@ -223,15 +222,15 @@ public class IPModInfoChecking {
             IPGlobal.clientTaskList.addTask(MyTaskList.withDelayCondition(
                 () -> Minecraft.getInstance().level == null,
                 MyTaskList.oneShotTask(() -> {
-                    if (IPGlobal.enableUpdateNotification) {
-                        if (O_O.shouldUpdateImmPtl(immPtlInfo.latestRelease.modVersion)) {
-                            CHelper.printChat(Component.translatable(
-                                "imm_ptl.new_version_available",
-                                immPtlInfo.latestRelease.modVersion,
-                                immPtlInfo.latestRelease.mcVersion
-                            ).append(McHelper.getLinkText(O_O.getModDownloadLink())));
-                        }
-                    }
+//                    if (IPGlobal.enableUpdateNotification) { //TODO @Nick1st implement Forge Version Check
+//                        if (O_O.shouldUpdateImmPtl(immPtlInfo.latestRelease.modVersion)) {
+//                            CHelper.printChat(Component.translatable(
+//                                "imm_ptl.new_version_available",
+//                                immPtlInfo.latestRelease.modVersion,
+//                                immPtlInfo.latestRelease.mcVersion
+//                            ).append(McHelper.getLinkText(O_O.getModDownloadLink())));
+//                        }
+//                    }
     
                     for (ModEntry mod : immPtlInfo.severelyIncompatible) {
                         if (mod != null && mod.isModLoadedWithinVersion()) {
