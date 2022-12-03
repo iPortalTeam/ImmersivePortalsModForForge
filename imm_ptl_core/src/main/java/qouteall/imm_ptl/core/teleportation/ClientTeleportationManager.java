@@ -326,7 +326,7 @@ public class ClientTeleportationManager {
     
     
     public boolean isTeleportingFrequently() {
-        return (tickTimeForTeleportation - lastTeleportGameTime <= 20) ||
+        return (tickTimeForTeleportation - lastTeleportGameTime <= 100) ||
             (tickTimeForTeleportation <= teleportTickTimeLimit);
     }
     
