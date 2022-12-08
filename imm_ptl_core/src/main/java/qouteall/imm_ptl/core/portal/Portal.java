@@ -3,8 +3,6 @@ package qouteall.imm_ptl.core.portal;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Quaternion;
 import com.mojang.math.Vector3f;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.Util;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -13,17 +11,11 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityDimensions;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MoverType;
-import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.level.ChunkPos;
@@ -31,6 +23,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.network.NetworkDirection;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.ClientWorldLoader;
@@ -38,13 +33,13 @@ import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.compat.PehkuiInterface;
 import qouteall.imm_ptl.core.compat.iris_compatibility.IrisInterface;
+import qouteall.imm_ptl.core.mc_utils.IPEntityEventListenableEntity;
+import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
+import qouteall.imm_ptl.core.platform_specific.forge.networking.Spawn_Entity;
 import qouteall.imm_ptl.core.portal.animation.AnimationView;
 import qouteall.imm_ptl.core.portal.animation.DefaultPortalAnimation;
 import qouteall.imm_ptl.core.portal.animation.PortalAnimation;
 import qouteall.imm_ptl.core.portal.animation.PortalAnimationDriver;
-import qouteall.q_misc_util.dimension.DimId;
-import qouteall.imm_ptl.core.mc_utils.IPEntityEventListenableEntity;
-import qouteall.imm_ptl.core.platform_specific.IPNetworking;
 import qouteall.imm_ptl.core.render.FrustumCuller;
 import qouteall.imm_ptl.core.render.PortalGroup;
 import qouteall.imm_ptl.core.render.PortalRenderer;
@@ -53,6 +48,7 @@ import qouteall.imm_ptl.core.teleportation.CollisionHelper;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.api.McRemoteProcedureCall;
+import qouteall.q_misc_util.dimension.DimId;
 import qouteall.q_misc_util.my_util.*;
 
 import javax.annotation.Nullable;
@@ -300,7 +296,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         CompoundTag customData = new CompoundTag();
         addAdditionalSaveData(customData);
         
-        ClientboundCustomPayloadPacket packet = McRemoteProcedureCall.createPacketToSendToClient(
+        Packet packet = McRemoteProcedureCall.createPacketToSendToClient(
             "qouteall.imm_ptl.core.portal.Portal.RemoteCallables.acceptPortalDataSync",
             level.dimension(),
             getId(),
@@ -809,7 +805,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     
     @Override
     public Packet<?> getAddEntityPacket() {
-        return IPNetworking.createStcSpawnEntity(this);
+        return IPMessage.INSTANCE.toVanillaPacket(new Spawn_Entity(this), NetworkDirection.PLAY_TO_CLIENT);
     }
     
     @Override

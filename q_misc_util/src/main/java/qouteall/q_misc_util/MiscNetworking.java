@@ -1,10 +1,6 @@
 package qouteall.q_misc_util;
 
 import io.netty.buffer.Unpooled;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -13,10 +9,13 @@ import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.MinecraftForge;
 import org.apache.commons.lang3.Validate;
-import qouteall.q_misc_util.api.DimensionAPI;
 import qouteall.q_misc_util.dimension.DimensionIdRecord;
 import qouteall.q_misc_util.dimension.DimensionTypeSync;
+import qouteall.q_misc_util.forge.events.ClientDimensionUpdateEvent;
 import qouteall.q_misc_util.mixin.client.IEClientPacketListener_Misc;
 
 import java.util.Set;
@@ -32,33 +31,33 @@ public class MiscNetworking {
     
     @OnlyIn(Dist.CLIENT)
     public static void initClient() {
-        ClientPlayNetworking.registerGlobalReceiver(
-            MiscNetworking.id_stcRemote,
-            (c, handler, buf, responseSender) -> {
-                MiscHelper.executeOnRenderThread(
-                    ImplRemoteProcedureCall.clientReadPacketAndGetHandler(buf)
-                );
-            }
-        );
+//        ClientPlayNetworking.registerGlobalReceiver(
+//            MiscNetworking.id_stcRemote,
+//            (c, handler, buf, responseSender) -> {
+//                MiscHelper.executeOnRenderThread(
+//                    ImplRemoteProcedureCall.clientReadPacketAndGetHandler(buf)
+//                );
+//            }
+//        );
         
-        ClientPlayNetworking.registerGlobalReceiver(
-            MiscNetworking.id_stcDimSync,
-            (c, handler, buf, responseSender) -> {
-                // no need to make it run on render thread
-                processDimSync(buf, handler);
-            }
-        );
+//        ClientPlayNetworking.registerGlobalReceiver(
+//            MiscNetworking.id_stcDimSync,
+//            (c, handler, buf, responseSender) -> {
+//                // no need to make it run on render thread
+//                processDimSync(buf, handler);
+//            }
+//        );
     }
     
     public static void init() {
-        ServerPlayNetworking.registerGlobalReceiver(
-            MiscNetworking.id_ctsRemote,
-            (server, player, handler, buf, responseSender) -> {
-                MiscHelper.executeOnServerThread(
-                    ImplRemoteProcedureCall.serverReadPacketAndGetHandler(player, buf)
-                );
-            }
-        );
+//        ServerPlayNetworking.registerGlobalReceiver(
+//            MiscNetworking.id_ctsRemote,
+//            (server, player, handler, buf, responseSender) -> {
+//                MiscHelper.executeOnServerThread(
+//                    ImplRemoteProcedureCall.serverReadPacketAndGetHandler(player, buf)
+//                );
+//            }
+//        );
     }
     
     public static Packet createDimSyncPacket() {
@@ -98,8 +97,8 @@ public class MiscNetworking {
             // it's used for command completion
             Set<ResourceKey<Level>> dimIdSet = DimensionIdRecord.clientRecord.getDimIdSet();
             ((IEClientPacketListener_Misc) packetListener).ip_setLevels(dimIdSet);
-            
-            DimensionAPI.clientDimensionUpdateEvent.invoker().run(dimIdSet);
+
+            MinecraftForge.EVENT_BUS.post(new ClientDimensionUpdateEvent(dimIdSet));
         });
     }
 }

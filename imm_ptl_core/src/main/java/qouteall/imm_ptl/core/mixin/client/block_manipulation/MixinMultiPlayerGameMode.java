@@ -6,6 +6,7 @@ import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
+import net.minecraftforge.network.NetworkDirection;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -13,7 +14,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import qouteall.imm_ptl.core.block_manipulation.BlockManipulationClient;
 import qouteall.imm_ptl.core.ducks.IEClientPlayerInteractionManager;
-import qouteall.imm_ptl.core.platform_specific.IPNetworkingClient;
+import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
+import qouteall.imm_ptl.core.platform_specific.forge.networking.PlayerAction;
+import qouteall.imm_ptl.core.platform_specific.forge.networking.RightClick;
 import qouteall.q_misc_util.Helper;
 
 @Mixin(MultiPlayerGameMode.class)
@@ -36,14 +39,10 @@ public abstract class MixinMultiPlayerGameMode implements IEClientPlayerInteract
     private Packet modifyPacketInStartPrediction(Packet<?> packet) {
         if (BlockManipulationClient.isContextSwitched) {
             if (packet instanceof ServerboundPlayerActionPacket playerActionPacket) {
-                return IPNetworkingClient.createCtsPlayerAction(
-                    BlockManipulationClient.remotePointedDim, playerActionPacket
-                );
+                return IPMessage.INSTANCE.toVanillaPacket(new PlayerAction(BlockManipulationClient.remotePointedDim, playerActionPacket), NetworkDirection.PLAY_TO_SERVER);
             }
             else if (packet instanceof ServerboundUseItemOnPacket useItemOnPacket) {
-                return IPNetworkingClient.createCtsRightClick(
-                    BlockManipulationClient.remotePointedDim, useItemOnPacket
-                );
+                return IPMessage.INSTANCE.toVanillaPacket(new RightClick(BlockManipulationClient.remotePointedDim, useItemOnPacket), NetworkDirection.PLAY_TO_SERVER);
             }
             else {
                 // TODO ServerboundUseItemPacket
@@ -65,9 +64,7 @@ public abstract class MixinMultiPlayerGameMode implements IEClientPlayerInteract
     )
     private Packet redirectSendInStartDestroyBlock(Packet packet) {
         if (BlockManipulationClient.isContextSwitched) {
-            return IPNetworkingClient.createCtsPlayerAction(
-                BlockManipulationClient.remotePointedDim, (ServerboundPlayerActionPacket) packet
-            );
+            return IPMessage.INSTANCE.toVanillaPacket(new PlayerAction(BlockManipulationClient.remotePointedDim, (ServerboundPlayerActionPacket) packet), NetworkDirection.PLAY_TO_SERVER);
         }
         else {
             return packet;
@@ -83,9 +80,7 @@ public abstract class MixinMultiPlayerGameMode implements IEClientPlayerInteract
     )
     private Packet redirectSendInStopDestroyBlock(Packet packet) {
         if (BlockManipulationClient.isContextSwitched) {
-            return IPNetworkingClient.createCtsPlayerAction(
-                BlockManipulationClient.remotePointedDim, (ServerboundPlayerActionPacket) packet
-            );
+            return IPMessage.INSTANCE.toVanillaPacket(new PlayerAction(BlockManipulationClient.remotePointedDim, (ServerboundPlayerActionPacket) packet), NetworkDirection.PLAY_TO_SERVER);
         }
         else {
             return packet;

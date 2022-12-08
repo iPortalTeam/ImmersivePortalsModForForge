@@ -3,7 +3,6 @@ package qouteall.imm_ptl.core.teleportation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -28,8 +27,9 @@ import qouteall.imm_ptl.core.compat.PehkuiInterface;
 import qouteall.imm_ptl.core.ducks.IEEntity;
 import qouteall.imm_ptl.core.ducks.IEServerPlayNetworkHandler;
 import qouteall.imm_ptl.core.ducks.IEServerPlayerEntity;
-import qouteall.imm_ptl.core.platform_specific.IPNetworking;
 import qouteall.imm_ptl.core.platform_specific.O_O;
+import qouteall.imm_ptl.core.platform_specific.forge.networking.Dim_Confirm;
+import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.global_portals.GlobalPortalStorage;
 import qouteall.q_misc_util.Helper;
@@ -378,12 +378,7 @@ public class ServerTeleportationManager {
     }
     
     public static void sendPositionConfirmMessage(ServerPlayer player) {
-        Packet packet = IPNetworking.createStcDimensionConfirm(
-            player.level.dimension(),
-            player.position()
-        );
-        
-        player.connection.send(packet);
+        IPMessage.sendToPlayer(new Dim_Confirm(player.level.dimension(), player.position()), player);
     }
     
     private void tick() {
