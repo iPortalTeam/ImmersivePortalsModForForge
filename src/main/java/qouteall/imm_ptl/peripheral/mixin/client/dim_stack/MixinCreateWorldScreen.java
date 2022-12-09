@@ -146,7 +146,7 @@ public abstract class MixinCreateWorldScreen extends Screen implements IECreateW
     
     // Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;method_40209(Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/world/level/DataPackConfig;)Lcom/mojang/datafixers/util/Pair
     @Inject(
-        method = "method_40209",
+        method = "lambda$tryApplyNewDataPacks$18",
         at = @At("RETURN")
     )
     private void onTryingApplyNewDatapackLoading(
@@ -155,7 +155,7 @@ public abstract class MixinCreateWorldScreen extends Screen implements IECreateW
         CallbackInfoReturnable<Pair<Pair<WorldGenSettings, Lifecycle>, RegistryAccess.Frozen>> cir
     ) {
         ip_lastWorldGenSettings = cir.getReturnValue().getFirst().getFirst();
-        
+
         ip_lastRegistryAccess = cir.getReturnValue().getSecond();
     }
     

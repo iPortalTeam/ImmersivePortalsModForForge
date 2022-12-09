@@ -57,7 +57,6 @@ public class PeripheralModEntry {
     public static final RegistryObject<Item> COMMAND_STICK_ITEM = ITEMS.register("command_stick", () -> new CommandStickItem(new Item.Properties().tab(CreativeModeTab.TAB_MISC)));
 
     private static void registerBlockItems() {
-        CommandStickItem.CommandStickData.register(FMLJavaModLoadingContext.get().getModEventBus());
         //PeripheralModMain.registerCommandStickTypes();
         
         CommandStickItem.init();
@@ -68,6 +67,7 @@ public class PeripheralModEntry {
         PeripheralModEntry.registerBlockItems(); //TODO Move this to a real DeferredRegistry @Nick1st
         BLOCKS.register(FMLJavaModLoadingContext.get().getModEventBus());
         ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
+        CommandStickItem.CommandStickData.register(FMLJavaModLoadingContext.get().getModEventBus());
         
         PeripheralModMain.init();
     }

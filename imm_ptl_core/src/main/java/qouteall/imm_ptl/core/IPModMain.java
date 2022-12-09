@@ -62,7 +62,7 @@ public class IPModMain {
 //        CommandRegistrationCallback.EVENT.register(
 //            (dispatcher, registryAccess, environment) -> PortalCommand.register(dispatcher)
 //        );
-        SubCommandArgumentType.init();
+//        SubCommandArgumentType.init(); //@Nick1st this is now in IPModEntry
         
         // intrinsic animation driver types
         RotationAnimation.init();

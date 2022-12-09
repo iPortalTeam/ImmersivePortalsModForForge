@@ -13,14 +13,14 @@ import qouteall.imm_ptl.core.portal.custom_portal_gen.CustomPortalGenManagement;
 
 @Mixin(ServerPlayer.class)
 public class MixinServerPlayerEntity_MA {
-    @Inject(method = "Lnet/minecraft/server/level/ServerPlayer;changeDimension(Lnet/minecraft/server/level/ServerLevel;)Lnet/minecraft/world/entity/Entity;", at = @At("HEAD"))
-    private void onChangeDimensionByVanilla(
-        ServerLevel serverWorld,
-        CallbackInfoReturnable<Entity> cir
-    ) {
-        ServerPlayer this_ = (ServerPlayer) (Object) this;
-        onBeforeDimensionTravel(this_);
-    }
+//    @Inject(method = "Lnet/minecraft/server/level/ServerPlayer;changeDimension(Lnet/minecraft/server/level/ServerLevel;)Lnet/minecraft/world/entity/Entity;", at = @At("HEAD")) //TODO @Nick1st Reimplement this
+//    private void onChangeDimensionByVanilla(
+//        ServerLevel serverWorld,
+//        CallbackInfoReturnable<Entity> cir
+//    ) {
+//        ServerPlayer this_ = (ServerPlayer) (Object) this;
+//        onBeforeDimensionTravel(this_);
+//    }
     
     // update chunk visibility data
     @Inject(method = "Lnet/minecraft/server/level/ServerPlayer;teleportTo(Lnet/minecraft/server/level/ServerLevel;DDDFF)V", at = @At("HEAD"))

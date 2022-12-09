@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import qouteall.imm_ptl.core.commands.ClientDebugCommand;
@@ -141,12 +142,11 @@ public class IPModMainClient {
         SharedBlockMeshBuffers.init();
         
         GcMonitor.initClient();
-        
-//        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
-//            ClientDebugCommand.register(dispatcher);
-//        });
-        
-//        showPreviewWarning();
+
+        MinecraftForge.EVENT_BUS.register(ClientDebugCommand.class);
+        MinecraftForge.EVENT_BUS.register(ClientWorldLoader.class);
+
+        showPreviewWarning();
         
         showIntelVideoCardWarning();
         
@@ -164,10 +164,4 @@ public class IPModMainClient {
 //            Helper.log("reload levelrenderer " + Minecraft.getInstance().level.dimension().location());
 //        });
     }
-
-    @SubscribeEvent
-    public static void registerClientCommands(RegisterClientCommandsEvent event) {
-        ClientDebugCommand.register(event.getDispatcher());
-    }
-    
 }

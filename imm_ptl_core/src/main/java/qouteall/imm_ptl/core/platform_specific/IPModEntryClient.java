@@ -37,16 +37,16 @@ public class IPModEntryClient {
     @SubscribeEvent
     public static void initPortalRenderers(EntityRenderersEvent.RegisterRenderers event) {
         
-        Arrays.stream(new EntityType<?>[]{
-            Portal.entityType,
-            NetherPortalEntity.entityType,
-            EndPortalEntity.entityType,
-            Mirror.entityType,
-            BreakableMirror.entityType,
-            GlobalTrackedPortal.entityType,
-            WorldWrappingPortal.entityType,
-            VerticalConnectingPortal.entityType,
-            GeneralBreakablePortal.entityType
+        Arrays.stream(new EntityType<?>[]{ //TODO @Nick1st Rename does to better match their respective name in Fabric
+                IPRegistry.PORTAL.get(),
+                IPRegistry.NETHER_PORTAL_NEW.get(),
+                IPRegistry.END_PORTAL.get(),
+                IPRegistry.MIRROR.get(),
+                IPRegistry.BREAKABLE_MIRROR.get(),
+                IPRegistry.GLOBAL_TRACKED_PORTAL.get(),
+                IPRegistry.BORDER_PORTAL.get(),
+                IPRegistry.END_FLOOR_PORTAL.get(),
+                IPRegistry.GENERAL_BREAKABLE_PORTAL.get()
         }).peek(
             Validate::notNull
         ).forEach(

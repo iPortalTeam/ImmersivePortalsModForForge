@@ -15,6 +15,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import qouteall.imm_ptl.core.IPModMain;
 import qouteall.imm_ptl.core.commands.PortalCommand;
+import qouteall.imm_ptl.core.commands.SubCommandArgumentType;
 import qouteall.q_misc_util.Helper;
 
 import static qouteall.imm_ptl.core.platform_specific.IPModEntry.MODID;
@@ -29,11 +30,12 @@ public class IPModEntry {
             IPModEntryClient.onInitializeClient();
         }
 
-        IPConfig.register(new ForgeConfigSpec.Builder());
+//        IPConfig.register(new ForgeConfigSpec.Builder()); //TODO @Nick1st Check if config is used / functioning
         FMLJavaModLoadingContext.get().getModEventBus().register(IPConfig.class);
         MinecraftForge.EVENT_BUS.addListener(IPModEntry::registerCommands);
         FMLJavaModLoadingContext.get().getModEventBus().register(IPModEntry.class);
         FMLJavaModLoadingContext.get().getModEventBus().register(IPRegistry.class);
+        FMLJavaModLoadingContext.get().getModEventBus().register(SubCommandArgumentType.class);
 
         IPModMain.init();
         RequiemCompat.init();

@@ -70,7 +70,7 @@ allprojects {
         //api fg.deobf("teamtwilight:twilightforest:${project.twilightforest_version}:universal")
         api fg.deobf("curse.maven:twilightforest-227639:${project.twilightforest_fileid}")
         // Flywheel
-        api fg.deobf("com.jozufozu.flywheel:flywheel-forge-1.19.2:${project.flywheel_version}")
+        compileOnly fg.deobf("com.jozufozu.flywheel:flywheel-forge-1.19.2:${project.flywheel_version}")
         // Rubidium
         api fg.deobf("curse.maven:rubidium-574856:${project.rubidium_fileid}")
         // Oculus
@@ -115,6 +115,7 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            taskName 'Client-1.19'
             mods {
                 examplemod {
                     source sourceSets.main
@@ -126,6 +127,7 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            taskName 'Server-1.19'
             mods {
                 examplemod {
                     source sourceSets.main

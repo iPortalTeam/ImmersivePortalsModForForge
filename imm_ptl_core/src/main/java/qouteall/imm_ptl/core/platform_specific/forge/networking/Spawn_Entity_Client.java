@@ -29,7 +29,7 @@ public class Spawn_Entity_Client {
             );
             entity.load(pack.compoundTag);
             entity.setId(pack.entityId);
-            entity.setPacketCoordinates(entity.getX(), entity.getY(), entity.getZ());
+            entity.setPosRaw(entity.getX(), entity.getY(), entity.getZ());
             world.putNonPlayerEntity(pack.entityId, entity);
 
             //do not create client world while rendering or gl states will be disturbed

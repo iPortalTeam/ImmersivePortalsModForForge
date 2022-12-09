@@ -6,22 +6,20 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.context.StringRange;
-import com.mojang.brigadier.context.SuggestionContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
-import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.synchronization.ArgumentTypeInfo;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.NotNull;
-import qouteall.imm_ptl.core.miscellaneous.IPVanillaCopy;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegisterEvent;
 
 import java.util.Collection;
 import java.util.List;
@@ -118,13 +116,17 @@ public class SubCommandArgumentType implements ArgumentType<String> {
             };
         }
     }
-    
-    public static void init() {
-        ArgumentTypeRegistry.registerArgumentType(
-            new ResourceLocation("imm_ptl:sub_command_argument_type"),
-            SubCommandArgumentType.class,
-            new CustomArgumentTypeInfo()
-        );
+
+    @SubscribeEvent
+    public static void init(RegisterEvent event) {
+        event.register(ForgeRegistries.Keys.COMMAND_ARGUMENT_TYPES, helper -> {
+            helper.register(new ResourceLocation("imm_ptl:sub_command_argument_type"), new CustomArgumentTypeInfo());
+        });
+//        ArgumentTypeRegistry.registerArgumentType( //TODO @Nick1st Check if that registration procedure is correct
+//            new ResourceLocation("imm_ptl:sub_command_argument_type"),
+//            SubCommandArgumentType.class,
+//            new CustomArgumentTypeInfo()
+//        );
         
     }
 }
