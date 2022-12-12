@@ -34,6 +34,7 @@ import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.compat.PehkuiInterface;
 import qouteall.imm_ptl.core.compat.iris_compatibility.IrisInterface;
 import qouteall.imm_ptl.core.mc_utils.IPEntityEventListenableEntity;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.Spawn_Entity;
 import qouteall.imm_ptl.core.portal.animation.AnimationView;
@@ -61,7 +62,7 @@ import java.util.stream.Collectors;
  * Portal entity. Global portals are also entities but not added into world.
  */
 public class Portal extends Entity implements PortalLike, IPEntityEventListenableEntity {
-    public static EntityType<Portal> entityType;
+    public static EntityType<Portal> entityType = IPRegistry.PORTAL.get();
     
     public static final UUID nullUUID = Util.NIL_UUID;
     private static final AABB nullBox = new AABB(0, 0, 0, 0, 0, 0);

@@ -15,6 +15,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.NetherPortalBlock;
 import net.minecraft.world.phys.Vec3;
 import qouteall.imm_ptl.core.IPGlobal;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.platform_specific.O_O;
 import qouteall.imm_ptl.core.portal.PortalPlaceholderBlock;
 
@@ -55,9 +56,9 @@ public class NetherPortalEntity extends BreakablePortalEntity {
         0,
         null
     );
-    
-    
-    public static EntityType<NetherPortalEntity> entityType;
+
+
+    public static EntityType<NetherPortalEntity> entityType = IPRegistry.NETHER_PORTAL_NEW.get();
     
     public NetherPortalEntity(
         EntityType<?> entityType_1,

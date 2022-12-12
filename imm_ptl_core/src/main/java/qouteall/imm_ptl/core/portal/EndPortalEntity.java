@@ -23,13 +23,14 @@ import net.minecraft.world.phys.Vec3;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.ducks.IEEntity;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 
 import java.util.Objects;
 
 public class EndPortalEntity extends Portal {
-    public static EntityType<EndPortalEntity> entityType;
+    public static EntityType<EndPortalEntity> entityType = IPRegistry.END_PORTAL.get();
     
     // only used by scaled view type end portal
     private EndPortalEntity clientFakedReversePortal;

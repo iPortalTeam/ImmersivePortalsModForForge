@@ -1,6 +1,7 @@
 package qouteall.imm_ptl.core.portal.global_portals;
 
 import qouteall.imm_ptl.core.McHelper;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.PortalExtension;
 import qouteall.q_misc_util.Helper;
@@ -15,7 +16,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 public class VerticalConnectingPortal extends GlobalTrackedPortal {
-    public static EntityType<VerticalConnectingPortal> entityType;
+    public static EntityType<VerticalConnectingPortal> entityType = IPRegistry.END_FLOOR_PORTAL.get();
     
     public static enum ConnectorType {
         ceil, floor

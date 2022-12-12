@@ -1,5 +1,6 @@
 package qouteall.imm_ptl.core.portal.global_portals;
 
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.my_util.IntBox;
@@ -21,7 +22,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 public class WorldWrappingPortal extends GlobalTrackedPortal {
-    public static EntityType<WorldWrappingPortal> entityType;
+    public static EntityType<WorldWrappingPortal> entityType = IPRegistry.BORDER_PORTAL.get();
     
     public boolean isInward = true;
     public int zoneId = -1;
