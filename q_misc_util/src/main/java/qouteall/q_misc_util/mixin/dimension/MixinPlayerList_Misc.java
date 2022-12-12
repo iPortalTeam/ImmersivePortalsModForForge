@@ -8,6 +8,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import qouteall.q_misc_util.MiscNetworking;
+import qouteall.q_misc_util.forge.networking.Dim_Sync;
+import qouteall.q_misc_util.forge.networking.Message;
 
 @Mixin(PlayerList.class)
 public class MixinPlayerList_Misc {
@@ -23,6 +25,7 @@ public class MixinPlayerList_Misc {
         ServerPlayer player,
         CallbackInfo ci
     ) {
-        player.connection.send(MiscNetworking.createDimSyncPacket());
+        Message.sendToPlayer(new Dim_Sync(), player);
+        //player.connection.send(MiscNetworking.createDimSyncPacket());
     }
 }

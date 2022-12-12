@@ -16,6 +16,7 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 import qouteall.imm_ptl.core.IPModMain;
 import qouteall.imm_ptl.core.commands.PortalCommand;
 import qouteall.imm_ptl.core.commands.SubCommandArgumentType;
+import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
 import qouteall.q_misc_util.Helper;
 
 import static qouteall.imm_ptl.core.platform_specific.IPModEntry.MODID;
@@ -75,7 +76,7 @@ public class IPModEntry {
     @SubscribeEvent
     public static void commonSetup(FMLCommonSetupEvent event) {
         Helper.log(MODID + " commonSetup called");
-//        IPMessage.register();
+        IPMessage.register();
 //        IPModCompatibilityWarning.initDedicatedServer();
     }
 

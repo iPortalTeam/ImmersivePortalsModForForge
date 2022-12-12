@@ -28,7 +28,7 @@ public class Message {
 
 
         // Register all our packets. We only have one right now. The new message has a unique ID, an indication
-        // of how it is going to be used (from client to server) and ways to encode and decode it. Finally 'handle'
+        // of how it is going to be used (from client to server) and ways to encode and decode it. Finally, 'handle'
         // will actually execute when the packet is received
         INSTANCE.messageBuilder(Dim_Sync.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(Dim_Sync::new)

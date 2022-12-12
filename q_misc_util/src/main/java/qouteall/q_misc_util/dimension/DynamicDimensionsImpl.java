@@ -32,6 +32,8 @@ import qouteall.q_misc_util.MiscNetworking;
 import qouteall.q_misc_util.api.DimensionAPI;
 import qouteall.q_misc_util.ducks.IEMinecraftServer_Misc;
 import qouteall.q_misc_util.forge.events.ServerDimensionDynamicUpdateEvent;
+import qouteall.q_misc_util.forge.networking.Dim_Sync;
+import qouteall.q_misc_util.forge.networking.Message;
 import qouteall.q_misc_util.mixin.dimension.IEWorldBorder;
 import qouteall.q_misc_util.my_util.MyTaskList;
 import qouteall.q_misc_util.my_util.SignalArged;
@@ -105,9 +107,10 @@ public class DynamicDimensionsImpl {
         
         DimensionIdManagement.updateAndSaveServerDimIdRecord();
         
-        Packet dimSyncPacket = MiscNetworking.createDimSyncPacket();
+        Dim_Sync dimSyncPacket = new Dim_Sync(); //MiscNetworking.createDimSyncPacket();
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            player.connection.send(dimSyncPacket);
+            Message.sendToPlayer(dimSyncPacket, player);
+            //player.connection.send(dimSyncPacket);
         }
 
 //        DimensionAPI.serverDimensionDynamicUpdateEvent.invoker().run(server.levelKeys()); //TODO Reimplement this !Important
@@ -187,10 +190,10 @@ public class DynamicDimensionsImpl {
             resetWorldBorderListener(server);
             
             Helper.log("Successfully Removed Dimension " + dimension.location());
-            
-            Packet dimSyncPacket = MiscNetworking.createDimSyncPacket();
+
+            Dim_Sync dimSyncPacket = new Dim_Sync();
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                player.connection.send(dimSyncPacket);
+                Message.sendToPlayer(dimSyncPacket, player);
             }
 
             MinecraftForge.EVENT_BUS.post(new ServerDimensionDynamicUpdateEvent(server.levelKeys()));

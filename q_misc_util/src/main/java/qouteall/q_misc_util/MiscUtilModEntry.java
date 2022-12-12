@@ -12,6 +12,7 @@ import qouteall.q_misc_util.dimension.DimensionMisc;
 import qouteall.q_misc_util.dimension.DimsCommand;
 import qouteall.q_misc_util.dimension.DynamicDimensionsImpl;
 import qouteall.q_misc_util.dimension.ExtraDimensionStorage;
+import qouteall.q_misc_util.forge.networking.Message;
 
 @Mod("q_misc_util")
 public class MiscUtilModEntry {
@@ -33,6 +34,11 @@ public class MiscUtilModEntry {
     @SubscribeEvent
     public static void clientSetup(FMLClientSetupEvent event) {
         MiscUtilModEntryClient.onInitializeClient();
+    }
+
+    @SubscribeEvent
+    public static void commonSetup(FMLCommonSetupEvent event) {
+        Message.register();
     }
 
     public static void serverTick(TickEvent.ServerTickEvent event) {
