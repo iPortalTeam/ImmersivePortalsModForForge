@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.portal.PortalPlaceholderBlock;
 
 @Mixin(Snowball.class)
@@ -21,7 +22,7 @@ public abstract class MixinSnowball extends MixinEntity {
         if (hitResult instanceof BlockHitResult) {
             Block hittingBlock = this.level.getBlockState(((BlockHitResult) hitResult).getBlockPos()).getBlock();
             if (hitResult.getType() == HitResult.Type.BLOCK &&
-                hittingBlock == PortalPlaceholderBlock.instance
+                hittingBlock == IPRegistry.NETHER_PORTAL_BLOCK.get()
             ) {
                 ci.cancel();
             }

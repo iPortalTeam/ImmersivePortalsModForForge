@@ -16,6 +16,7 @@ import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.chunk_loading.ChunkLoader;
 import qouteall.imm_ptl.core.chunk_loading.DimensionalChunkPos;
 import qouteall.imm_ptl.core.chunk_loading.NewChunkTrackingGraph;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.platform_specific.O_O;
 import qouteall.imm_ptl.core.portal.LoadingIndicatorEntity;
 import qouteall.imm_ptl.core.portal.PortalPlaceholderBlock;
@@ -93,7 +94,7 @@ public class NetherPortalGeneration {
     ) {
         world.setBlockAndUpdate(
             pos,
-            PortalPlaceholderBlock.instance.defaultBlockState().setValue(
+                IPRegistry.NETHER_PORTAL_BLOCK.get().defaultBlockState().setValue(
                 PortalPlaceholderBlock.AXIS, normalAxis
             )
         );

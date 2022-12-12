@@ -62,7 +62,7 @@ import java.util.stream.Collectors;
  * Portal entity. Global portals are also entities but not added into world.
  */
 public class Portal extends Entity implements PortalLike, IPEntityEventListenableEntity {
-    public static EntityType<Portal> entityType = IPRegistry.PORTAL.get();
+    //public static EntityType<Portal> entityType = IPRegistry.PORTAL.get();
     
     public static final UUID nullUUID = Util.NIL_UUID;
     private static final AABB nullBox = new AABB(0, 0, 0, 0, 0, 0);

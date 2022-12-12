@@ -15,6 +15,7 @@ import net.minecraft.world.phys.Vec3;
 import qouteall.imm_ptl.core.IPMcHelper;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.api.PortalAPI;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.my_util.DQuaternion;
@@ -328,7 +329,7 @@ public class PortalManipulation {
         AABB viewBox = Helper.getBoxByBottomPosAndSize(boxBottomCenter, viewBoxSize);
         for (Direction direction : Direction.values()) {
             Portal portal = createOrthodoxPortal(
-                Portal.entityType,
+                    IPRegistry.PORTAL.get(),
                 boxWorld, areaWorld,
                 direction, Helper.getBoxSurface(viewBox, direction),
                 Helper.getBoxSurface(area, direction).getCenter()
@@ -343,7 +344,7 @@ public class PortalManipulation {
             McHelper.spawnServerEntity(portal);
             
             if (biWay) {
-                Portal reversePortal = createReversePortal(portal, Portal.entityType);
+                Portal reversePortal = createReversePortal(portal, IPRegistry.PORTAL.get());
                 
                 reversePortal.renderingMergable = innerRenderingMergable;
                 
@@ -409,7 +410,7 @@ public class PortalManipulation {
             ? entity.level
             : hitPortals.get(hitPortals.size() - 1).getDestinationWorld();
         
-        Portal portal = new Portal(Portal.entityType, world);
+        Portal portal = new Portal(IPRegistry.PORTAL.get(), world);
         
         portal.setPosRaw(pos.x, pos.y, pos.z);
         

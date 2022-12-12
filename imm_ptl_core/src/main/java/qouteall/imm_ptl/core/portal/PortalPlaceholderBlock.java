@@ -48,7 +48,7 @@ public class PortalPlaceholderBlock extends Block {
         10.0D
     );
     
-    public static PortalPlaceholderBlock instance;
+    //public static PortalPlaceholderBlock instance;
     
     public PortalPlaceholderBlock(Properties properties) {
         super(properties);

@@ -13,6 +13,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import qouteall.imm_ptl.core.McHelper;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.portal.PortalExtension;
 import qouteall.imm_ptl.core.portal.PortalManipulation;
 import qouteall.imm_ptl.core.portal.PortalPlaceholderBlock;
@@ -162,7 +163,7 @@ public class FlippingFloorSquareForm extends PortalGenForm {
                 pos -> {
                     BlockState blockState = toWorld.getBlockState(pos);
                     return !blockState.isSolidRender(toWorld, pos) &&
-                        blockState.getBlock() != PortalPlaceholderBlock.instance &&
+                        blockState.getBlock() != IPRegistry.NETHER_PORTAL_BLOCK.get() &&
                         blockState.getFluidState().isEmpty();
                 }
             ))
@@ -172,7 +173,7 @@ public class FlippingFloorSquareForm extends PortalGenForm {
                     blockPos -> {
                         BlockState blockState = toWorld.getBlockState(blockPos);
                         return !blockState.isAir() &&
-                            blockState.getBlock() != PortalPlaceholderBlock.instance;
+                            blockState.getBlock() != IPRegistry.NETHER_PORTAL_BLOCK.get();
                     }
                 )
             )

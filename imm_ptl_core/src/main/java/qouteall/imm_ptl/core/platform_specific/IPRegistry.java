@@ -29,7 +29,7 @@ public class IPRegistry {
     @SubscribeEvent
     public static void registerBlocks(RegisterEvent event) {
         event.register(ForgeRegistries.Keys.BLOCKS, handler -> handler.register(
-            new ResourceLocation("immersive_portals", "nether_portal_block"),
+            new ResourceLocation("imm_ptl_core", "nether_portal_block"),
             new PortalPlaceholderBlock(BlockBehaviour.Properties
                 .of(Material.PORTAL)
                 .noCollission()

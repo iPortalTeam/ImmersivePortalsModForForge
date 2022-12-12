@@ -17,6 +17,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.event.ForgeEventFactory;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.IPMcHelper;
@@ -375,6 +376,18 @@ public class ServerTeleportationManager {
         
         //update advancements
         ((IEServerPlayerEntity) player).portal_worldChanged(fromWorld);
+
+        /*##################################################################################################
+        ##                                         Forge specific start                                   ##
+        ##################################################################################################*/
+
+        // fire forge event
+        Helper.dbg("Forge Event PlayerEvent.PlayerChangedDimensionEvent fired");
+        ForgeEventFactory.firePlayerChangedDimensionEvent(player, fromWorld.dimension(), toWorld.dimension());
+
+        /*##################################################################################################
+        ##                                          Forge specific end                                    ##
+        ##################################################################################################*/
     }
     
     public static void sendPositionConfirmMessage(ServerPlayer player) {

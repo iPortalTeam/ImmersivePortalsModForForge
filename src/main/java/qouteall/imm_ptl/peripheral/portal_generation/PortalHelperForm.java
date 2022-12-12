@@ -9,6 +9,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import qouteall.imm_ptl.core.McHelper;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.PortalExtension;
 import qouteall.imm_ptl.core.portal.PortalManipulation;
@@ -55,11 +56,11 @@ public class PortalHelperForm extends AbstractDiligentForm {
         world.setBlockAndUpdate(info.fromShape.firstFramePos, Blocks.AIR.defaultBlockState());
         world.setBlockAndUpdate(info.toShape.firstFramePos, Blocks.AIR.defaultBlockState());
         
-        Portal portal = info.createTemplatePortal(Portal.entityType);
+        Portal portal = info.createTemplatePortal(IPRegistry.PORTAL.get());
         PortalExtension.get(portal).bindCluster = true;
-        Portal flipped = PortalManipulation.createFlippedPortal(portal, Portal.entityType);
-        Portal reverse = PortalManipulation.createReversePortal(portal, Portal.entityType);
-        Portal parallel = PortalManipulation.createReversePortal(flipped, Portal.entityType);
+        Portal flipped = PortalManipulation.createFlippedPortal(portal, IPRegistry.PORTAL.get());
+        Portal reverse = PortalManipulation.createReversePortal(portal, IPRegistry.PORTAL.get());
+        Portal parallel = PortalManipulation.createReversePortal(flipped, IPRegistry.PORTAL.get());
         
         Portal[] portals = {portal, flipped, reverse, parallel};
         

@@ -43,6 +43,7 @@ import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.api.PortalAPI;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.portal.*;
 import qouteall.imm_ptl.core.portal.global_portals.BorderBarrierFiller;
 import qouteall.imm_ptl.core.portal.global_portals.GlobalPortalStorage;
@@ -1191,7 +1192,7 @@ public class PortalCommand {
         double width, double height, Entity fromEntity, Entity toEntity,
         String portalName
     ) {
-        Portal portal = Portal.entityType.create(fromEntity.level);
+        Portal portal = IPRegistry.PORTAL.get().create(fromEntity.level);
         
         portal.setPos(fromEntity.getX(), fromEntity.getY(), fromEntity.getZ());
         
@@ -1743,7 +1744,7 @@ public class PortalCommand {
                     facingVec, sideDirectionVec
                 );
                 
-                Portal portal = Portal.entityType.create(world);
+                Portal portal = IPRegistry.PORTAL.get().create(world);
                 portal.setOriginPos(portalOrigin);
                 portal.setDestination(portalDestination);
                 portal.setDestinationDimension(world.dimension());
@@ -1805,7 +1806,7 @@ public class PortalCommand {
                     IntBox room1 = room1Area.getAdjusted(1, 1, 1, -1, -1, -1);
                     IntBox room2 = room2Area.getAdjusted(1, 1, 1, -1, -1, -1);
                     
-                    Portal portal = Portal.entityType.create(world);
+                    Portal portal = IPRegistry.PORTAL.get().create(world);
                     Validate.notNull(portal);
                     portal.setOriginPos(room1.getCenterVec().add(
                         roomSize.getX() / 4.0, 0, 0
@@ -1893,7 +1894,7 @@ public class PortalCommand {
     
     private static void addSmallWorldWrappingPortals(AABB box, ServerLevel world, boolean isInward) {
         for (Direction direction : Direction.values()) {
-            Portal portal = Portal.entityType.create(world);
+            Portal portal = IPRegistry.PORTAL.get().create(world);
             WorldWrappingPortal.initWrappingPortal(
                 world, box, direction, isInward, portal
             );
@@ -1952,7 +1953,7 @@ public class PortalCommand {
         PortalManipulation.completeBiWayBiFacedPortal(
             portal,
             p -> sendMessage(context, "Removed " + p),
-            p -> sendMessage(context, "Added " + p), Portal.entityType
+            p -> sendMessage(context, "Added " + p), IPRegistry.PORTAL.get()
         );
     }
     
@@ -1969,8 +1970,8 @@ public class PortalCommand {
         );
         
         Portal result = PortalManipulation.completeBiFacedPortal(
-            portal,
-            Portal.entityType
+                portal,
+                IPRegistry.PORTAL.get()
         );
         sendMessage(context, "Added " + result);
     }
@@ -1989,7 +1990,7 @@ public class PortalCommand {
         
         Portal result = PortalManipulation.completeBiWayPortal(
             portal,
-            Portal.entityType
+                IPRegistry.PORTAL.get()
         );
         sendMessage(context, "Added " + result);
     }
@@ -2052,7 +2053,7 @@ public class PortalCommand {
         boolean biWay
     ) {
         Portal newPortal = PortalManipulation.copyPortal(
-            pointedPortal, Portal.entityType
+            pointedPortal, IPRegistry.PORTAL.get()
         );
         
         removeMultidestEntry(context, pointedPortal, player);
@@ -2074,14 +2075,14 @@ public class PortalCommand {
                 },
                 p -> {
                 },
-                Portal.entityType
+                    IPRegistry.PORTAL.get()
             );
         }
         else if (biFaced) {
-            PortalManipulation.completeBiFacedPortal(newPortal, Portal.entityType);
+            PortalManipulation.completeBiFacedPortal(newPortal, IPRegistry.PORTAL.get());
         }
         else if (biWay) {
-            PortalManipulation.completeBiWayPortal(newPortal, Portal.entityType);
+            PortalManipulation.completeBiWayPortal(newPortal, IPRegistry.PORTAL.get());
         }
     }
     

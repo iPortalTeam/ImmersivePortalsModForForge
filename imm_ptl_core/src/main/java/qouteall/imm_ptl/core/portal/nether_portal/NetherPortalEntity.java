@@ -77,7 +77,7 @@ public class NetherPortalEntity extends BreakablePortalEntity {
         
         return blockPortalShape.area.stream()
             .allMatch(blockPos ->
-                level.getBlockState(blockPos).getBlock() == PortalPlaceholderBlock.instance
+                level.getBlockState(blockPos).getBlock() == IPRegistry.NETHER_PORTAL_BLOCK.get()
             ) &&
             blockPortalShape.frameAreaWithoutCorner.stream()
                 .allMatch(blockPos ->
