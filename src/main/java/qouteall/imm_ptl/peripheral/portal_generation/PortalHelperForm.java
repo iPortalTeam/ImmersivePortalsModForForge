@@ -18,6 +18,7 @@ import qouteall.imm_ptl.core.portal.custom_portal_gen.form.AbstractDiligentForm;
 import qouteall.imm_ptl.core.portal.custom_portal_gen.form.PortalGenForm;
 import qouteall.imm_ptl.core.portal.nether_portal.BlockPortalShape;
 import qouteall.imm_ptl.peripheral.PeripheralModMain;
+import qouteall.imm_ptl.peripheral.platform_specific.PeripheralModEntry;
 
 import java.util.function.Predicate;
 
@@ -29,7 +30,7 @@ public class PortalHelperForm extends AbstractDiligentForm {
     @Override
     public void generateNewFrame(ServerLevel fromWorld, BlockPortalShape fromShape, ServerLevel toWorld, BlockPortalShape toShape) {
         for (BlockPos blockPos : toShape.frameAreaWithoutCorner) {
-            toWorld.setBlockAndUpdate(blockPos, PeripheralModMain.portalHelperBlock.defaultBlockState());
+            toWorld.setBlockAndUpdate(blockPos, PeripheralModEntry.PORTAL_HELPER_BLOCK.get().defaultBlockState());
         }
         McHelper.findEntitiesByBox(
             ServerPlayer.class,
@@ -73,12 +74,12 @@ public class PortalHelperForm extends AbstractDiligentForm {
     
     @Override
     public Predicate<BlockState> getOtherSideFramePredicate() {
-        return blockState -> blockState.getBlock() == PeripheralModMain.portalHelperBlock;
+        return blockState -> blockState.getBlock() == PeripheralModEntry.PORTAL_HELPER_BLOCK.get();
     }
     
     @Override
     public Predicate<BlockState> getThisSideFramePredicate() {
-        return blockState -> blockState.getBlock() == PeripheralModMain.portalHelperBlock;
+        return blockState -> blockState.getBlock() == PeripheralModEntry.PORTAL_HELPER_BLOCK.get();
     }
     
     @Override

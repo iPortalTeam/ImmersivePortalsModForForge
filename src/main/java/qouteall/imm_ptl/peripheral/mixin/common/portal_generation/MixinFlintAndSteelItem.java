@@ -21,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.portal.BreakableMirror;
 import qouteall.imm_ptl.peripheral.PeripheralModMain;
+import qouteall.imm_ptl.peripheral.platform_specific.PeripheralModEntry;
 import qouteall.imm_ptl.peripheral.portal_generation.IntrinsicPortalGeneration;
 
 @Mixin(FlintAndSteelItem.class)
@@ -43,7 +44,7 @@ public class MixinFlintAndSteelItem {
                 );
                 cir.setReturnValue(InteractionResult.SUCCESS);
             }
-            else if (targetBlock == PeripheralModMain.portalHelperBlock) {
+            else if (targetBlock == PeripheralModEntry.PORTAL_HELPER_BLOCK.get()) {
                 boolean result = IntrinsicPortalGeneration.activatePortalHelper(
                     ((ServerLevel) world),
                     firePos
