@@ -170,8 +170,9 @@ jar {
 mixin {
     add sourceSets.main, 'mixins.imm_ptl.refmap.json'
     config 'imm_ptl.mixins.json'
+    config 'imm_ptl_fabric.mixins.json'
     config 'imm_ptl_peripheral.mixins.json'
-    //config 'q_misc_util.mixins.json'
+    config 'q_misc_util.mixins.json'
     debug = false
 }
 
