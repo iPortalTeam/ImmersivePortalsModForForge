@@ -55,6 +55,7 @@ public abstract class MixinServerEntity implements IEEntityTrackerEntry {
                 player.connection.send(new ClientboundRemoveEntitiesPacket(entity.getId()));
             }
         );
+        net.minecraftforge.event.ForgeEventFactory.onStopEntityTracking(this.entity, player);
     }
     
     /**
@@ -71,6 +72,7 @@ public abstract class MixinServerEntity implements IEEntityTrackerEntry {
                 this.entity.startSeenByPlayer(player);
             }
         );
+        net.minecraftforge.event.ForgeEventFactory.onStartEntityTracking(this.entity, player);
     }
 
 //    @Inject(

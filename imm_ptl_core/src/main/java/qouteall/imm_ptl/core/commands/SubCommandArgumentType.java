@@ -15,10 +15,9 @@ import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.synchronization.ArgumentTypeInfo;
+import net.minecraft.commands.synchronization.ArgumentTypeInfos;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegisterEvent;
 
 import java.util.Collection;
@@ -119,9 +118,13 @@ public class SubCommandArgumentType implements ArgumentType<String> {
 
     @SubscribeEvent
     public static void init(RegisterEvent event) {
-        event.register(ForgeRegistries.Keys.COMMAND_ARGUMENT_TYPES, helper -> {
-            helper.register(new ResourceLocation("imm_ptl:sub_command_argument_type"), new CustomArgumentTypeInfo());
-        });
+//        DeferredRegister<ArgumentType> argumentType = DeferredRegister.create()
+        ArgumentTypeInfos.registerByClass(SubCommandArgumentType.class, new CustomArgumentTypeInfo());
+//        event.register(ForgeRegistries.Keys.COMMAND_ARGUMENT_TYPES, helper -> {
+//            helper.register(new ResourceLocation("imm_ptl:sub_command_argument_type"), new SubCommandArgumentType.CustomArgumentTypeInfo());
+//        });
+//        ForgeRegistries.COMMAND_ARGUMENT_TYPES.register(new ResourceLocation("imm_ptl:sub_command_argument_type"), new CustomArgumentTypeInfo());
+
 //        ArgumentTypeRegistry.registerArgumentType( //TODO @Nick1st Check if that registration procedure is correct
 //            new ResourceLocation("imm_ptl:sub_command_argument_type"),
 //            SubCommandArgumentType.class,

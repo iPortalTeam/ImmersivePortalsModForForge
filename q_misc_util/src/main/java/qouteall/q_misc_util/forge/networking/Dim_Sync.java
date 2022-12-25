@@ -21,12 +21,12 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 public class Dim_Sync {
-    private CompoundTag record;
+    private CompoundTag idMap;
     private CompoundTag typeMap;
 
     public Dim_Sync() {
         Validate.notNull(DimensionIdRecord.serverRecord);
-        record = DimensionIdRecord.recordToTag(
+        idMap = DimensionIdRecord.recordToTag(
                 DimensionIdRecord.serverRecord,
                 dim -> MiscHelper.getServer().getLevel(dim) != null
         );
@@ -34,25 +34,25 @@ public class Dim_Sync {
     }
 
     public Dim_Sync(FriendlyByteBuf buf) {
-        record = buf.readNbt();
+        idMap = buf.readNbt();
         typeMap = buf.readNbt();
     }
 
     public void toBytes(FriendlyByteBuf buf) {
-        buf.writeNbt(record);
+        buf.writeNbt(idMap);
         buf.writeNbt(typeMap);
     }
 
     public boolean handle(Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context ctx = supplier.get();
-        ctx.enqueueWork(() -> processDimSync(record, typeMap, (ClientPacketListener) ctx.getNetworkManager().getPacketListener()));
+        ctx.enqueueWork(() -> processDimSync(idMap, typeMap, (ClientPacketListener) ctx.getNetworkManager().getPacketListener()));
         ctx.setPacketHandled(true);
         return true;
     }
 
     @OnlyIn(Dist.CLIENT)
-    private static void processDimSync(CompoundTag record, CompoundTag typeMap, ClientPacketListener packetListener) {
-        DimensionIdRecord.clientRecord = DimensionIdRecord.tagToRecord(record);
+    private static void processDimSync(CompoundTag idMap, CompoundTag typeMap, ClientPacketListener packetListener) {
+        DimensionIdRecord.clientRecord = DimensionIdRecord.tagToRecord(idMap);
 
         MiscHelper.executeOnRenderThread(() -> {
             DimensionTypeSync.acceptTypeMapData(typeMap);

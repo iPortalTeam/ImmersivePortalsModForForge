@@ -26,15 +26,18 @@ public class Spawn_Entity {
     ResourceKey<Level> dim;
     CompoundTag compoundTag;
 
+    FriendlyByteBuf buf;
+
     public Spawn_Entity(Entity entity) {
         this.entity = entity;
     }
 
     public Spawn_Entity(FriendlyByteBuf buf) {
-        entityType = EntityType.byString(buf.readUtf());
-        entityId = buf.readInt();
-        dim = DimId.readWorldId(buf, true);
-        compoundTag = buf.readNbt();
+//        entityType = EntityType.byString(buf.readUtf()); // TODO @Nick1st This is strange...
+//        entityId = buf.readInt();
+//        dim = DimId.readWorldId(buf, true);
+//        compoundTag = buf.readNbt();
+        this.buf = buf;
     }
 
     public void toBytes(FriendlyByteBuf buf) {
@@ -51,6 +54,10 @@ public class Spawn_Entity {
 
     public boolean handle(Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context ctx = supplier.get();
+        entityType = EntityType.byString(buf.readUtf()); // TODO @Nick1st This is strange...
+        entityId = buf.readInt();
+        dim = DimId.readWorldId(buf, true);
+        compoundTag = buf.readNbt();
         ctx.enqueueWork(() -> Spawn_Entity_Client.processEntitySpawn(this));
         ctx.setPacketHandled(true);
         return true;

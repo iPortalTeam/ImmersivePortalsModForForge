@@ -3,6 +3,7 @@ package qouteall.imm_ptl.core.platform_specific.forge.networking;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkEvent;
 import qouteall.imm_ptl.core.IPGlobal;
@@ -29,6 +30,7 @@ public class RightClick {
         DimId.writeWorldId(buf, dimension, true);
         buf.writeEnum(packet.getHand());
         buf.writeBlockHitResult(packet.getHitResult());
+        buf.writeInt(packet.getSequence());
     }
 
     public boolean handle(Supplier<NetworkEvent.Context> supplier) {

@@ -30,6 +30,7 @@ public class PlayerAction {
         buf.writeEnum(packet.getAction());
         buf.writeBlockPos(packet.getPos());
         buf.writeByte(packet.getDirection().get3DDataValue());
+        buf.writeInt(packet.getSequence());
     }
 
     public boolean handle(Supplier<NetworkEvent.Context> supplier) {

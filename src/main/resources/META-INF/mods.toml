@@ -1,5 +1,5 @@
 modLoader="javafml" #mandatory
-loaderVersion="[40,)"
+loaderVersion="[43,)"
 license="Apache-2.0"
 issueTrackerURL="https://github.com/Nick1st/SeeThroughPortals/issues" #optional
 showAsResourcePack=false

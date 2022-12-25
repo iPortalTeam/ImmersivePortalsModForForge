@@ -113,7 +113,8 @@ public class DynamicDimensionsImpl {
             //player.connection.send(dimSyncPacket);
         }
 
-//        DimensionAPI.serverDimensionDynamicUpdateEvent.invoker().run(server.levelKeys()); //TODO Reimplement this !Important
+//        DimensionAPI.serverDimensionDynamicUpdateEvent.invoker().run(server.levelKeys()); //TODO Reimplement this !DONE
+        MinecraftForge.EVENT_BUS.post(new ServerDimensionDynamicUpdateEvent(server.levelKeys()));
     }
     
     public static void removeDimensionDynamically(ServerLevel world) {
