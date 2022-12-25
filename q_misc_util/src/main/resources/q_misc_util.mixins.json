@@ -2,6 +2,7 @@
   "required": true,
   "package": "qouteall.q_misc_util.mixin",
   "compatibilityLevel": "JAVA_17",
+  "refmap": "mixins.imm_ptl.refmap.json",
   "mixins": [
     "IELevelStorageAccess_Misc",
     "MixinMappedRegistry",

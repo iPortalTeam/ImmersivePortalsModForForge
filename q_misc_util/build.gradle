@@ -1,11 +1,11 @@
 archivesBaseName = "q_misc_util"
 group = "qouteall"
 
-mixin {
-    add sourceSets.main, 'mixins.q_misc_util.refmap.json'
-    config 'q_misc_util.mixins.json'
-    debug = false
-}
+//mixin {
+//    add sourceSets.main, 'mixins.q_misc_util.refmap.json'
+//    config 'q_misc_util.mixins.json'
+//    debug = false
+//}
 
 dependencies {
 //    api project(":imm_ptl_core")

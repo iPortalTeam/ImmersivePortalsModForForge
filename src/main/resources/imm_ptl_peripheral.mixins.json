@@ -2,6 +2,7 @@
   "required": true,
   "package": "qouteall.imm_ptl.peripheral.mixin",
   "compatibilityLevel": "JAVA_17",
+  "refmap": "mixins.imm_ptl.refmap.json",
   "mixins": [
     "common.alternate_dimension.IEChunk1",
     "common.alternate_dimension.IEChunkAccess_AlternateDim",

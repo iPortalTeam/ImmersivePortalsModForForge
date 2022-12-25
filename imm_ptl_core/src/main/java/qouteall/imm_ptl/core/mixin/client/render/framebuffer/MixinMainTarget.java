@@ -31,8 +31,7 @@ public abstract class MixinMainTarget extends RenderTarget {
         method = "Lcom/mojang/blaze3d/pipeline/MainTarget;allocateDepthAttachment(Lcom/mojang/blaze3d/pipeline/MainTarget$Dimension;)Z",
         at = @At(
             value = "INVOKE",
-            target = "Lcom/mojang/blaze3d/platform/GlStateManager;_texImage2D(IIIIIIIILjava/nio/IntBuffer;)V",
-            remap = false
+            target = "Lcom/mojang/blaze3d/platform/GlStateManager;_texImage2D(IIIIIIIILjava/nio/IntBuffer;)V"
         )
     )
     private void onTexImage2D(
@@ -66,8 +65,7 @@ public abstract class MixinMainTarget extends RenderTarget {
         method = "Lcom/mojang/blaze3d/pipeline/MainTarget;createFrameBuffer(II)V",
         at = @At(
             value = "INVOKE",
-            target = "Lcom/mojang/blaze3d/platform/GlStateManager;_glFramebufferTexture2D(IIIII)V",
-            remap = false
+            target = "Lcom/mojang/blaze3d/platform/GlStateManager;_glFramebufferTexture2D(IIIII)V"
         )
     )
     private void redirectFrameBufferTexture2d(
