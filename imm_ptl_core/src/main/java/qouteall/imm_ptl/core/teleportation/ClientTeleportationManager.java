@@ -11,8 +11,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.ClientWorldLoader;
@@ -41,7 +41,7 @@ import qouteall.q_misc_util.my_util.Vec2d;
 import java.util.Comparator;
 import java.util.stream.Stream;
 
-@CheckEnv(Env.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class ClientTeleportationManager {
     public static final Minecraft client = Minecraft.getInstance();
     public long tickTimeForTeleportation = 0;
@@ -145,7 +145,7 @@ public class ClientTeleportationManager {
         client.getProfiler().pop();
     }
     
-    private record TeleportationRec(
+    private static record TeleportationRec(
         Portal portal, Vec2d portalLocalXY, Vec3 collisionPos
     ) {}
     

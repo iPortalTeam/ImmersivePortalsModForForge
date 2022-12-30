@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.network;
 
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -27,7 +27,7 @@ import qouteall.q_misc_util.my_util.SignalArged;
 
 import java.util.Optional;
 
-@CheckEnv(Env.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class PacketRedirectionClient {
     
     public static final Minecraft client = Minecraft.getInstance();

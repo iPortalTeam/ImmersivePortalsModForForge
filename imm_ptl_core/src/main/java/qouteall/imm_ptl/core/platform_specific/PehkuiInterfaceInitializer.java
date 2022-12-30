@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.platform_specific;
 
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -118,7 +118,7 @@ public class PehkuiInterfaceInitializer {
         PehkuiInterface.invoker = new OnPehkuiPresent();
     }
     
-    @CheckEnv(Env.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     private static void onPlayerTeleportedClient(Portal portal) {
         if (portal.hasScaling() && portal.teleportChangesScale) {
             Minecraft client = Minecraft.getInstance();

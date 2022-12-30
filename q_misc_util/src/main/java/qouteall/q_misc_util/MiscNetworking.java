@@ -9,8 +9,8 @@ import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import org.apache.commons.lang3.Validate;
 import qouteall.q_misc_util.dimension.DimensionIdRecord;
@@ -29,7 +29,7 @@ public class MiscNetworking {
     public static final ResourceLocation id_stcDimSync =
         new ResourceLocation("imm_ptl", "dim_sync");
     
-    @CheckEnv(Env.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void initClient() {
 //        ClientPlayNetworking.registerGlobalReceiver(
 //            MiscNetworking.id_stcRemote,
@@ -77,7 +77,7 @@ public class MiscNetworking {
         return new ClientboundCustomPayloadPacket(id_stcDimSync, buf);
     }
     
-    @CheckEnv(Env.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     private static void processDimSync(
         FriendlyByteBuf buf,
         ClientPacketListener packetListener

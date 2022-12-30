@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.render;
 
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -15,7 +15,7 @@ import qouteall.q_misc_util.my_util.BoxPredicate;
 import javax.annotation.Nullable;
 import java.util.Comparator;
 
-@CheckEnv(Env.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class FrustumCuller {
     
     
@@ -143,7 +143,7 @@ public class FrustumCuller {
         };
     }
     
-    public enum BatchTestResult {
+    public static enum BatchTestResult {
         all_true,
         all_false,
         both
@@ -262,7 +262,11 @@ public class FrustumCuller {
         if (up == BatchTestResult.all_false && down == BatchTestResult.all_true) {
             return true;
         }
-        return up == BatchTestResult.all_true && down == BatchTestResult.all_false;
+        if (up == BatchTestResult.all_true && down == BatchTestResult.all_false) {
+            return true;
+        }
+        
+        return false;
     }
     
     private static boolean isFullyInFrustum(

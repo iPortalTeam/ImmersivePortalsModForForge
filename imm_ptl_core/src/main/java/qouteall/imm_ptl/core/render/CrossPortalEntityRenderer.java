@@ -1,8 +1,8 @@
 package qouteall.imm_ptl.core.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -32,7 +32,7 @@ import qouteall.q_misc_util.Helper;
 
 import java.util.WeakHashMap;
 
-@CheckEnv(Env.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class CrossPortalEntityRenderer {
     private static final Minecraft client = Minecraft.getInstance();
     
@@ -336,7 +336,10 @@ public class CrossPortalEntityRenderer {
         if (!WorldRenderInfo.isRendering()) {
             return false;
         }
-        return client.cameraEntity.level.dimension() == RenderStates.originalPlayerDimension;
+        if (client.cameraEntity.level.dimension() == RenderStates.originalPlayerDimension) {
+            return true;
+        }
+        return false;
     }
     
     public static boolean shouldRenderEntityNow(Entity entity) {

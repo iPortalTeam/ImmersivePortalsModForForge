@@ -6,8 +6,8 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.ModList;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.IPGlobal;
@@ -59,7 +59,7 @@ public class RequiemCompat {
         return (Mob) possessedEntity;
     }
     
-    @CheckEnv(Env.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void onPlayerTeleportedClient() {
         if (!isRequiemPresent) {
             return;

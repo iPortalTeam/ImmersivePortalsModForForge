@@ -1,11 +1,11 @@
 package qouteall.imm_ptl.core.platform_specific;
 
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.q_misc_util.my_util.SignalArged;
 
-@CheckEnv(Env.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class IPNetworkingClient {
 
     public static final SignalArged<Portal> clientPortalSpawnSignal = new SignalArged<>();

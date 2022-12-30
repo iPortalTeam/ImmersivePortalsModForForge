@@ -5,13 +5,13 @@ import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.gui.entries.BooleanListEntry;
 import me.shedaniel.clothconfig2.gui.entries.EnumListEntry;
 import me.shedaniel.clothconfig2.gui.entries.IntegerSliderEntry;
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import qouteall.imm_ptl.core.IPGlobal;
 
-@CheckEnv(Env.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class IPConfigGUI {
     public static Screen createClothConfigScreen(Screen parent) {
         IPConfig currConfig = IPConfig.readConfig();

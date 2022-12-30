@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.mixin.client.sync;
 
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.resources.ResourceKey;
@@ -15,7 +15,7 @@ import qouteall.q_misc_util.dimension.DimId;
 import qouteall.imm_ptl.core.ducks.IEPlayerMoveC2SPacket;
 import qouteall.imm_ptl.core.network.IPNetworkAdapt;
 
-@CheckEnv(Env.CLIENT)
+@OnlyIn(Dist.CLIENT)
 @Mixin(ServerboundMovePlayerPacket.Rot.class)
 public class MixinServerboundMovePlayerPacketRot {
     @Inject(method = "Lnet/minecraft/network/protocol/game/ServerboundMovePlayerPacket$Rot;write(Lnet/minecraft/network/FriendlyByteBuf;)V", at = @At("RETURN"))

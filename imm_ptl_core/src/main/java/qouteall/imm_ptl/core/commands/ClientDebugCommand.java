@@ -38,9 +38,8 @@ import net.minecraft.world.level.chunk.DataLayer;
 import net.minecraft.world.level.chunk.EmptyLevelChunk;
 import net.minecraft.world.level.entity.EntityTickList;
 import net.minecraft.world.phys.Vec3;
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -68,7 +67,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@CheckEnv(Env.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class ClientDebugCommand {
 
     @SubscribeEvent
@@ -332,7 +331,7 @@ public class ClientDebugCommand {
                             ClientWorldLoader.getWorldRenderer(world.dimension()))
                             .ip_getBuiltChunkStorage();
                         CHelper.printChat(
-                            world.dimension().location() + builtChunkStorage.getDebugString()
+                            world.dimension().location().toString() + builtChunkStorage.getDebugString()
                         );
                     });
                 });
@@ -355,7 +354,7 @@ public class ClientDebugCommand {
                                 p -> Optional.ofNullable(PortalRenderInfo.getGroupOf(p))
                             ));
                     
-                    CHelper.printChat("\n" + clientWorld.dimension().location());
+                    CHelper.printChat("\n" + clientWorld.dimension().location().toString());
                     result.forEach((g, l) -> {
                         CHelper.printChat("\n" + g.toString());
                         CHelper.printChat(l.stream()
@@ -672,10 +671,10 @@ public class ClientDebugCommand {
             
             result.append("Client Portals\n");
             ClientWorldLoader.getClientWorlds().forEach((world) -> {
-                result.append(world.dimension().location() + "\n");
+                result.append(world.dimension().location().toString() + "\n");
                 for (Entity e : world.entitiesForRendering()) {
                     if (e instanceof Portal) {
-                        result.append(e);
+                        result.append(e.toString());
                         result.append("\n");
                     }
                 }

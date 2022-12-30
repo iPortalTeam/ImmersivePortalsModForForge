@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.teleportation;
 
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
@@ -50,7 +50,7 @@ public class AnimatedPortalTeleportationManager {
 //        lastStateTickDelta = 0;
 //    }
 //
-//    @CheckEnv(Env.CLIENT)
+//    @OnlyIn(Dist.CLIENT)
 //    private void updateClient() {
 //        Validate.isTrue(portal.level.isClientSide());
 //        lastState = portal.getPortalState();

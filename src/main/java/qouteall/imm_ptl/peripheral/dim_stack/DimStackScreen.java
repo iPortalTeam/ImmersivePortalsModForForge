@@ -1,8 +1,8 @@
 package qouteall.imm_ptl.peripheral.dim_stack;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@CheckEnv(Env.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class DimStackScreen extends Screen {
     @org.jetbrains.annotations.Nullable
     public final Screen parent;

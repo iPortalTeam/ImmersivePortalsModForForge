@@ -26,8 +26,8 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkDirection;
 import org.apache.commons.lang3.Validate;
 import qouteall.q_misc_util.forge.networking.Message;
@@ -157,7 +157,7 @@ public class ImplRemoteProcedureCall {
         buf.writeUtf(jsonString);
     }
     
-    @CheckEnv(Env.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static ServerboundCustomPayloadPacket createC2SPacket(
         String methodPath,
         Object... arguments
@@ -176,7 +176,7 @@ public class ImplRemoteProcedureCall {
         return Message.INSTANCE.toVanillaPacket(new Remote_StC(methodPath, arguments), NetworkDirection.PLAY_TO_CLIENT);
     }
     
-    @CheckEnv(Env.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static Runnable clientReadPacketAndGetHandler(FriendlyByteBuf buf) {
         String methodPath = readStringNonClientOnly(buf);
         

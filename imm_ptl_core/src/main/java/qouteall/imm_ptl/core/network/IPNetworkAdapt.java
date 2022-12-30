@@ -1,12 +1,12 @@
 package qouteall.imm_ptl.core.network;
 
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import qouteall.imm_ptl.core.CHelper;
 
-@CheckEnv(Env.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class IPNetworkAdapt {
     private static boolean serverHasIP = true;
     

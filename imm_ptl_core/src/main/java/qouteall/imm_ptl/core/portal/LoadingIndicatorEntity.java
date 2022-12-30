@@ -16,8 +16,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkDirection;
 import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
@@ -60,7 +60,7 @@ public class LoadingIndicatorEntity extends Entity {
         }
     }
     
-    @CheckEnv(Env.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     private void tickClient() {
         addParticles();
         
@@ -69,7 +69,7 @@ public class LoadingIndicatorEntity extends Entity {
         }
     }
     
-    @CheckEnv(Env.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     private void addParticles() {
         int num = tickCount < 100 ? 50 : 20;
         
@@ -134,7 +134,7 @@ public class LoadingIndicatorEntity extends Entity {
         return getEntityData().get(text);
     }
     
-    @CheckEnv(Env.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     private void showMessageClient() {
         Gui inGameHud = Minecraft.getInstance().gui;
         inGameHud.setOverlayMessage(

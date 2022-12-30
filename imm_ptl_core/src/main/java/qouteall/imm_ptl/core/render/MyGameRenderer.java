@@ -5,8 +5,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.Util;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -45,14 +45,14 @@ import javax.annotation.Nullable;
 import java.util.Stack;
 import java.util.function.Consumer;
 
-@CheckEnv(Env.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class MyGameRenderer {
     public static final Minecraft client = Minecraft.getInstance();
     
     private static final LimitedLogger limitedLogger = new LimitedLogger(10);
     
     // portal rendering and outer world rendering uses different buffer builder storages
-    private static final Stack<RenderBuffers> secondaryRenderBuffers = new Stack<>();
+    private static Stack<RenderBuffers> secondaryRenderBuffers = new Stack<>();
     private static int usingRenderBuffersObjectNum = 0;
     
     // the vanilla visibility sections discovery code is multi-threaded

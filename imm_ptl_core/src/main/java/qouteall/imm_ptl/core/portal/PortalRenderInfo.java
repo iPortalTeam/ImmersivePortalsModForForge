@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.portal;
 
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.profiling.ProfilerFiller;
 import org.apache.commons.lang3.Validate;
@@ -24,7 +24,7 @@ import java.util.UUID;
 
 // A portal's rendering related things
 // to access the package private field of Portal, this class is not in "render" package
-@CheckEnv(Env.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class PortalRenderInfo {
     
     public static class Visibility {
@@ -145,7 +145,7 @@ public class PortalRenderInfo {
     
     // disposing twice is fine
     public void dispose() {
-        disposeInfoMap(this.infoMap);
+        disposeInfoMap((Map<List<UUID>, Visibility>) this.infoMap);
     }
     
     private static void disposeInfoMap(Map<List<UUID>, Visibility> infoMap) {

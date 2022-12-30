@@ -12,8 +12,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.UUID;
 
 public abstract class BreakablePortalEntity extends Portal {
-    public record OverlayInfo(
+    public static record OverlayInfo(
         BlockState blockState,
         double opacity,
         double offset,
@@ -188,7 +188,7 @@ public abstract class BreakablePortalEntity extends Portal {
     
     protected abstract boolean isPortalIntactOnThisSide();
     
-    @CheckEnv(Env.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     protected abstract void addSoundAndParticle();
     
     private static final LimitedLogger limitedLogger = new LimitedLogger(20);
@@ -205,12 +205,22 @@ public abstract class BreakablePortalEntity extends Portal {
         }
         
         List<BreakablePortalEntity> revs = findReversePortals(this);
-        //            limitedLogger.err("Missing Reverse Portal " + this);
         if (revs.size() == 1) {
             BreakablePortalEntity reversePortal = revs.get(0);
-            return !(reversePortal.getDestPos().distanceToSqr(getOriginPos()) > 1);
+            if (reversePortal.getDestPos().distanceToSqr(getOriginPos()) > 1) {
+                return false;
+            }
+            else {
+                return true;
+            }
         }
-        else return revs.size() <= 1;
+        else if (revs.size() > 1) {
+            return false;
+        }
+        else {
+//            limitedLogger.err("Missing Reverse Portal " + this);
+            return true;
+        }
     }
     
     public void markShouldBreak() {

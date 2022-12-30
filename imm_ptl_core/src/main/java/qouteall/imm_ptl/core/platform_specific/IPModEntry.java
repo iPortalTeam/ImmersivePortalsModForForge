@@ -3,7 +3,6 @@ package qouteall.imm_ptl.core.platform_specific;
 //import com.fusionflux.gravity_api.util.GravityChannel;
 //import com.fusionflux.gravity_api.util.packet.DefaultGravityPacket;
 
-import com.demonwav.mcdev.annotations.Env;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.MinecraftForge;

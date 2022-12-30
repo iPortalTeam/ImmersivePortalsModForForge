@@ -4,9 +4,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.commons.lang3.Validate;
 import qouteall.q_misc_util.ducks.IEMinecraftServer_Misc;
@@ -44,7 +43,7 @@ public class MiscHelper {
      * {@link ReentrantThreadExecutor#shouldExecuteAsync()}
      * The execution may get deferred on the render thread
      */
-    @CheckEnv(Env.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void executeOnRenderThread(Runnable runnable) {
         Minecraft client = Minecraft.getInstance();
         

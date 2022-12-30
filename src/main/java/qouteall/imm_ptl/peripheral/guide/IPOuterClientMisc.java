@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.peripheral.guide;
 
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
@@ -19,7 +19,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-@CheckEnv(Env.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class IPOuterClientMisc {
     public static class OuterConfig {
         public boolean wikiInformed = false;
@@ -135,7 +135,7 @@ public class IPOuterClientMisc {
         writeToFile(outerConfig);
     }
     
-    @CheckEnv(Env.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static class RemoteCallables {
         public static void showWiki() {
             informWithURL(

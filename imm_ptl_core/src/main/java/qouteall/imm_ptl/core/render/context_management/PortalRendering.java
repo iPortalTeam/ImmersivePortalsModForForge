@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.render.context_management;
 
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
@@ -21,7 +21,7 @@ import java.util.Stack;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@CheckEnv(Env.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class PortalRendering {
     private static final Stack<PortalLike> portalLayers = new Stack<>();
     private static boolean isRenderingCache = false;

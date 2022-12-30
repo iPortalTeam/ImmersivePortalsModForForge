@@ -4,8 +4,8 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.forgespi.language.IModFileInfo;
@@ -127,7 +127,7 @@ public class IPModInfoChecking {
     
     // NOTE do not run it on render thread
     @Nullable
-    @CheckEnv(Env.CLIENT) // TODO do it on dedicated server
+    @OnlyIn(Dist.CLIENT) // TODO do it on dedicated server
     public static ImmPtlInfo fetchImmPtlInfoFromInternet() {
         String url = O_O.getImmPtlModInfoUrl();
         
@@ -206,7 +206,7 @@ public class IPModInfoChecking {
         
     }
     
-    @CheckEnv(Env.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void initClient() {
         Util.backgroundExecutor().execute(() -> {
             if (!IPGlobal.checkModInfoFromInternet) {

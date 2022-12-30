@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.portal;
 
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
@@ -126,7 +126,7 @@ public class EndPortalEntity extends Portal {
         }
     }
     
-    @CheckEnv(Env.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     private void tickClient() {
         if (Objects.equals(portalTag, "view_box")) {
             LocalPlayer player = Minecraft.getInstance().player;
@@ -197,11 +197,14 @@ public class EndPortalEntity extends Portal {
     
     private boolean shouldAddSlowFalling(Entity entity) {
         if (entity instanceof LivingEntity) {
-            if (entity instanceof ServerPlayer player) {
+            if (entity instanceof ServerPlayer) {
+                ServerPlayer player = (ServerPlayer) entity;
                 if (player.gameMode.getGameModeForPlayer() == GameType.CREATIVE) {
                     return false;
                 }
-                return player.getItemBySlot(EquipmentSlot.CHEST).getItem() != Items.ELYTRA;
+                if (player.getItemBySlot(EquipmentSlot.CHEST).getItem() == Items.ELYTRA) {
+                    return false;
+                }
             }
             return true;
         }

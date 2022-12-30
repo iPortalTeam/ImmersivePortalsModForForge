@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.miscellaneous;
 
-import com.demonwav.mcdev.annotations.Env;
-import com.demonwav.mcdev.annotations.CheckEnv;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import qouteall.imm_ptl.core.IPGlobal;
@@ -11,7 +11,7 @@ import qouteall.q_misc_util.api.McRemoteProcedureCall;
 
 import java.util.ArrayDeque;
 
-@CheckEnv(Env.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class ClientPerformanceMonitor {
     
     public static PerformanceLevel level = PerformanceLevel.medium;
@@ -54,7 +54,7 @@ public class ClientPerformanceMonitor {
         }
         
         averageFps = (int) records.stream().mapToInt(r -> r.FPS).average().orElse(60);
-        minimumFps = records.stream().mapToInt(r -> r.FPS).min().orElse(60);
+        minimumFps = (int) records.stream().mapToInt(r -> r.FPS).min().orElse(60);
         averageFreeMemoryMB = (int) records.stream()
             .mapToInt(r -> r.freeMemoryMB).average().orElse(1000);
         
