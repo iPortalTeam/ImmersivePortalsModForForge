@@ -1,6 +1,6 @@
 package qouteall.imm_ptl.core.platform_specific;
 
-import net.minecraft.client.Minecraft;
+import net.minecraftforge.fml.loading.FMLPaths;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.q_misc_util.Helper;
 
@@ -53,7 +53,7 @@ public class IPConfig {
 //    public boolean enableServerCollision = true;
 
     private static File getGameDir() {
-        return Minecraft.getInstance().gameDirectory;
+        return FMLPaths.GAMEDIR.get().toFile();
     }
 
     public static IPConfig readConfig() {
@@ -73,7 +73,7 @@ public class IPConfig {
 
     public static File getConfigFileLocation() {
         return new File(
-            getGameDir(), "config/immersive_portals_fabric.json"
+            getGameDir(), "config/immersive_portals_forge.json"
         );
     }
 
