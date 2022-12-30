@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core;
 
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -43,7 +43,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-@OnlyIn(Dist.CLIENT)
+@CheckEnv(Env.CLIENT)
 public class ClientWorldLoader {
     public static final SignalArged<ResourceKey<Level>> clientDimensionDynamicRemoveSignal =
         new SignalArged<>();

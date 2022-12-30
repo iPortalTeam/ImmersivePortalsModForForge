@@ -5,8 +5,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.network.NetworkEvent;
 import org.apache.commons.lang3.Validate;
@@ -21,8 +21,8 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 public class Dim_Sync {
-    private CompoundTag idMap;
-    private CompoundTag typeMap;
+    private final CompoundTag idMap;
+    private final CompoundTag typeMap;
 
     public Dim_Sync() {
         Validate.notNull(DimensionIdRecord.serverRecord);
@@ -50,7 +50,7 @@ public class Dim_Sync {
         return true;
     }
 
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     private static void processDimSync(CompoundTag idMap, CompoundTag typeMap, ClientPacketListener packetListener) {
         DimensionIdRecord.clientRecord = DimensionIdRecord.tagToRecord(idMap);
 

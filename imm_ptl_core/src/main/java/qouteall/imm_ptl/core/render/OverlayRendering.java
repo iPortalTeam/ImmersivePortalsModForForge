@@ -8,8 +8,8 @@ import com.mojang.math.Matrix4f;
 import com.mojang.math.Quaternion;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -41,7 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-@OnlyIn(Dist.CLIENT)
+@CheckEnv(Env.CLIENT)
 public class OverlayRendering {
     private static final RandomSource random = RandomSource.create();
     

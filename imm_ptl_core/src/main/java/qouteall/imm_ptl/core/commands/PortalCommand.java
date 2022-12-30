@@ -12,8 +12,8 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Quaternion;
 import com.mojang.math.Vector3f;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.commands.CommandSourceStack;
@@ -1279,7 +1279,7 @@ public class PortalCommand {
                         context.getSource().sendSuccess(
                             Component.translatable(
                                 "imm_ptl.command.tpme.success",
-                                McHelper.dimensionTypeId(dim).toString() + dest.toString()
+                                McHelper.dimensionTypeId(dim).toString() + dest
                             ),
                             true
                         );
@@ -1362,7 +1362,7 @@ public class PortalCommand {
                                 Component.translatable(
                                     "imm_ptl.command.tp.success",
                                     numTeleported,
-                                    McHelper.dimensionTypeId(dim).toString() + dest.toString()
+                                    McHelper.dimensionTypeId(dim).toString() + dest
                                 ),
                                 true
                             );
@@ -1569,21 +1569,18 @@ public class PortalCommand {
                         Entity e1 = EntityArgument.getEntity(context, "portal1");
                         Entity e2 = EntityArgument.getEntity(context, "portal2");
                         
-                        if (!(e1 instanceof Portal)) {
+                        if (!(e1 instanceof Portal portal1)) {
                             context.getSource().sendFailure(
                                 Component.literal("portal1 is not a portal entity"));
                             return 0;
                         }
                         
-                        if (!(e2 instanceof Portal)) {
+                        if (!(e2 instanceof Portal portal2)) {
                             context.getSource().sendFailure(
                                 Component.literal("portal2 is not a portal entity"));
                             return 0;
                         }
-                        
-                        Portal portal1 = (Portal) e1;
-                        Portal portal2 = (Portal) e2;
-                        
+
                         portal1.setDestination(portal2.getOriginPos());
                         portal2.setDestination(portal1.getOriginPos());
                         
@@ -1911,9 +1908,8 @@ public class PortalCommand {
         );
         
         for (Entity portalEntity : entities) {
-            if (portalEntity instanceof Portal) {
-                Portal portal = (Portal) portalEntity;
-                
+            if (portalEntity instanceof Portal portal) {
+
                 invoker.accept(portal);
             }
             else {
@@ -1962,7 +1958,7 @@ public class PortalCommand {
         Portal portal
     ) {
         PortalManipulation.removeOverlappedPortals(
-            ((ServerLevel) portal.level),
+                portal.level,
             portal.getOriginPos(),
             portal.getNormal().scale(-1),
             p -> Objects.equals(portal.specificPlayerId, p.specificPlayerId),
@@ -2037,7 +2033,7 @@ public class PortalCommand {
                     portal,
                     (p) -> sendMessage(context, "removed " + p.toString())
                 );
-                sendMessage(context, "removed " + portal.toString());
+                sendMessage(context, "removed " + portal);
                 portal.remove(Entity.RemovalReason.KILLED);
             }
         );
@@ -2220,7 +2216,7 @@ public class PortalCommand {
         );
     }
     
-    public static interface PortalConsumerThrowsCommandSyntaxException {
+    public interface PortalConsumerThrowsCommandSyntaxException {
         void accept(Portal portal) throws CommandSyntaxException;
     }
     
@@ -2231,9 +2227,8 @@ public class PortalCommand {
         CommandSourceStack source = context.getSource();
         Entity entity = source.getEntity();
         
-        if (entity instanceof ServerPlayer) {
-            ServerPlayer player = ((ServerPlayer) entity);
-            
+        if (entity instanceof ServerPlayer player) {
+
             Portal portal = getPlayerPointingPortal(player, false);
             
             if (portal == null) {
@@ -2340,7 +2335,7 @@ public class PortalCommand {
     }
     
     public static class RemoteCallables {
-        @OnlyIn(Dist.CLIENT)
+        @CheckEnv(Env.CLIENT)
         public static void clientAccelerate(double v) {
             Minecraft client = Minecraft.getInstance();
             

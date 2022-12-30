@@ -2,8 +2,9 @@ package qouteall.imm_ptl.core.compat;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import net.minecraft.client.Minecraft;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import qouteall.imm_ptl.core.ducks.IEFrameBuffer;
@@ -31,7 +32,7 @@ public class IPPortingLibCompat {
         }
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     public static boolean getIsStencilEnabled(RenderTarget renderTarget) {
         if (isPortingLibPresent) {
             return Helper.noError(
@@ -43,7 +44,7 @@ public class IPPortingLibCompat {
         }
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     public static void setIsStencilEnabled(RenderTarget renderTarget, boolean cond) {
         if (isPortingLibPresent) {
             

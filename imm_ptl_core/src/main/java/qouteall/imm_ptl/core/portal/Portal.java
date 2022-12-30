@@ -23,8 +23,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraftforge.network.NetworkDirection;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.CHelper;
@@ -200,7 +200,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     @Nullable
     public List<String> commandsOnTeleported;
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     PortalRenderInfo portalRenderInfo;
     
     public final PortalAnimation animation = new PortalAnimation();
@@ -407,7 +407,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
      *                                  Every 3 vertices correspond to a triangle.
      *                                  In camera-centered coordinate.
      */
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     @Override
     public void renderViewAreaMesh(Vec3 portalPosRelativeToCamera, Consumer<Vec3> vertexOutput) {
         if (this instanceof Mirror) {
@@ -416,7 +416,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
                 || IPGlobal.pureMirror;
             double mirrorOffset = offsetFront ? 0.01 : -0.01;
             portalPosRelativeToCamera = portalPosRelativeToCamera.add(
-                ((Mirror) this).getNormal().scale(mirrorOffset));
+                this.getNormal().scale(mirrorOffset));
         }
         
         ViewAreaRenderer.generateViewAreaTriangles(this, portalPosRelativeToCamera, vertexOutput);
@@ -691,7 +691,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         if (compoundTag.contains("commandsOnTeleported")) {
             ListTag list = compoundTag.getList("commandsOnTeleported", 8);
             commandsOnTeleported = list.stream()
-                .map(t -> ((StringTag) t).getAsString()).collect(Collectors.toList());
+                .map(t -> t.getAsString()).collect(Collectors.toList());
         }
         else {
             commandsOnTeleported = null;
@@ -947,7 +947,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         return false;
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     private boolean isPortalValidClient() {
         boolean contains = ClientWorldLoader.getServerDimensions().contains(dimensionTo);
         if (!contains) {
@@ -976,7 +976,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
             ),
             level.dimension().location(), getX(), getY(), getZ(),
             dimensionTo.location(), getDestPos().x, getDestPos().y, getDestPos().z,
-            specificPlayerId != null ? (",specificAccessor:" + specificPlayerId.toString()) : "",
+            specificPlayerId != null ? (",specificAccessor:" + specificPlayerId) : "",
             hasScaling() ? (",scale:" + scaling) : "",
             portalTag != null ? "," + portalTag : ""
         );
@@ -1351,7 +1351,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     
     
     // function return true for culled
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     @Override
     public BoxPredicate getInnerFrustumCullingFunc(
         double cameraX, double cameraY, double cameraZ
@@ -1455,7 +1455,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         unsetRemoved();
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     public PortalLike getRenderingDelegate() {
         if (IPGlobal.enablePortalRenderingMerge) {
             PortalGroup group = PortalRenderInfo.getGroupOf(this);
@@ -1608,7 +1608,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     }
     
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     private void acceptDataSync(Vec3 pos, CompoundTag customData) {
         PortalState oldState = getPortalState();
         

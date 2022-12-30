@@ -1,8 +1,8 @@
 package qouteall.imm_ptl.core.portal.animation;
 
+import com.demonwav.mcdev.annotations.CheckEnv;
+import com.demonwav.mcdev.annotations.Env;
 import net.minecraft.ChatFormatting;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
@@ -55,15 +55,15 @@ public class PortalAnimation {
     public PortalState thisTickAnimatedState;
     
     // for client player teleportation
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     @Nullable
     public PortalState clientLastFramePortalState;
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     public long clientLastFramePortalStateCounter = -1;
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     @Nullable
     public PortalState clientCurrentFramePortalState;
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     public long clientCurrentFramePortalStateCounter = -1;
     
     public void readFromTag(CompoundTag tag) {
@@ -280,7 +280,7 @@ public class PortalAnimation {
         }
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     private static void markRequiresClientAnimationUpdate(Portal portal) {
         ClientPortalAnimationManagement.markRequiresCustomAnimationUpdate(portal);
     }
@@ -492,7 +492,7 @@ public class PortalAnimation {
         return UnilateralPortalState.combine(from.build(), to.build());
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     public void updateClientState(Portal portal, long currentTeleportationCounter) {
         if (currentTeleportationCounter == clientCurrentFramePortalStateCounter) {
             return;

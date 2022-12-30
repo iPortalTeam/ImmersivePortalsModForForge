@@ -4,8 +4,8 @@ import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSectionManager;
 import me.jellysquid.mods.sodium.client.render.texture.SpriteUtil;
 import me.jellysquid.mods.sodium.client.world.WorldRendererExtended;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import qouteall.imm_ptl.core.compat.mixin.IESodiumWorldRenderer;
@@ -13,7 +13,7 @@ import qouteall.imm_ptl.core.render.FrustumCuller;
 
 import javax.annotation.Nullable;
 
-@OnlyIn(Dist.CLIENT)
+@CheckEnv(Env.CLIENT)
 public class SodiumInterface {
     
     @Nullable

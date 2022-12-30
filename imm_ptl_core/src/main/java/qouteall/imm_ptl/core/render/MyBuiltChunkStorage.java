@@ -1,8 +1,8 @@
 package qouteall.imm_ptl.core.render;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -33,7 +33,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.function.LongConsumer;
 
-@OnlyIn(Dist.CLIENT)
+@CheckEnv(Env.CLIENT)
 public class MyBuiltChunkStorage extends ViewArea {
     
     public static class Column {

@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.portal.animation;
 
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.game.ClientboundSetTimePacket;
 import org.apache.commons.lang3.Validate;
@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
  * - The stable time always flows forward, it doesn't flow backward or stop.
  * - The stable time should approach server synced time in a short period of time, even if the server synced time jumps.
  */
-@OnlyIn(Dist.CLIENT)
+@CheckEnv(Env.CLIENT)
 public class StableClientTimer {
     // use two numbers to keep precision
     public static final class Time {

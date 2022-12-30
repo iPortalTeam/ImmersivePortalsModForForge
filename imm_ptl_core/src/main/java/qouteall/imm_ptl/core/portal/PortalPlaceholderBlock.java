@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.portal;
 
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
@@ -53,9 +53,9 @@ public class PortalPlaceholderBlock extends Block {
     public PortalPlaceholderBlock(Properties properties) {
         super(properties);
         this.registerDefaultState(
-            (BlockState) ((BlockState) this.getStateDefinition().any()).setValue(
-                AXIS, Direction.Axis.X
-            )
+                this.getStateDefinition().any().setValue(
+                    AXIS, Direction.Axis.X
+                )
         );
     }
     
@@ -63,7 +63,7 @@ public class PortalPlaceholderBlock extends Block {
     public VoxelShape getShape(
         BlockState state, BlockGetter world, BlockPos blockPos, CollisionContext shapeContext
     ) {
-        switch ((Direction.Axis) state.getValue(AXIS)) {
+        switch (state.getValue(AXIS)) {
             case Z:
                 return Z_AABB;
             case Y:
@@ -89,9 +89,8 @@ public class PortalPlaceholderBlock extends Block {
         BlockPos neighborPos
     ) {
         if (!worldAccess.isClientSide()) {
-            if (worldAccess instanceof Level) {
-                Level world = (Level) worldAccess;
-                
+            if (worldAccess instanceof Level world) {
+
                 world.getProfiler().push("portal_placeholder");
                 
                 Direction.Axis axis = thisState.getValue(AXIS);
@@ -104,7 +103,7 @@ public class PortalPlaceholderBlock extends Block {
                         e -> true
                     ).forEach(
                         portal -> {
-                            ((BreakablePortalEntity) portal).notifyPlaceholderUpdate();
+                            portal.notifyPlaceholderUpdate();
                         }
                     );
                 }
@@ -138,7 +137,7 @@ public class PortalPlaceholderBlock extends Block {
         return RenderShape.INVISIBLE;
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     @Override
     public float getShadeBrightness(
         BlockState blockState_1,

@@ -7,8 +7,8 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.JsonOps;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -75,9 +75,7 @@ import java.util.stream.Stream;
 public class McHelper {
     
     public static IEThreadedAnvilChunkStorage getIEStorage(ResourceKey<Level> dimension) {
-        return (IEThreadedAnvilChunkStorage) (
-            (ServerChunkCache) getServerWorld(dimension).getChunkSource()
-        ).chunkMap;
+        return (IEThreadedAnvilChunkStorage) getServerWorld(dimension).getChunkSource().chunkMap;
     }
     
     public static ArrayList<ServerPlayer> getCopiedPlayerList() {
@@ -299,9 +297,7 @@ public class McHelper {
     public static LevelChunk getServerChunkIfPresent(
         ServerLevel world, int x, int z
     ) {
-        ChunkHolder chunkHolder_ = ((IEThreadedAnvilChunkStorage) (
-            (ServerChunkCache) world.getChunkSource()
-        ).chunkMap).ip_getChunkHolder(ChunkPos.asLong(x, z));
+        ChunkHolder chunkHolder_ = ((IEThreadedAnvilChunkStorage) world.getChunkSource().chunkMap).ip_getChunkHolder(ChunkPos.asLong(x, z));
         if (chunkHolder_ == null) {
             return null;
         }
@@ -375,7 +371,7 @@ public class McHelper {
     }
     
     // because withUnderline is client only
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     public static MutableComponent getLinkText(String link) {
         return Component.literal(link).withStyle(
             style -> style.withClickEvent(new ClickEvent(
@@ -426,7 +422,7 @@ public class McHelper {
         }).filter(b -> b != null).reduce(AABB::minmax).orElse(null);
     }
     
-    public static interface ChunkAccessor {
+    public interface ChunkAccessor {
         LevelChunk getChunk(int x, int z);
     }
     
@@ -692,7 +688,7 @@ public class McHelper {
                 return ((ServerLevel) world).getAllEntities();
             }
             else {
-                return ((Iterable<Entity>) Collections.emptyList().iterator());
+                return ((Iterable<Entity>) Collections.emptyIterator());
             }
         }
     }

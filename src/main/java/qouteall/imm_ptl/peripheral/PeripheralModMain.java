@@ -4,8 +4,8 @@ import com.google.common.collect.Lists;
 import com.mojang.serialization.Codec;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
@@ -30,7 +30,7 @@ public class PeripheralModMain {
     public static Block portalHelperBlock;
     public static BlockItem portalHelperBlockItem;
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     public static void initClient() {
         IPOuterClientMisc.initClient();
     }

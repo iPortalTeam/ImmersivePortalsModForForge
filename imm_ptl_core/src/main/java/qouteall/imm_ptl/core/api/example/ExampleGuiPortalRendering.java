@@ -4,8 +4,8 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
@@ -57,7 +57,7 @@ public class ExampleGuiPortalRendering {
     /**
      * The Framebuffer that the GUI portal is going to render onto
      */
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     private static RenderTarget frameBuffer;
     
     /**
@@ -100,7 +100,7 @@ public class ExampleGuiPortalRendering {
     }
     
     public static class RemoteCallables {
-        @OnlyIn(Dist.CLIENT)
+        @CheckEnv(Env.CLIENT)
         public static void clientActivateExampleGuiPortal(
             ResourceKey<Level> dimension,
             Vec3 position
@@ -117,7 +117,7 @@ public class ExampleGuiPortalRendering {
         }
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     public static class GuiPortalScreen extends Screen {
         
         private final ResourceKey<Level> viewingDimension;

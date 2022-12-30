@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.compat;
 
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
@@ -60,7 +60,7 @@ public class PehkuiInterface {
     
     private static boolean messageShown = false;
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     private static void showMissingPehkui(Portal portal) {
         if (portal.hasScaling() && portal.teleportChangesScale) {
             if (!messageShown) {

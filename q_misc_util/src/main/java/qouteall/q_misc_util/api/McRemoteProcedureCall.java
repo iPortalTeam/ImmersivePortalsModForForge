@@ -1,8 +1,8 @@
 package qouteall.q_misc_util.api;
 
 import net.minecraft.network.protocol.Packet;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
 import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
@@ -147,7 +147,7 @@ public class McRemoteProcedureCall {
      * @param arguments The arguments. The types must match the remotely invoked method signature.
      *                  The remote method's first argument must be the player that's sending the packet.
      */
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     public static void tellServerToInvoke(
         String methodPath,
         Object... arguments

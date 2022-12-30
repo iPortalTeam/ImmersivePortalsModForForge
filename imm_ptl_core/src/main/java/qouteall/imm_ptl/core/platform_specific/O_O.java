@@ -9,8 +9,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.fml.ModList;
@@ -30,14 +31,14 @@ public class O_O {
         return true;
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     public static void onPlayerChangeDimensionClient(
         ResourceKey<Level> from, ResourceKey<Level> to
     ) {
         RequiemCompat.onPlayerTeleportedClient();
     }
 
-//    @OnlyIn(Dist.CLIENT)
+//    @CheckEnv(Env.CLIENT)
 //    public static void segregateClientEntity(
 //        ClientWorld fromWorld,
 //        Entity entity
@@ -103,7 +104,7 @@ public class O_O {
     
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     public static ClientChunkCache createMyClientChunkManager(ClientLevel world, int loadDistance) {
         return new MyClientChunkManager(world, loadDistance);
     }
@@ -139,9 +140,7 @@ public class O_O {
 
             if (endVersion != null) {
                 int i = version.compareTo(new DefaultArtifactVersion(endVersion));
-                if (i > 0) {
-                    return false;
-                }
+                return i <= 0;
             }
             
             return true;

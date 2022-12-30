@@ -14,8 +14,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.commons.lang3.Validate;
@@ -108,12 +108,12 @@ public class GlobalPortalStorage extends SavedData {
         );
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     private static void initClient() {
         IPGlobal.clientCleanupSignal.connect(GlobalPortalStorage::onClientCleanup);
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     private static void onClientCleanup() {
         if (ClientWorldLoader.getIsInitialized()) {
             for (ClientLevel clientWorld : ClientWorldLoader.getClientWorlds()) {
@@ -291,7 +291,7 @@ public class GlobalPortalStorage extends SavedData {
     
     public void clearAbnormalPortals() {
         data.removeIf(e -> {
-            ResourceKey<Level> dimensionTo = ((Portal) e).dimensionTo;
+            ResourceKey<Level> dimensionTo = e.dimensionTo;
             if (MiscHelper.getServer().getLevel(dimensionTo) == null) {
                 Helper.err("Missing Dimension for global portal " + dimensionTo.location());
                 return true;
@@ -304,7 +304,7 @@ public class GlobalPortalStorage extends SavedData {
         //removed
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     public static void receiveGlobalPortalSync(ResourceKey<Level> dimension, CompoundTag compoundTag) {
         ClientLevel world = ClientWorldLoader.getWorld(dimension);
         

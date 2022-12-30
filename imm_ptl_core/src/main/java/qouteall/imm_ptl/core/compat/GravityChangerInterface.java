@@ -6,8 +6,8 @@ package qouteall.imm_ptl.core.compat;
 //import com.fusionflux.gravity_api.util.GravityComponent;
 //import com.fusionflux.gravity_api.util.RotationUtil;
 //import com.fusionflux.gravity_api.util.packet.DefaultGravityPacket;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.Direction;
@@ -79,7 +79,7 @@ public class GravityChangerInterface {
     
     private static boolean warned = false;
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     private static void warnGravityChangerNotPresent() {
         if (!warned) {
             warned = true;
@@ -129,7 +129,7 @@ public class GravityChangerInterface {
 //            setClientPlayerGravityDirectionClientOnly(player, direction);
 //        }
 //
-//        @OnlyIn(Dist.CLIENT)
+//        @CheckEnv(Env.CLIENT)
 //        private void setClientPlayerGravityDirectionClientOnly(
 //            Player player, Direction direction
 //        ) {

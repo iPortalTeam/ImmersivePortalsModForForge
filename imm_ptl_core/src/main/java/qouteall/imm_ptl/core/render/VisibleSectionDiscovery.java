@@ -1,8 +1,8 @@
 package qouteall.imm_ptl.core.render;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import qouteall.imm_ptl.core.ClientWorldLoader;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.chunk_loading.PerformanceLevel;
@@ -33,7 +33,7 @@ import net.minecraft.world.phys.Vec3;
  *  hard to integrate with portal rendering.
  * The cave culling is conditionally enabled with Sodium: {@link PortalRendering#shouldEnableSodiumCaveCulling()}
  */
-@OnlyIn(Dist.CLIENT)
+@CheckEnv(Env.CLIENT)
 public class VisibleSectionDiscovery {
     
     private static MyBuiltChunkStorage builtChunks;
@@ -116,7 +116,7 @@ public class VisibleSectionDiscovery {
     }
     
     private static void discoverBottomOrTopLayerVisibleChunks(int cy) {
-        BlockTraverse.<Object>searchOnPlane(
+        BlockTraverse.searchOnPlane(
             cameraSectionPos.x(),
             cameraSectionPos.z(),
             viewDistance - 1,

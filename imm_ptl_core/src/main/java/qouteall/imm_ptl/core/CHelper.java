@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core;
 
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
@@ -34,7 +34,7 @@ import java.util.stream.Stream;
 
 import static org.lwjgl.opengl.GL11.GL_NO_ERROR;
 
-@OnlyIn(Dist.CLIENT)
+@CheckEnv(Env.CLIENT)
 public class CHelper {
     
     private static int reportedErrorNum = 0;
@@ -139,11 +139,10 @@ public class CHelper {
     }
     
     public static Iterable<Entity> getWorldEntityList(Level world) {
-        if (!(world instanceof ClientLevel)) {
-            return (Iterable<Entity>) Collections.emptyList().iterator();
+        if (!(world instanceof ClientLevel clientWorld)) {
+            return (Iterable<Entity>) Collections.emptyIterator();
         }
-        
-        ClientLevel clientWorld = (ClientLevel) world;
+
         return clientWorld.entitiesForRendering();
     }
     

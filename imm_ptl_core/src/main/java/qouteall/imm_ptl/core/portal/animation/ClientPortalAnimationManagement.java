@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.portal.animation;
 
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import qouteall.imm_ptl.core.ClientWorldLoader;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.portal.Portal;
@@ -13,7 +13,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.function.Consumer;
 
-@OnlyIn(Dist.CLIENT)
+@CheckEnv(Env.CLIENT)
 public class ClientPortalAnimationManagement {
     private static final Map<Portal, RunningDefaultAnimation> defaultAnimatedPortals = new HashMap<>();
     private static final HashSet<Portal> customAnimatedPortals = new HashSet<>();

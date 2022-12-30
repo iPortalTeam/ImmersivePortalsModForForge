@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.miscellaneous;
 
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -32,7 +32,7 @@ public class GcMonitor {
     private static long lastUpdateTime = 0;
     private static long lastLongPauseTime = 0;
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     public static void initClient() {
         IPGlobal.preGameRenderSignal.connect(GcMonitor::update);
     }
@@ -113,7 +113,7 @@ public class GcMonitor {
         }
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     private static void informMemoryNotEnoughClient() {
         Minecraft client = Minecraft.getInstance();
         if (client.player != null) {

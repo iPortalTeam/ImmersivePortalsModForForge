@@ -2,8 +2,8 @@ package qouteall.imm_ptl.core.portal.nether_portal;
 
 import com.mojang.math.Quaternion;
 import com.mojang.math.Vector3f;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
@@ -86,7 +86,7 @@ public class NetherPortalEntity extends BreakablePortalEntity {
     }
     
     @Override
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     protected void addSoundAndParticle() {
         if (!IPGlobal.enableNetherPortalEffect) {
             return;

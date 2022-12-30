@@ -1,8 +1,8 @@
 package qouteall.imm_ptl.core.teleportation;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import com.demonwav.mcdev.annotations.Env;
+import com.demonwav.mcdev.annotations.CheckEnv;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -106,9 +106,7 @@ public class CollisionHelper {
                 if (isInGroup) {
                     return true;
                 }
-                if (portal.isPointInPortalProjection(cameraPosVec)) {
-                    return true;
-                }
+                return portal.isPointInPortalProjection(cameraPosVec);
             }
         }
         return false;
@@ -350,11 +348,11 @@ public class CollisionHelper {
         if (entity.maxUpStep > 0.0F && touchGround && (moveX || moveZ)) {
             Vec3 stepping = collideBoundingBox(
                 entity,
-                new Vec3(attemptedMove.x, (double) entity.maxUpStep, attemptedMove.z),
+                new Vec3(attemptedMove.x, entity.maxUpStep, attemptedMove.z),
                 boundingBox, entity.level, entityCollisions, filter
             );
             Vec3 verticalStep = collideBoundingBox(
-                entity, new Vec3(0.0D, (double) entity.maxUpStep, 0.0D),
+                entity, new Vec3(0.0D, entity.maxUpStep, 0.0D),
                 boundingBox.expandTowards(attemptedMove.x, 0.0D, attemptedMove.z),
                 entity.level, entityCollisions, filter
             );
@@ -444,9 +442,8 @@ public class CollisionHelper {
         AABB originalBox,
         Vec3 transformedAttemptedMove
     ) {
-        if (portalLike instanceof Portal) {
-            Portal portal = (Portal) portalLike;
-            
+        if (portalLike instanceof Portal portal) {
+
             AABB otherSideBox = transformBox(portal, originalBox);
             
             Vec3 clippingPos = portal.getDestPos().subtract(transformedAttemptedMove);
@@ -555,19 +552,19 @@ public class CollisionHelper {
         });
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     public static void initClient() {
         IPGlobal.postClientTickSignal.connect(CollisionHelper::tickClient);
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     public static void tickClient() {
         updateGlobalPortalCollidingStatus();
         
         updateClientStagnateStatus();
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     private static void updateGlobalPortalCollidingStatus() {
         if (ClientWorldLoader.getIsInitialized()) {
             for (ClientLevel world : ClientWorldLoader.getClientWorlds()) {
@@ -644,13 +641,13 @@ public class CollisionHelper {
     private static boolean thisTickStagnate = false;
     private static boolean lastTickStagnate = false;
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     private static void informClientStagnant() {
         thisTickStagnate = true;
         limitedLogger.log("client movement stagnated");
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     private static void updateClientStagnateStatus() {
         if (thisTickStagnate && lastTickStagnate) {
             Minecraft.getInstance().gui.setOverlayMessage(
@@ -681,7 +678,7 @@ public class CollisionHelper {
         }
     }
     
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     private static PortalLike getCollisionHandlingUnitClient(Portal portal) {
         return PortalGroup.getPortalUnit(portal);
     }
