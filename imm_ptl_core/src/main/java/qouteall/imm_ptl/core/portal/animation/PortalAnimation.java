@@ -1,5 +1,7 @@
 package qouteall.imm_ptl.core.portal.animation;
 
+import com.demonwav.mcdev.annotations.CheckEnv;
+import com.demonwav.mcdev.annotations.Env;
 import net.minecraft.ChatFormatting;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -58,12 +60,12 @@ public class PortalAnimation {
     @OnlyIn(Dist.CLIENT)
     @Nullable
     public PortalState clientLastFramePortalState;
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     public long clientLastFramePortalStateCounter = -1;
     @OnlyIn(Dist.CLIENT)
     @Nullable
     public PortalState clientCurrentFramePortalState;
-    @OnlyIn(Dist.CLIENT)
+    @CheckEnv(Env.CLIENT)
     public long clientCurrentFramePortalStateCounter = -1;
     
     public void readFromTag(CompoundTag tag) {
