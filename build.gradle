@@ -70,11 +70,11 @@ allprojects {
         //api fg.deobf("teamtwilight:twilightforest:${project.twilightforest_version}:universal")
 //        api fg.deobf("curse.maven:twilightforest-227639:${project.twilightforest_fileid}")
         // Flywheel
-        api fg.deobf("com.jozufozu.flywheel:flywheel-forge-1.19.2:${project.flywheel_version}")
+        compileOnly fg.deobf("com.jozufozu.flywheel:flywheel-forge-1.19.2:${project.flywheel_version}") // TODO @Nick1st there's no flywheel yet
         // Rubidium
         api fg.deobf("curse.maven:rubidium-574856:${project.rubidium_fileid}")
         // Oculus
-        compileOnly fg.deobf("curse.maven:oculus-581495:${project.oculus_fileid}") // TODO @Nick1st Oculus support currently non functioning
+        compileOnly fg.deobf("curse.maven:oculus-581495:${project.oculus_fileid}") // TODO @Nick1st Oculus support currently non functioning, no Oculus for 1.19 yet
         // Curios
         runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${project.curios_version}")
         compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${project.curios_version}:api")
@@ -84,9 +84,9 @@ allprojects {
         // Serene Seasons (Disabled: Fully incompatible)
             //api fg.deobf("curse.maven:sereneseasons-291874:${project.sereneseasons_fileid}")
         // Mekanism
-        api fg.deobf("curse.maven:mekanism-268560:${project.mekanism_fileid}")
+            //api fg.deobf("curse.maven:mekanism-268560:${project.mekanism_fileid}")
         // Immersive Engineering
-        api fg.deobf("curse.maven:immersiveengineering-231951:${project.immersiveengineering_fileid}")
+            //api fg.deobf("curse.maven:immersiveengineering-231951:${project.immersiveengineering_fileid}")
 
         implementation 'com.demonwav.mcdev:annotations:1.0'
 
