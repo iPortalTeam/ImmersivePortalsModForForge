@@ -1,6 +1,8 @@
 package qouteall.imm_ptl.core.portal.nether_portal;
 
 import com.mojang.math.Quaternion;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -8,6 +10,7 @@ import net.minecraft.nbt.NbtUtils;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -21,6 +24,7 @@ import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.PortalPlaceholderBlock;
 import qouteall.q_misc_util.Helper;
+import qouteall.q_misc_util.my_util.DQuaternion;
 import qouteall.q_misc_util.my_util.LimitedLogger;
 
 import javax.annotation.Nullable;
@@ -32,7 +36,7 @@ public abstract class BreakablePortalEntity extends Portal {
         BlockState blockState,
         double opacity,
         double offset,
-        @Nullable Quaternion rotation
+        @Nullable DQuaternion rotation
     ) {
     }
     
@@ -77,7 +81,10 @@ public abstract class BreakablePortalEntity extends Portal {
         unbreakable = compoundTag.getBoolean("unbreakable");
         
         if (compoundTag.contains("overlayBlockState")) {
-            BlockState overlayBlockState = NbtUtils.readBlockState(compoundTag.getCompound("overlayBlockState"));
+            BlockState overlayBlockState = NbtUtils.readBlockState(
+                level.holderLookup(Registries.BLOCK),
+                compoundTag.getCompound("overlayBlockState")
+            );
             if (overlayBlockState.isAir()) {
                 overlayInfo = null;
             }
@@ -87,7 +94,7 @@ public abstract class BreakablePortalEntity extends Portal {
                     overlayOpacity = 0.5;
                 }
                 double overlayOffset = compoundTag.getDouble("overlayOffset");
-                Quaternion rotation = Helper.getQuaternion(compoundTag, "overlayRotation");
+                DQuaternion rotation = Helper.getQuaternion(compoundTag, "overlayRotation");
                 
                 overlayInfo = new OverlayInfo(
                     overlayBlockState, overlayOpacity, overlayOffset, rotation

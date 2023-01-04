@@ -186,7 +186,7 @@ public class CrossPortalEntityRenderer {
                     boolean isHidden = cameraPos.subtract(collidingPortal.getDestPos())
                         .dot(collidingPortal.getContentDirection()) < 0;
                     if (renderingPortal == collidingPortal || !isHidden) {
-                        renderEntityRegardingPlayer(entity, collidingPortal, matrixStack);
+                        renderEntity(entity, collidingPortal, matrixStack);
                     }
                 }
             }
@@ -197,23 +197,8 @@ public class CrossPortalEntityRenderer {
             client.renderBuffers().bufferSource().endBatch();
             
             FrontClipping.setupInnerClipping(collidingPortal, false, matrixStack);
-            renderEntityRegardingPlayer(entity, collidingPortal, matrixStack);
+            renderEntity(entity, collidingPortal, matrixStack);
             FrontClipping.disableClipping();
-        }
-    }
-    
-    private static void renderEntityRegardingPlayer(
-        Entity entity,
-        Portal transformingPortal,
-        PoseStack matrixStack
-    ) {
-        if (entity instanceof LocalPlayer) {
-            MyGameRenderer.renderPlayerItself(() -> {
-                renderEntity(entity, transformingPortal, matrixStack);
-            });
-        }
-        else {
-            renderEntity(entity, transformingPortal, matrixStack);
         }
     }
     
@@ -309,7 +294,7 @@ public class CrossPortalEntityRenderer {
     private static void setupEntityProjectionRenderingTransformation(
         Portal portal, Entity entity, PoseStack matrixStack
     ) {
-        if (portal.scaling == 1.0 && portal.rotation == null) {
+        if (portal.scaling == 1.0 && portal.getRotation() == null) {
             return;
         }
         
@@ -322,8 +307,8 @@ public class CrossPortalEntityRenderer {
         float scaling = (float) portal.scaling;
         matrixStack.scale(scaling, scaling, scaling);
         
-        if (portal.rotation != null) {
-            matrixStack.mulPose(portal.rotation);
+        if (portal.getRotation() != null) {
+            matrixStack.mulPose(portal.getRotation().toMcQuaternion());
         }
         
         matrixStack.translate(-anchor.x, -anchor.y, -anchor.z);
@@ -336,7 +321,7 @@ public class CrossPortalEntityRenderer {
         if (!WorldRenderInfo.isRendering()) {
             return false;
         }
-        if (client.cameraEntity.level.dimension() == RenderStates.originalPlayerDimension) {
+        if (client.level == client.player.level) {
             return true;
         }
         return false;

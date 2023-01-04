@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.DimensionType;
@@ -320,11 +321,11 @@ public class ClientWorldLoader {
     
     public static void initializeIfNeeded() {
         if (!isInitialized) {
-            Validate.isTrue(client.level != null);
-            Validate.isTrue(client.levelRenderer != null);
+            Validate.isTrue(client.level != null, "level is null");
+            Validate.isTrue(client.levelRenderer != null, "levelRenderer is null");
             
-            Validate.notNull(client.player);
-            Validate.isTrue(client.player.level == client.level);
+            Validate.notNull(client.player, "player is null");
+            Validate.isTrue(client.player.level == client.level, "The player level is not the same as client level");
             
             ResourceKey<Level> playerDimension = client.level.dimension();
             clientWorldMap.put(playerDimension, client.level);
@@ -372,7 +373,7 @@ public class ClientWorldLoader {
             int simulationDistance = client.level.getServerSimulationDistance();
             
             Holder<DimensionType> dimensionType = registryManager
-                .registryOrThrow(Registry.DIMENSION_TYPE_REGISTRY)
+                .registryOrThrow(Registries.DIMENSION_TYPE)
                 .getHolderOrThrow(dimensionTypeKey);
             
             ClientLevel.ClientLevelData properties = new ClientLevel.ClientLevelData(

@@ -1,10 +1,12 @@
 package qouteall.q_misc_util.api;
 
 import com.mojang.serialization.Lifecycle;
+import net.minecraft.core.DefaultedMappedRegistry;
 import net.minecraft.core.Holder;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -13,12 +15,14 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.WorldGenSettings;
+import net.minecraft.world.level.levelgen.WorldOptions;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import qouteall.q_misc_util.dimension.DimensionMisc;
 import qouteall.q_misc_util.dimension.DynamicDimensionsImpl;
 import qouteall.q_misc_util.dimension.ExtraDimensionStorage;
+import qouteall.q_misc_util.mixin.dimension.IEMappedRegistry;
 
 import java.util.Set;
 
@@ -27,21 +31,19 @@ public class DimensionAPI {
     
     public static interface ServerDimensionsLoadCallback {
         /**
-         * You can get the registry of dimensions using `worldGenSettings.dimensions()`
-         * For biomes and dimension types, you can get them from the registry access
+         * TODO update doc
          */
-        void run(WorldGenSettings worldGenSettings, RegistryAccess registryAccess);
+        void run(WorldOptions worldOptions, RegistryAccess registryAccess);
     }
     
 //    public static final Event<ServerDimensionsLoadCallback> serverDimensionsLoadEvent =
 //        EventFactory.createArrayBacked(
 //            ServerDimensionsLoadCallback.class,
-//            (listeners) -> ((generatorOptions, registryManager) -> {
+//            (listeners) -> ((worldOptions, registryManager) -> {
+//                Registry<LevelStem> levelStems = registryManager.registryOrThrow(Registries.LEVEL_STEM);
 //                for (ServerDimensionsLoadCallback listener : listeners) {
-//                    DimensionMisc.ensureRegistryNotFrozen(generatorOptions);
-//                    listener.run(generatorOptions, registryManager);
+//                    listener.run(worldOptions, registryManager);
 //                }
-//                DimensionMisc.ensureRegistryFrozen(generatorOptions);
 //            })
 //        );
     
@@ -72,45 +74,22 @@ public class DimensionAPI {
         ResourceLocation dimensionId,
         LevelStem levelStem
     ) {
-        if (levelStemRegistry instanceof MappedRegistry<LevelStem> mapped) {
-            if (!mapped.keySet().contains(dimensionId)) {
-                
-                mapped.register(
-                    ResourceKey.create(Registry.LEVEL_STEM_REGISTRY, dimensionId),
-                    levelStem,
-                    Lifecycle.stable()
-                );
-            }
-        }
-        else {
+        if (!(levelStemRegistry instanceof MappedRegistry<LevelStem> mapped)) {
             throw new RuntimeException("Failed to register the dimension");
         }
-        
-        markDimensionNonPersistent(dimensionId);
-    }
-    
-    @Deprecated
-    public static void addDimension(
-        long argSeed,
-        Registry<LevelStem> dimensionOptionsRegistry,
-        ResourceLocation dimensionId,
-        Holder<DimensionType> dimensionTypeHolder,
-        ChunkGenerator chunkGenerator
-    ) {
-        addDimension(dimensionOptionsRegistry, dimensionId, dimensionTypeHolder, chunkGenerator);
-    }
-    
-    
-    /**
-     * Don't use this for dynamically-added dimensions
-     * <p>
-     * If you don't mark a dimension non-persistent, then it will be saved into "level.dat" file
-     * Then when you upgrade the world or remove the mod, DFU cannot recognize it
-     * then the nether and the end will vanish.
-     * It's recommended to mark your own dimension non-persistent
-     */
-    public static void markDimensionNonPersistent(ResourceLocation dimensionId) {
-        DimensionMisc.nonPersistentDimensions.add(dimensionId);
+
+        if (!mapped.keySet().contains(dimensionId)) {
+            // the vanilla freezing mechanism is used for validating dangling object references
+            // for this API, that thing won't happen
+            boolean oldIsFrozen = ((IEMappedRegistry) mapped).ip_getIsFrozen();
+            ((IEMappedRegistry) mapped).ip_setIsFrozen(false);
+            mapped.register(
+                ResourceKey.create(Registries.LEVEL_STEM, dimensionId),
+                levelStem,
+                Lifecycle.stable()
+            );
+            ((IEMappedRegistry) mapped).ip_setIsFrozen(oldIsFrozen);
+        }
     }
     
     /**

@@ -1,13 +1,15 @@
 package qouteall.q_misc_util.my_util;
 
 
-import com.mojang.math.Quaternion;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.phys.Vec3;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import qouteall.q_misc_util.Helper;
 
 import java.util.Objects;
@@ -15,7 +17,7 @@ import java.util.Objects;
 /**
  * Quaternion but in double and immutable.
  * Immutability reduce the chance of having bugs (you have to manually copy everywhere to avoid unintended mutation).
- * Minecraft's quaternion {@link Quaternion} uses float and is mutable.
+ * Minecraft's quaternion {@link Quaternionf} uses float and is mutable.
  */
 public class DQuaternion {
     private static final Logger logger = LogManager.getLogger(DQuaternion.class);
@@ -38,9 +40,9 @@ public class DQuaternion {
     /**
      * Converts from Minecraft's mutable quaternion to immutable DQuaternion
      */
-    public static DQuaternion fromMcQuaternion(Quaternion quaternion) {
+    public static DQuaternion fromMcQuaternion(Quaternionf quaternion) {
         return new DQuaternion(
-            quaternion.i(), quaternion.j(), quaternion.k(), quaternion.r()
+            quaternion.x(), quaternion.y(), quaternion.z(), quaternion.w()
         );
     }
     
@@ -62,10 +64,14 @@ public class DQuaternion {
     /**
      * @return Converts to Minecraft's quaternion
      */
-    public Quaternion toMcQuaternion() {
-        return new Quaternion(
+    public Quaternionf toMcQuaternion() {
+        return new Quaternionf(
             (float) x, (float) y, (float) z, (float) w
         );
+    }
+    
+    public Matrix4f toMatrix() {
+        return new Matrix4f().set(toMcQuaternion());
     }
     
     /**
@@ -459,5 +465,23 @@ public class DQuaternion {
     
     private static boolean isCoordinateZeroOrOneOrNegativeOne(double coord) {
         return coord == 0 || coord == 1 || coord == -1;
+    }
+    
+    /**
+     * @param eulerAngle in pitch, yaw, roll, in degrees
+     */
+    public static DQuaternion fromEulerAngle(Vec3 eulerAngle) {
+        return fromMcQuaternion(
+            new Quaternionf()
+                .rotateZ((float) Math.toRadians(eulerAngle.z))
+                .rotateY((float) Math.toRadians(-eulerAngle.y))
+                .rotateX((float) Math.toRadians(eulerAngle.x))
+        );
+    }
+    
+    public Vec3 toEulerAngle() {
+        Quaternionf q = toMcQuaternion();
+        Vector3f result = q.getEulerAnglesZYX(new Vector3f());
+        return new Vec3(Math.toDegrees(result.x), Math.toDegrees(-result.y), Math.toDegrees(result.z));
     }
 }

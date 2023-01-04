@@ -24,6 +24,9 @@ import net.minecraft.core.Vec3i;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.system.MemoryStack;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.compat.iris_compatibility.IrisInterface;
@@ -147,7 +150,7 @@ public class OverlayRendering {
             );
             
             if (overlay.rotation() != null) {
-                matrixStack.mulPose(overlay.rotation());
+                matrixStack.mulPose(overlay.rotation().toMcQuaternion());
             }
             
             for (BakedQuad quad : quads) {
@@ -190,7 +193,7 @@ public class OverlayRendering {
         Vec3i vec3i = quad.getDirection().getNormal();
         Vector3f vector3f = new Vector3f((float) vec3i.getX(), (float) vec3i.getY(), (float) vec3i.getZ());
         Matrix4f matrix4f = poseEntry.pose();
-        vector3f.transform(poseEntry.normal());
+        poseEntry.normal().transform(vector3f);
         int i = 8;
         int j = js.length / 8;
         
@@ -225,7 +228,7 @@ public class OverlayRendering {
                 float m = byteBuffer.getFloat(16);
                 float n = byteBuffer.getFloat(20);
                 Vector4f vector4f = new Vector4f(f, g, h, 1.0F);
-                vector4f.transform(matrix4f);
+                matrix4f.transform(vector4f);
                 vertexConsumer.vertex(vector4f.x(), vector4f.y(), vector4f.z(), o, p, q, alpha, m, n, combinedOverlay, r, vector3f.x(), vector3f.y(), vector3f.z());
             }
         }

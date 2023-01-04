@@ -1,5 +1,9 @@
 package qouteall.imm_ptl.core.compat;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -157,53 +161,15 @@ public class IPModInfoChecking {
                 ImmPtlInfo immPtlInfo = Helper.gson.fromJson(jsonStr, ImmPtlInfo.class);
                 return immPtlInfo;
             }
-        } catch (Throwable e) {
+        }
+        catch (Throwable e) {
             e.printStackTrace();
             return null;
         }
     }
     
     public static void initDedicatedServer() {
-        // TODO use another way to send HTTP request in dedicated server
-//        Util.backgroundExecutor().execute(() -> {
-//            if (!IPGlobal.checkModInfoFromInternet) {
-//                return;
-//            }
-//
-//            ImmPtlInfo immPtlInfo = fetchImmPtlInfoFromInternet();
-//
-//            if (immPtlInfo == null) {
-//                return;
-//            }
-//
-//            if (O_O.shouldUpdateImmPtl(immPtlInfo.latestRelease.modVersion)) {
-//                Helper.log("A new version of Immersive Portals is available: %s (for MC %s)".formatted(
-//                    immPtlInfo.latestRelease.modVersion,
-//                    immPtlInfo.latestRelease.mcVersion
-//                ));
-//            }
-//
-//            for (ModEntry mod : immPtlInfo.severelyIncompatible) {
-//                if (mod.isModLoadedWithinVersion()) {
-//                    Helper.err(String.format(
-//                        "ERROR: This mod is incompatible with Immersive Portals: %s(%s). Severe issues will occur!" +
-//                            " (If the two mods become compatible, contact qouteall)",
-//                        mod.modName, mod.modId
-//                    ));
-//                }
-//            }
-//
-//            for (ModEntry mod : immPtlInfo.incompatible) {
-//                if (mod.isModLoadedWithinVersion()) {
-//                    Helper.err(String.format(
-//                        "WARNING: This mod has compatibility issues with Immersive Portals: %s(%s)",
-//                        mod.modName, mod.modId
-//                    ));
-//                }
-//            }
-//        });
-        
-        
+        // currently not doing it in dedicated server
     }
     
     @OnlyIn(Dist.CLIENT)

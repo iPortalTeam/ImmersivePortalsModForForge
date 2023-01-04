@@ -5,11 +5,11 @@ import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexBuffer;
-import com.mojang.math.Matrix4f;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
@@ -27,6 +27,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -130,7 +131,7 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
     protected abstract void deinitTransparency();
     
     @Inject(
-        method = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V",
+        method = "renderLevel",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/renderer/DimensionSpecialEffects;constantAmbientLight()Z"
@@ -148,7 +149,7 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
     }
     
     @Inject(
-        method = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V",
+        method = "renderLevel",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/renderer/Sheets;translucentCullBlockSheet()Lnet/minecraft/client/renderer/RenderType;"
@@ -188,7 +189,7 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
     }
     
     @Inject(
-        method = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V",
+        method = "renderLevel",
         at = @At("RETURN")
     )
     private void onAfterTranslucentRendering(
@@ -210,10 +211,10 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
     }
     
     @Inject(
-        method = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V",
+        method = "renderLevel",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/client/renderer/LevelRenderer;renderChunkLayer(Lnet/minecraft/client/renderer/RenderType;Lcom/mojang/blaze3d/vertex/PoseStack;DDDLcom/mojang/math/Matrix4f;)V"
+            target = "Lnet/minecraft/client/renderer/LevelRenderer;renderChunkLayer(Lnet/minecraft/client/renderer/RenderType;Lcom/mojang/blaze3d/vertex/PoseStack;DDDLorg/joml/Matrix4f;)V"
         )
     )
     private void onBeforeRenderingLayer(
@@ -240,10 +241,10 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
     }
     
     @Inject(
-        method = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V",
+        method = "renderLevel",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/client/renderer/LevelRenderer;renderChunkLayer(Lnet/minecraft/client/renderer/RenderType;Lcom/mojang/blaze3d/vertex/PoseStack;DDDLcom/mojang/math/Matrix4f;)V",
+            target = "Lnet/minecraft/client/renderer/LevelRenderer;renderChunkLayer(Lnet/minecraft/client/renderer/RenderType;Lcom/mojang/blaze3d/vertex/PoseStack;DDDLorg/joml/Matrix4f;)V",
             shift = At.Shift.AFTER
         )
     )
@@ -338,7 +339,7 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
     }
     
     @Redirect(
-        method = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V",
+        method = "renderLevel",
         at = @At(
             value = "INVOKE",
             target = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V"
@@ -375,9 +376,10 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
         }
     }
     
-    //render player itself when rendering portal
+    // @Inject does not allow getting the entity reference
+    // maybe needs Mixin Extra
     @Redirect(
-        method = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V",
+        method = "renderLevel",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/renderer/LevelRenderer;renderEntity(Lnet/minecraft/world/entity/Entity;DDDFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;)V"
@@ -393,25 +395,6 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
         PoseStack matrixStack,
         MultiBufferSource vertexConsumerProvider
     ) {
-        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
-        if (entity == camera.getEntity() && WorldRenderInfo.isRendering()) { //player
-            if (CrossPortalEntityRenderer.shouldRenderEntityNow(entity)) {
-                MyGameRenderer.renderPlayerItself(() -> {
-                    if (CrossPortalEntityRenderer.shouldRenderPlayerNormally(entity)) {
-                        CrossPortalEntityRenderer.beforeRenderingEntity(entity, matrixStack);
-                        renderEntity(
-                            entity,
-                            cameraX, cameraY, cameraZ,
-                            tickDelta,
-                            matrixStack, vertexConsumerProvider
-                        );
-                        CrossPortalEntityRenderer.afterRenderingEntity(entity);
-                    }
-                });
-                return;
-            }
-        }
-        
         CrossPortalEntityRenderer.beforeRenderingEntity(entity, matrixStack);
         renderEntity(
             entity,
@@ -423,7 +406,7 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
     }
     
     @Inject(
-        method = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V",
+        method = "renderLevel",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V"
@@ -449,7 +432,7 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
     }
     
     @Inject(
-        method = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V",
+        method = "renderLevel",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/renderer/LevelRenderer;renderSnowAndRain(Lnet/minecraft/client/renderer/LightTexture;FDDD)V",
@@ -475,7 +458,7 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
     
     //avoid render glowing entities when rendering portal
     @Redirect(
-        method = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V",
+        method = "renderLevel",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/Minecraft;shouldEntityAppearGlowing(Lnet/minecraft/world/entity/Entity;)Z"
@@ -537,8 +520,23 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
         MyRenderHelper.recoverFaceCulling();
     }
     
+    // correct the eye position for sky rendering
+    @Redirect(
+        method = "renderSky",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/player/LocalPlayer;getEyePosition(F)Lnet/minecraft/world/phys/Vec3;"
+        )
+    )
+    private Vec3 redirectGetEyePositionInSkyRendering(LocalPlayer player, float partialTicks) {
+        if (WorldRenderInfo.isRendering()) {
+            return WorldRenderInfo.getCameraPos();
+        }
+        return player.getEyePosition(partialTicks);
+    }
+    
     @Inject(
-        method = "Lnet/minecraft/client/renderer/LevelRenderer;prepareCullFrustum(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/phys/Vec3;Lcom/mojang/math/Matrix4f;)V", at = @At("HEAD")
+        method = "prepareCullFrustum", at = @At("HEAD")
     )
     private void onSetupFrustum(PoseStack matrices, Vec3 pos, Matrix4f projectionMatrix, CallbackInfo ci) {
         TransformationManager.processTransformation(minecraft.gameRenderer.getMainCamera(), matrices);
@@ -547,7 +545,7 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
     // vanilla clears translucentFramebuffer even when transparencyShader is null
     // it makes the framebuffer to be wrongly bound in fabulous mode
     @Redirect(
-        method = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V",
+        method = "renderLevel",
         at = @At(
             value = "FIELD",
             target = "Lnet/minecraft/client/renderer/LevelRenderer;translucentTarget:Lcom/mojang/blaze3d/pipeline/RenderTarget;"
@@ -579,7 +577,7 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
     // the captured lambda uses the net handler's world field
     // so switch that correctly
     @Redirect(
-        method = "Lnet/minecraft/client/renderer/LevelRenderer;renderLevel(Lcom/mojang/blaze3d/vertex/PoseStack;FJZLnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GameRenderer;Lnet/minecraft/client/renderer/LightTexture;Lcom/mojang/math/Matrix4f;)V",
+        method = "renderLevel",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/multiplayer/ClientLevel;pollLightUpdates()V"

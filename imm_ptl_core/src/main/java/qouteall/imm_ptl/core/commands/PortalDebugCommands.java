@@ -1,47 +1,34 @@
 package qouteall.imm_ptl.core.commands;
 
-import com.google.gson.JsonElement;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.datafixers.util.Pair;
-import com.mojang.serialization.DataResult;
-import com.mojang.serialization.JsonOps;
-import com.mojang.serialization.Lifecycle;
 import it.unimi.dsi.fastutil.longs.LongSortedSet;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.DimensionArgument;
 import net.minecraft.commands.arguments.coordinates.Vec3Argument;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
-import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.RegistryLoader;
-import net.minecraft.resources.RegistryOps;
-import net.minecraft.resources.RegistryResourceAccess;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.WorldStem;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.profiling.ActiveProfiler;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.EmptyLevelChunk;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.DimensionType;
-import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.entity.LevelEntityGetter;
 import net.minecraft.world.level.entity.PersistentEntitySectionManager;
 import net.minecraft.world.level.levelgen.WorldGenSettings;
@@ -56,13 +43,10 @@ import qouteall.imm_ptl.core.chunk_loading.MyLoadingTicket;
 import qouteall.imm_ptl.core.chunk_loading.NewChunkTrackingGraph;
 import qouteall.imm_ptl.core.ducks.IEServerWorld;
 import qouteall.imm_ptl.core.ducks.IEWorld;
-import qouteall.imm_ptl.core.mixin.common.IERegistryLoader;
 import qouteall.imm_ptl.core.mixin.common.mc_util.IELevelEntityGetterAdapter;
 import qouteall.imm_ptl.core.portal.Portal;
-import qouteall.imm_ptl.core.portal.custom_portal_gen.CustomPortalGeneration;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
-import qouteall.q_misc_util.api.DimensionAPI;
 import qouteall.q_misc_util.api.McRemoteProcedureCall;
 import qouteall.q_misc_util.my_util.MyTaskList;
 
@@ -426,28 +410,47 @@ public class PortalDebugCommands {
                 return 0;
             })
         );
-        
-        builder.then(Commands
-            .literal("print_generator_config")
-            .requires(serverCommandSource -> serverCommandSource.hasPermission(3))
-            .executes(context -> {
-                MiscHelper.getServer().getAllLevels().forEach(world -> {
-                    ChunkGenerator generator = world.getChunkSource().getGenerator();
-                    Helper.log(world.dimension().location());
-                    Helper.log(McHelper.serializeToJson(generator, ChunkGenerator.CODEC));
-                    Helper.log(McHelper.serializeToJson(
-                        world.dimensionType(),
-                        DimensionType.DIRECT_CODEC.stable()
-                    ));
-                });
-                
-                WorldGenSettings options = MiscHelper.getServer().getWorldData().worldGenSettings();
-                
-                Helper.log(McHelper.serializeToJson(options, WorldGenSettings.CODEC));
-                
-                return 0;
-            })
-        );
+
+//        builder.then(Commands
+//            .literal("print_biome_list")
+//            .requires(serverCommandSource -> serverCommandSource.hasPermission(3))
+//            .executes(context -> {
+//                Registry<Biome> biomes = MiscHelper.getServer().registryAccess().registryOrThrow(Registries.BIOME);
+//
+//                StringBuilder builder1 = new StringBuilder();
+//                for (ResourceLocation resourceLocation : biomes.keySet()) {
+//                    builder1.append("\"");
+//                    builder1.append(resourceLocation);
+//                    builder1.append("\",\n");
+//                }
+//
+//                Helper.log(builder1.toString());
+//
+//                return 0;
+//            })
+//        );
+
+//        builder.then(Commands
+//            .literal("print_generator_config")
+//            .requires(serverCommandSource -> serverCommandSource.hasPermission(3))
+//            .executes(context -> {
+//                MiscHelper.getServer().getAllLevels().forEach(world -> {
+//                    ChunkGenerator generator = world.getChunkSource().getGenerator();
+//                    Helper.log(world.dimension().location());
+//                    Helper.log(McHelper.serializeToJson(generator, ChunkGenerator.CODEC));
+//                    Helper.log(McHelper.serializeToJson(
+//                        world.dimensionType(),
+//                        DimensionType.DIRECT_CODEC.stable()
+//                    ));
+//                });
+//
+//                WorldGenSettings options = MiscHelper.getServer().getWorldData().worldGenSettings();
+//
+//                Helper.log(McHelper.serializeToJson(options, WorldGenSettings.CODEC));
+//
+//                return 0;
+//            })
+//        );
         
         builder.then(Commands
             .literal("nofog_enable")

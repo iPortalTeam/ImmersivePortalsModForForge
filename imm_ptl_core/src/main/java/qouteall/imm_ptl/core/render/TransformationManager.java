@@ -12,8 +12,10 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import qouteall.imm_ptl.core.compat.GravityChangerInterface;
-import qouteall.imm_ptl.core.ducks.IEMatrix4f;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.render.context_management.RenderStates;
 import qouteall.imm_ptl.core.render.context_management.WorldRenderInfo;
@@ -55,8 +57,8 @@ public class TransformationManager {
         
         if (isAnimationRunning()) {
             // override vanilla camera transformation
-            matrixStack.last().pose().setIdentity();
-            matrixStack.last().normal().setIdentity();
+            matrixStack.last().pose().identity();
+            matrixStack.last().normal().identity();
             
             Direction gravityDir = GravityChangerInterface.invoker.getGravityDirection(client.player);
             
@@ -115,7 +117,7 @@ public class TransformationManager {
     public static void managePlayerRotationAndChangeGravity(
         Portal portal
     ) {
-        if (portal.rotation != null) {
+        if (portal.getRotation() != null) {
             LocalPlayer player = client.player;
             
             Direction oldGravityDir = GravityChangerInterface.invoker.getGravityDirection(player);
@@ -128,7 +130,7 @@ public class TransformationManager {
             
             DQuaternion cameraRotationThroughPortal =
                 currentCameraRotationInterpolated.hamiltonProduct(
-                    DQuaternion.fromMcQuaternion(portal.rotation).getConjugated()
+                    portal.getRotation().getConjugated()
                 );
             
             Direction newGravityDir = portal.getTeleportChangesGravity() ?
@@ -214,7 +216,7 @@ public class TransformationManager {
             0, 0, 0, 1
         };
         Matrix4f matrix = new Matrix4f();
-        ((IEMatrix4f) (Object) matrix).loadFromArray(arr);
+        matrix.set(arr);
         return matrix;
     }
     
@@ -241,7 +243,7 @@ public class TransformationManager {
             0, 0, 0, 1
         };
         Matrix4f m1 = new Matrix4f();
-        ((IEMatrix4f) (Object) m1).loadFromArray(arr);
+        m1.set(arr);
         
         return m1;
     }
@@ -277,9 +279,9 @@ public class TransformationManager {
             return cameraPos;
         }
         
-        Quaternion rotation = camera.rotation();
+        Quaternionf rotation = camera.rotation();
         Vector3f vec = new Vector3f(0, 0, client.options.getEffectiveRenderDistance() * -10);
-        vec.transform(rotation);
+        rotation.transform(vec);
         
         return cameraPos.add(vec.x(), vec.y(), vec.z());
     }

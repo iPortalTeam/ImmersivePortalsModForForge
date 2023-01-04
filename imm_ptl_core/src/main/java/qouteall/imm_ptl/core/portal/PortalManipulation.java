@@ -1,6 +1,5 @@
 package qouteall.imm_ptl.core.portal;
 
-import com.mojang.math.Quaternion;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -19,7 +18,6 @@ import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.my_util.DQuaternion;
-import qouteall.q_misc_util.my_util.RotationHelper;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -34,7 +32,7 @@ public class PortalManipulation {
         Portal portal,
         ResourceKey<Level> destDim,
         Vec3 destPos,
-        @Nullable Quaternion rotation,
+        @Nullable DQuaternion rotation,
         double scale
     ) {
         portal.dimensionTo = destDim;
@@ -89,8 +87,8 @@ public class PortalManipulation {
         
         newPortal.width = portal.width * portal.scaling;
         newPortal.height = portal.height * portal.scaling;
-        newPortal.axisW = portal.axisW;
-        newPortal.axisH = portal.axisH.scale(-1);
+        newPortal.axisW = portal.axisW.scale(-1);
+        newPortal.axisH = portal.axisH;
         
         if (portal.specialShape != null) {
             newPortal.specialShape = new GeometryPortalShape();
@@ -107,8 +105,7 @@ public class PortalManipulation {
         if (portal.rotation != null) {
             rotatePortalBody(newPortal, portal.rotation);
             
-            newPortal.rotation = new Quaternion(portal.rotation);
-            newPortal.rotation.conj();
+            newPortal.rotation = portal.rotation.getConjugated();
         }
         
         newPortal.scaling = 1.0 / portal.scaling;
@@ -118,9 +115,9 @@ public class PortalManipulation {
         return newPortal;
     }
     
-    public static void rotatePortalBody(Portal portal, Quaternion rotation) {
-        portal.axisW = RotationHelper.getRotated(rotation, portal.axisW);
-        portal.axisH = RotationHelper.getRotated(rotation, portal.axisH);
+    public static void rotatePortalBody(Portal portal, DQuaternion rotation) {
+        portal.axisW = rotation.rotate(portal.axisW);
+        portal.axisH = rotation.rotate(portal.axisH);
     }
     
     public static Portal completeBiFacedPortal(Portal portal, EntityType<Portal> entityType) {
@@ -141,8 +138,8 @@ public class PortalManipulation {
         
         newPortal.width = portal.width;
         newPortal.height = portal.height;
-        newPortal.axisW = portal.axisW;
-        newPortal.axisH = portal.axisH.scale(-1);
+        newPortal.axisW = portal.axisW.scale(-1);
+        newPortal.axisH = portal.axisH;
         
         if (portal.specialShape != null) {
             newPortal.specialShape = new GeometryPortalShape();
@@ -200,12 +197,12 @@ public class PortalManipulation {
     private static void initFlippedShape(Portal newPortal, GeometryPortalShape specialShape, double scale) {
         newPortal.specialShape.triangles = specialShape.triangles.stream()
             .map(triangle -> new GeometryPortalShape.TriangleInPlane(
-                triangle.x1 * scale,
-                -triangle.y1 * scale,
-                triangle.x2 * scale,
-                -triangle.y2 * scale,
-                triangle.x3 * scale,
-                -triangle.y3 * scale
+                -triangle.x1 * scale,
+                triangle.y1 * scale,
+                -triangle.x2 * scale,
+                triangle.y2 * scale,
+                -triangle.x3 * scale,
+                triangle.y3 * scale
             )).collect(Collectors.toList());
     }
     
@@ -448,8 +445,8 @@ public class PortalManipulation {
         );
         DQuaternion aRot = flip.hamiltonProduct(delta);
         
-        portalA.setRotationTransformation(aRot.toMcQuaternion());
-        portalB.setRotationTransformation(aRot.getConjugated().toMcQuaternion());
+        portalA.setRotation(aRot);
+        portalB.setRotation(aRot.getConjugated());
         
     }
     

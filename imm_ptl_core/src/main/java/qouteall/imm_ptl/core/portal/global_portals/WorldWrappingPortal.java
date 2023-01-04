@@ -1,6 +1,7 @@
 package qouteall.imm_ptl.core.portal.global_portals;
 
 import qouteall.imm_ptl.core.platform_specific.IPRegistry;
+import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.my_util.IntBox;
@@ -10,6 +11,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -139,10 +141,10 @@ public class WorldWrappingPortal extends GlobalTrackedPortal {
             
             return new IntBox(
                 new BlockPos(
-                    Math.round(floatBox.minX), 0, Math.round(floatBox.minZ)
+                    Math.round(floatBox.minX), McHelper.getMinY(world), Math.round(floatBox.minZ)
                 ),
                 new BlockPos(
-                    Math.round(floatBox.maxX) - 1, 256, Math.round(floatBox.maxZ) - 1
+                    Math.round(floatBox.maxX) - 1, McHelper.getMaxYExclusive(world), Math.round(floatBox.maxZ) - 1
                 )
             );
         }
@@ -157,10 +159,10 @@ public class WorldWrappingPortal extends GlobalTrackedPortal {
             
             return new IntBox(
                 new BlockPos(
-                    Math.round(floatBox.minX) - 1, 0, Math.round(floatBox.minZ) - 1
+                    Math.round(floatBox.minX) - 1, McHelper.getMinY(world), Math.round(floatBox.minZ) - 1
                 ),
                 new BlockPos(
-                    Math.round(floatBox.maxX), 256, Math.round(floatBox.maxZ)
+                    Math.round(floatBox.maxX), McHelper.getMaxYExclusive(world), Math.round(floatBox.maxZ)
                 )
             );
         }
@@ -225,8 +227,11 @@ public class WorldWrappingPortal extends GlobalTrackedPortal {
         }
         
         int availableId = getAvailableId(wrappingZones);
-    
-        AABB box = new IntBox(new BlockPos(x1, 0, z1), new BlockPos(x2, 255, z2)).toRealNumberBox();
+
+        AABB box = new IntBox(
+            new BlockPos(x1, McHelper.getMinY(world), z1),
+            new BlockPos(x2, McHelper.getMaxYExclusive(world) - 1, z2)
+        ).toRealNumberBox();
         
         WorldWrappingPortal p1 = createWrappingPortal(
             world, box, Direction.NORTH, availableId, isInward

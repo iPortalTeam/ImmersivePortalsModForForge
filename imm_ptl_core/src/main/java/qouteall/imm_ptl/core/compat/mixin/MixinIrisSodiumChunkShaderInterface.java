@@ -4,6 +4,7 @@ import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkShaderInte
 import net.coderbot.iris.compat.sodium.impl.shader_overrides.ShaderBindingContextExt;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
+import net.coderbot.iris.uniforms.custom.CustomUniforms;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,9 +34,9 @@ public class MixinIrisSodiumChunkShaderInterface {
         require = 0
     )
     private void onInit(
-            int handle, ShaderBindingContextExt contextExt, SodiumTerrainPipeline pipeline,
-            boolean isShadowPass, BlendModeOverride blendModeOverride, float alpha,
-            CallbackInfo ci
+        int handle,
+        ShaderBindingContextExt par2, SodiumTerrainPipeline par3, boolean par4,
+        BlendModeOverride par5, List par6, float par7, CustomUniforms par8, CallbackInfo ci
     ) {
         ip_init(handle);
     }

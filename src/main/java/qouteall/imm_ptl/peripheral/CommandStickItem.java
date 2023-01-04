@@ -20,6 +20,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -137,7 +138,7 @@ public class CommandStickItem extends Item {
     }
     
     public static final MappedRegistry<Data> commandStickTypeRegistry = new MappedRegistry<>(
-        registryRegistryKey, Lifecycle.stable(), null
+        registryRegistryKey, Lifecycle.stable()
     );
     
     public static void registerType(String id, Data data) {
@@ -230,18 +231,7 @@ public class CommandStickItem extends Item {
         
         tooltip.add(Component.translatable("imm_ptl.command_stick").withStyle(ChatFormatting.GRAY));
     }
-    
-    @Override
-    public void fillItemCategory(CreativeModeTab group, NonNullList<ItemStack> stacks) {
-        if (this.allowedIn(group)) {
-            cmd_stick_data.forEach(data -> {
-                ItemStack stack = new ItemStack(PeripheralModEntry.COMMAND_STICK_ITEM.get());
-                data.serialize(stack.getOrCreateTag());
-                stacks.add(stack);
-            });
-        }
-    }
-    
+
     @Override
     public String getDescriptionId(ItemStack stack) {
         Data data = Data.deserialize(stack.getOrCreateTag());
@@ -264,5 +254,15 @@ public class CommandStickItem extends Item {
             player.getInventory().add(itemStack);
             player.inventoryMenu.broadcastChanges();
         });
+
+        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.TOOLS_AND_UTILITIES).register(
+            groupEntries -> {
+                commandStickTypeRegistry.stream().forEach(data -> {
+                    ItemStack stack = new ItemStack(instance);
+                    data.serialize(stack.getOrCreateTag());
+                    groupEntries.accept(stack);
+                });
+            }
+        );
     }
 }

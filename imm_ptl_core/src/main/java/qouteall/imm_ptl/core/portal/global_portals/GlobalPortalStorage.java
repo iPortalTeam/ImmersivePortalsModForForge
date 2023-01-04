@@ -2,6 +2,8 @@ package qouteall.imm_ptl.core.portal.global_portals;
 
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
@@ -197,7 +199,10 @@ public class GlobalPortalStorage extends SavedData {
         }
         
         if (tag.contains("bedrockReplacement")) {
-            bedrockReplacement = NbtUtils.readBlockState(tag.getCompound("bedrockReplacement"));
+            bedrockReplacement = NbtUtils.readBlockState(
+                currWorld.holderLookup(Registries.BLOCK),
+                tag.getCompound("bedrockReplacement")
+            );
         }
         else {
             bedrockReplacement = null;
@@ -230,7 +235,7 @@ public class GlobalPortalStorage extends SavedData {
     
     private static Portal readPortalFromTag(Level currWorld, CompoundTag compoundTag) {
         ResourceLocation entityId = new ResourceLocation(compoundTag.getString("entity_type"));
-        EntityType<?> entityType = Registry.ENTITY_TYPE.get(entityId);
+        EntityType<?> entityType = BuiltInRegistries.ENTITY_TYPE.get(entityId);
         
         Entity e = entityType.create(currWorld);
         e.load(compoundTag);
