@@ -26,6 +26,7 @@ import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.WorldDimensions;
 import net.minecraft.world.level.levelgen.WorldGenSettings;
 import net.minecraft.world.level.storage.PrimaryLevelData;
+import net.minecraftforge.common.MinecraftForge;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -45,6 +46,7 @@ import qouteall.imm_ptl.peripheral.dim_stack.DimStackScreen;
 import qouteall.imm_ptl.peripheral.ducks.IECreateWorldScreen;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.api.DimensionAPI;
+import qouteall.q_misc_util.forge.events.ServerDimensionsLoadEvent;
 import qouteall.q_misc_util.mixin.dimension.IELayeredRegistryAccess;
 
 import javax.annotation.Nullable;
@@ -200,7 +202,8 @@ public abstract class MixinCreateWorldScreen extends Screen implements IECreateW
             );
             RegistryAccess.Frozen wrappedRegistryAccess = wrappedLayeredRegistryAccess.compositeAccess();
 
-            DimensionAPI.serverDimensionsLoadEvent.invoker().run(settings.options(), wrappedRegistryAccess);
+            //DimensionAPI.serverDimensionsLoadEvent.invoker().run(settings.options(), wrappedRegistryAccess);
+            MinecraftForge.EVENT_BUS.post(new ServerDimensionsLoadEvent(settings.options(), wrappedRegistryAccess));
 
             return subDimensionRegistry
                 .keySet().stream().map(DimId::idToKey).toList();

@@ -119,8 +119,8 @@ public class LoadingIndicatorEntity extends Entity {
     }
     
     @Override
-    public Packet<?> getAddEntityPacket() {
-        return IPMessage.INSTANCE.toVanillaPacket(new Spawn_Entity(this), NetworkDirection.PLAY_TO_CLIENT);
+    public Packet<ClientGamePacketListener> getAddEntityPacket() {
+        return (Packet<ClientGamePacketListener>) IPMessage.INSTANCE.toVanillaPacket(new Spawn_Entity(this), NetworkDirection.PLAY_TO_CLIENT);
     }
     
     public void inform(Component str) {

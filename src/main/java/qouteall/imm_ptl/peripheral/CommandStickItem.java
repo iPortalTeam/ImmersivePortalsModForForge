@@ -25,12 +25,15 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.event.CreativeModeTabEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.RegistryBuilder;
 import net.minecraftforge.registries.RegistryObject;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.commands.PortalCommand;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.peripheral.platform_specific.PeripheralModEntry;
 import qouteall.q_misc_util.MiscHelper;
 
@@ -81,14 +84,16 @@ public class CommandStickItem extends Item {
     public static final RegistryObject<Data> disable_default_animation = CommandStickData.register("disable_default_animation", () -> createData("disable_default_animation", "nbt {defaultAnimation:{durationTicks:0}}"));
     public static final RegistryObject<Data> pause_animation = CommandStickData.register("pause_animation", () -> createData("pause_animation", "animation pause"));
     public static final RegistryObject<Data> resume_animation = CommandStickData.register("resume_animation", () -> createData("resume_animation", "animation resume"));
-    public static final RegistryObject<Data> rotate_around_y = CommandStickData.register("rotate_around_y", () -> createData("rotate_around_y", "animation rotate_infinitely @s 0 1 0 1.0"));
-    public static final RegistryObject<Data> rotate_randomly = CommandStickData.register("rotate_randomly", () -> createData("rotate_randomly", "animation rotate_infinitely_random"));
-    public static final RegistryObject<Data> rotate_around_view = CommandStickData.register("rotate_around_view", () -> new CommandStickItem.Data("execute positioned 0.0 0.0 0.0 run portal animation rotate_infinitely @p ^0.0 ^0.0 ^1.0 1.7", "imm_ptl.command.rotate_around_view", Lists.newArrayList("imm_ptl.command_dest.rotate_around_view"), true));
+
     public static final RegistryObject<Data> expand_from_center = CommandStickData.register("expand_from_center", () -> createData("expand_from_center", "animation expand_from_center 20"));
     public static final RegistryObject<Data> clear_animation = CommandStickData.register("clear_animation", () -> createData("clear_animation", "animation clear"));
     public static final RegistryObject<Data> reset_scale = CommandStickData.register("reset_scale", () -> new CommandStickItem.Data("/scale set pehkui:base 1", "imm_ptl.command.reset_scale", Lists.newArrayList("imm_ptl.command_desc.reset_scale"),true));
     public static final RegistryObject<Data> long_reach = CommandStickData.register("long_reach", () -> new CommandStickItem.Data("/scale set pehkui:reach 5", "imm_ptl.command.long_reach", Lists.newArrayList("imm_ptl.command_desc.long_reach"), true));
     public static final RegistryObject<Data> night_vision = CommandStickData.register("night_vision", () -> new CommandStickItem.Data("/effect give @s minecraft:night_vision 9999 1 true", "imm_ptl.command.night_vision", List.of(), true));
+
+    public static final RegistryObject<Data> rotate_around_y = CommandStickData.register("rotate_around_y", () -> createData("rotate_around_y", "animation rotate_infinitely @s 0 1 0 1.0"));
+    public static final RegistryObject<Data> rotate_randomly = CommandStickData.register("rotate_randomly", () -> createData("rotate_randomly", "animation rotate_infinitely_random"));
+    public static final RegistryObject<Data> rotate_around_view = CommandStickData.register("rotate_around_view", () -> new CommandStickItem.Data("execute positioned 0.0 0.0 0.0 run portal animation rotate_infinitely @p ^0.0 ^0.0 ^1.0 1.7", "imm_ptl.command.rotate_around_view", Lists.newArrayList("imm_ptl.command_dest.rotate_around_view"), true));
 
     public static final RegistryObject<Data> goback = CommandStickData.register("goback", () -> createData("goback"));
     public static final RegistryObject<Data> show_wiki = CommandStickData.register("show_wiki", () -> createData("show_wiki", "wiki"));
@@ -254,15 +259,17 @@ public class CommandStickItem extends Item {
             player.getInventory().add(itemStack);
             player.inventoryMenu.broadcastChanges();
         });
+    }
 
-        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.TOOLS_AND_UTILITIES).register(
-            groupEntries -> {
-                commandStickTypeRegistry.stream().forEach(data -> {
-                    ItemStack stack = new ItemStack(instance);
-                    data.serialize(stack.getOrCreateTag());
-                    groupEntries.accept(stack);
-                });
-            }
-        );
+    @SubscribeEvent
+    public static void buildContents(CreativeModeTabEvent.BuildContents event) {
+        // Add to ingredients tab
+        if (event.getTab() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
+            commandStickTypeRegistry.stream().forEach(data -> {
+                ItemStack stack = new ItemStack(PeripheralModEntry.COMMAND_STICK_ITEM.get());
+                data.serialize(stack.getOrCreateTag());
+                event.accept(stack);
+            });
+        }
     }
 }

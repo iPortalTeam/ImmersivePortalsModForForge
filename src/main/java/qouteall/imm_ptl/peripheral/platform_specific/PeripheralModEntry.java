@@ -2,15 +2,13 @@ package qouteall.imm_ptl.peripheral.platform_specific;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.Material;
+import net.minecraftforge.event.CreativeModeTabEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -56,8 +54,8 @@ public class PeripheralModEntry {
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, "immersive_portals");
 
     public static final RegistryObject<Block> PORTAL_HELPER_BLOCK = BLOCKS.register("portal_helper", () -> new Block(BlockBehaviour.Properties.of(Material.METAL).noOcclusion().isRedstoneConductor((a, b, c) -> false)));
-    public static final RegistryObject<Item> PORTAL_HELPER_ITEM = ITEMS.register("portal_helper", () -> new PortalHelperItem(PORTAL_HELPER_BLOCK.get(), new Item.Properties().tab(CreativeModeTab.TAB_MISC)));
-    public static final RegistryObject<Item> COMMAND_STICK_ITEM = ITEMS.register("command_stick", () -> new CommandStickItem(new Item.Properties().tab(CreativeModeTab.TAB_MISC)));
+    public static final RegistryObject<Item> PORTAL_HELPER_ITEM = ITEMS.register("portal_helper", () -> new PortalHelperItem(PORTAL_HELPER_BLOCK.get(), new Item.Properties()));
+    public static final RegistryObject<Item> COMMAND_STICK_ITEM = ITEMS.register("command_stick", () -> new CommandStickItem(new Item.Properties()));
 
     private static void registerBlockItems() {
         //PeripheralModMain.registerCommandStickTypes();
@@ -65,8 +63,18 @@ public class PeripheralModEntry {
         CommandStickItem.init();
     }
 
+    @SubscribeEvent
+    public void buildContents(CreativeModeTabEvent.BuildContents event) {
+        // Add to creative tab
+        if (event.getTab() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
+            event.accept(PORTAL_HELPER_ITEM.get().getDefaultInstance());
+            event.accept(PORTAL_HELPER_ITEM.get().getDefaultInstance());
+        }
+    }
+
     public PeripheralModEntry() {
         FMLJavaModLoadingContext.get().getModEventBus().register(PeripheralModEntry.class);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(CommandStickItem::buildContents);
         PeripheralModEntry.registerBlockItems(); //TODO Move this to a real DeferredRegistry @Nick1st
         BLOCKS.register(FMLJavaModLoadingContext.get().getModEventBus());
         ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
