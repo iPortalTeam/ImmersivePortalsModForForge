@@ -14,6 +14,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import qouteall.imm_ptl.core.render.FrontClipping;
 import qouteall.q_misc_util.Helper;
 
+import java.util.List;
+
 @Mixin(value = IrisChunkShaderInterface.class, remap = false)
 public class MixinIrisSodiumChunkShaderInterface {
     private int uIPClippingEquation;
@@ -25,20 +27,20 @@ public class MixinIrisSodiumChunkShaderInterface {
             uIPClippingEquation = -1;
         }
     }
-
+    
     @Inject(
         method = "<init>",
         at = @At("RETURN"),
         require = 0
     )
     private void onInit(
-            int handle, ShaderBindingContextExt contextExt, SodiumTerrainPipeline pipeline,
-            boolean isShadowPass, BlendModeOverride blendModeOverride, float alpha,
-            CallbackInfo ci
+        int handle,
+        ShaderBindingContextExt par2, SodiumTerrainPipeline par3,
+        boolean par4, BlendModeOverride par5, List par6, float par7, CallbackInfo ci
     ) {
         ip_init(handle);
     }
-
+    
     @Inject(
         method = "setup",
         at = @At("RETURN")
