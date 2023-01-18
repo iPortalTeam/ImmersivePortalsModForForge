@@ -339,6 +339,7 @@ public class ServerTeleportationManager {
         McHelper.updateBoundingBox(player);
         
         player.setLevel(toWorld);
+        player.reviveCaps(); // TODO @Nick1st Is this the right way to fix forge caps?
         
         // adds the player
         toWorld.addDuringPortalTeleport(player);
