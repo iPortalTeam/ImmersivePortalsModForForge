@@ -6,11 +6,13 @@ import org.joml.Matrix4f;
 import qouteall.imm_ptl.core.ducks.IECamera;
 
 import javax.annotation.Nullable;
+
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.phys.Vec3;
 import com.mojang.blaze3d.vertex.PoseStack;
+
 import java.util.List;
 import java.util.Stack;
 import java.util.UUID;
@@ -56,8 +58,12 @@ public class WorldRenderInfo {
     
     public final boolean doRenderHand;
     
+    public final boolean enableViewBobbing;
+    
     private static final Stack<WorldRenderInfo> renderInfoStack = new Stack<>();
     
+    // should use the builder or the full constructor
+    @Deprecated
     public WorldRenderInfo(
         ClientLevel world, Vec3 cameraPos,
         @Nullable Matrix4f cameraTransformation,
@@ -71,6 +77,8 @@ public class WorldRenderInfo {
         );
     }
     
+    // should use the builder or the full constructor
+    @Deprecated
     public WorldRenderInfo(
         ClientLevel world, Vec3 cameraPos,
         @Nullable Matrix4f cameraTransformation,
@@ -86,6 +94,26 @@ public class WorldRenderInfo {
         this.renderDistance = renderDistance;
         this.overwriteCameraTransformation = overwriteCameraTransformation;
         this.doRenderHand = doRenderHand;
+        this.enableViewBobbing = true;
+    }
+    
+    public WorldRenderInfo(
+        ClientLevel world, Vec3 cameraPos,
+        @Nullable Matrix4f cameraTransformation,
+        boolean overwriteCameraTransformation,
+        @Nullable UUID description,
+        int renderDistance,
+        boolean doRenderHand,
+        boolean enableViewBobbing
+    ) {
+        this.world = world;
+        this.cameraPos = cameraPos;
+        this.cameraTransformation = cameraTransformation;
+        this.description = description;
+        this.renderDistance = renderDistance;
+        this.overwriteCameraTransformation = overwriteCameraTransformation;
+        this.doRenderHand = doRenderHand;
+        this.enableViewBobbing = enableViewBobbing;
     }
     
     public static void pushRenderInfo(WorldRenderInfo worldRenderInfo) {
@@ -154,5 +182,78 @@ public class WorldRenderInfo {
     public static Vec3 getCameraPos() {
         Validate.isTrue(!renderInfoStack.isEmpty());
         return renderInfoStack.peek().cameraPos;
+    }
+    
+    public static boolean isViewBobbingEnabled() {
+        return renderInfoStack.stream().allMatch(info -> info.enableViewBobbing);
+    }
+    
+    public static class Builder {
+        private ClientLevel world;
+        private Vec3 cameraPos;
+        private Matrix4f cameraTransformation;
+        private boolean overwriteCameraTransformation;
+        private UUID description;
+        private int renderDistance;
+        private boolean doRenderHand;
+        private boolean enableViewBobbing;
+        
+        public Builder() {
+            this.cameraTransformation = null;
+            this.overwriteCameraTransformation = false;
+            this.description = null;
+            this.renderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
+            this.doRenderHand = false;
+            this.enableViewBobbing = true;
+        }
+        
+        public Builder setWorld(ClientLevel world) {
+            this.world = world;
+            return this;
+        }
+        
+        public Builder setCameraPos(Vec3 cameraPos) {
+            this.cameraPos = cameraPos;
+            return this;
+        }
+        
+        public Builder setCameraTransformation(Matrix4f cameraTransformation) {
+            this.cameraTransformation = cameraTransformation;
+            return this;
+        }
+        
+        public Builder setOverwriteCameraTransformation(boolean overwriteCameraTransformation) {
+            this.overwriteCameraTransformation = overwriteCameraTransformation;
+            return this;
+        }
+        
+        public Builder setDescription(UUID description) {
+            this.description = description;
+            return this;
+        }
+        
+        public Builder setRenderDistance(int renderDistance) {
+            this.renderDistance = renderDistance;
+            return this;
+        }
+        
+        public Builder setDoRenderHand(boolean doRenderHand) {
+            this.doRenderHand = doRenderHand;
+            return this;
+        }
+        
+        public Builder setEnableViewBobbing(boolean enableViewBobbing) {
+            this.enableViewBobbing = enableViewBobbing;
+            return this;
+        }
+        
+        public WorldRenderInfo build() {
+            Validate.notNull(world);
+            Validate.notNull(cameraPos);
+            return new WorldRenderInfo(
+                world, cameraPos, cameraTransformation, overwriteCameraTransformation,
+                description, renderDistance, doRenderHand, enableViewBobbing
+            );
+        }
     }
 }

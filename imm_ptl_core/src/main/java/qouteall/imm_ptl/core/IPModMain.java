@@ -6,6 +6,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import qouteall.imm_ptl.core.chunk_loading.*;
 import qouteall.imm_ptl.core.commands.PortalCommand;
 import qouteall.imm_ptl.core.commands.SubCommandArgumentType;
+import qouteall.imm_ptl.core.commands.TimingFunctionArgumentType;
 import qouteall.imm_ptl.core.compat.IPPortingLibCompat;
 import qouteall.imm_ptl.core.miscellaneous.GcMonitor;
 import qouteall.imm_ptl.core.platform_specific.O_O;
@@ -59,10 +60,12 @@ public class IPModMain {
         
         IPPortingLibCompat.init();
         
-//        CommandRegistrationCallback.EVENT.register(
-//            (dispatcher, registryAccess, environment) -> PortalCommand.register(dispatcher)
-//        );
-//        SubCommandArgumentType.init(); //@Nick1st this is now in IPModEntry
+        CommandRegistrationCallback.EVENT.register(
+            (dispatcher, registryAccess, environment) -> PortalCommand.register(dispatcher)
+        );
+        SubCommandArgumentType.init();
+        TimingFunctionArgumentType.init();
+        AxisArgumentType.init(); // TODO @Nick1st
         
         // intrinsic animation driver types
         RotationAnimation.init();

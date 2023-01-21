@@ -14,6 +14,7 @@ import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.my_util.IntBox;
 
+import javax.annotation.Nullable;
 import java.util.ArrayDeque;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class BlockPortalShape {
+    public static final int lengthLimit = 20;
     public BlockPos anchor;
     public Set<BlockPos> area;
     public IntBox innerAreaBox;
@@ -74,6 +76,9 @@ public class BlockPortalShape {
         return result;
     }
     
+    public static BlockPortalShape fromTag(CompoundTag tag) {
+        return new BlockPortalShape(tag);
+    }
     
     public CompoundTag toTag() {
         CompoundTag data = new CompoundTag();
@@ -155,6 +160,7 @@ public class BlockPortalShape {
     }
     
     //null for not found
+    @Nullable
     public static BlockPortalShape findArea(
         BlockPos startingPos,
         Direction.Axis axis,
@@ -168,6 +174,7 @@ public class BlockPortalShape {
         return findShapeWithoutRegardingStartingPos(startingPos, axis, isAir, isObsidian);
     }
     
+    @Nullable
     public static BlockPortalShape findShapeWithoutRegardingStartingPos(
         BlockPos startingPos, Direction.Axis axis, Predicate<BlockPos> isAir, Predicate<BlockPos> isObsidian
     ) {
@@ -206,7 +213,7 @@ public class BlockPortalShape {
         newlyAdded.addLast(startingPos);
         
         while (!newlyAdded.isEmpty()) {
-            if (foundArea.size() > 400) {
+            if (foundArea.size() > (lengthLimit * lengthLimit)) {
                 return false;
             }
             
@@ -228,7 +235,10 @@ public class BlockPortalShape {
             }
             
             BlockPos delta = initialPos.subtract(startingPos);
-            if (Math.abs(delta.getX()) > 20 || Math.abs(delta.getY()) > 20 || Math.abs(delta.getZ()) > 20) {
+            if (Math.abs(delta.getX()) > lengthLimit ||
+                Math.abs(delta.getY()) > lengthLimit ||
+                Math.abs(delta.getZ()) > lengthLimit
+            ) {
                 return false;
             }
         }
@@ -236,51 +246,8 @@ public class BlockPortalShape {
         return true;
     }
     
-    @Deprecated
-    private static boolean findAreaRecursively(
-        BlockPos currPos,
-        Predicate<BlockPos> isAir,
-        Predicate<BlockPos> isObsidian,
-        Direction[] directions,
-        Set<BlockPos> foundArea,
-        BlockPos initialPos
-    ) {
-        if (foundArea.size() > 400) {
-            return false;
-        }
-        BlockPos delta = initialPos.subtract(currPos);
-        if (Math.abs(delta.getX()) > 20 || Math.abs(delta.getY()) > 20 || Math.abs(delta.getZ()) > 20) {
-            return false;
-        }
-        for (Direction direction : directions) {
-            BlockPos newPos = currPos.offset(direction.getNormal());
-            if (!foundArea.contains(newPos)) {
-                if (isAir.test(newPos)) {
-                    foundArea.add(newPos.immutable());
-                    boolean shouldContinue = findAreaRecursively(
-                        newPos,
-                        isAir,
-                        isObsidian,
-                        directions,
-                        foundArea,
-                        initialPos
-                    );
-                    if (!shouldContinue) {
-                        return false;
-                    }
-                }
-                else {
-                    if (!isObsidian.test(newPos)) {
-                        //abort
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-    
     //return null for not match
+    @Nullable
     public BlockPortalShape matchShape(
         Predicate<BlockPos> isAir,
         Predicate<BlockPos> isObsidian,
@@ -349,7 +316,7 @@ public class BlockPortalShape {
     public boolean isFrameIntact(
         Predicate<BlockPos> isObsidian
     ) {
-        return frameAreaWithoutCorner.stream().allMatch(isObsidian::test);
+        return frameAreaWithoutCorner.stream().allMatch(isObsidian);
     }
     
     public boolean isPortalIntact(
@@ -360,21 +327,20 @@ public class BlockPortalShape {
             area.stream().allMatch(isPortalBlock);
     }
     
-    public void initPortalPosAxisShape(Portal portal, boolean doInvert) {
+    public void initPortalPosAxisShape(Portal portal, Direction.AxisDirection axisDirection) {
         Vec3 center = innerAreaBox.getCenterVec();
         portal.setPos(center.x, center.y, center.z);
         
-        Direction[] anotherFourDirections = Helper.getAnotherFourDirections(axis);
-        Direction wDirection;
-        Direction hDirection;
-        if (doInvert) {
-            wDirection = anotherFourDirections[0];
-            hDirection = anotherFourDirections[1];
-        }
-        else {
-            wDirection = anotherFourDirections[1];
-            hDirection = anotherFourDirections[0];
-        }
+        initPortalAxisShape(portal, center, Direction.fromAxisAndDirection(axis, axisDirection));
+    }
+    
+    public void initPortalAxisShape(Portal portal, Vec3 center, Direction facing) {
+        Validate.isTrue(facing.getAxis() == axis);
+        
+        Tuple<Direction, Direction> perpendicularDirections = Helper.getPerpendicularDirections(facing);
+        Direction wDirection = perpendicularDirections.getA();
+        Direction hDirection = perpendicularDirections.getB();
+        
         portal.axisW = Vec3.atLowerCornerOf(wDirection.getNormal());
         portal.axisH = Vec3.atLowerCornerOf(hDirection.getNormal());
         portal.width = Helper.getCoordinate(innerAreaBox.getSize(), wDirection.getAxis());

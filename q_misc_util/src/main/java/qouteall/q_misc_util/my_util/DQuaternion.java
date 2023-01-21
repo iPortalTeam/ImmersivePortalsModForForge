@@ -7,11 +7,15 @@ import net.minecraft.util.Tuple;
 import net.minecraft.world.phys.Vec3;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
+import org.joml.Quaterniond;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import qouteall.q_misc_util.Helper;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 /**
@@ -41,6 +45,12 @@ public class DQuaternion {
      * Converts from Minecraft's mutable quaternion to immutable DQuaternion
      */
     public static DQuaternion fromMcQuaternion(Quaternionf quaternion) {
+        return new DQuaternion(
+            quaternion.x(), quaternion.y(), quaternion.z(), quaternion.w()
+        );
+    }
+    
+    public static DQuaternion fromMcQuaternion(Quaterniond quaternion) {
         return new DQuaternion(
             quaternion.x(), quaternion.y(), quaternion.z(), quaternion.w()
         );
@@ -483,5 +493,13 @@ public class DQuaternion {
         Quaternionf q = toMcQuaternion();
         Vector3f result = q.getEulerAnglesZYX(new Vector3f());
         return new Vec3(Math.toDegrees(result.x), Math.toDegrees(-result.y), Math.toDegrees(result.z));
+    }
+    
+    @Nonnull
+    public static DQuaternion fromNullable(@Nullable DQuaternion q) {
+        if (q == null) {
+            return DQuaternion.identity;
+        }
+        return q;
     }
 }

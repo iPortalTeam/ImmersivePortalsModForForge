@@ -13,18 +13,23 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkDirection;
 import org.apache.commons.lang3.Validate;
+import org.joml.Matrix4d;
 import org.joml.Matrix4f;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.ClientWorldLoader;
@@ -39,6 +44,9 @@ import qouteall.imm_ptl.core.portal.animation.AnimationView;
 import qouteall.imm_ptl.core.portal.animation.DefaultPortalAnimation;
 import qouteall.imm_ptl.core.portal.animation.PortalAnimation;
 import qouteall.imm_ptl.core.portal.animation.PortalAnimationDriver;
+import qouteall.q_misc_util.dimension.DimId;
+import qouteall.imm_ptl.core.mc_utils.IPEntityEventListenableEntity;
+import qouteall.imm_ptl.core.network.IPNetworking;
 import qouteall.imm_ptl.core.render.FrustumCuller;
 import qouteall.imm_ptl.core.render.PortalGroup;
 import qouteall.imm_ptl.core.render.PortalRenderer;
@@ -50,6 +58,7 @@ import qouteall.q_misc_util.api.McRemoteProcedureCall;
 import qouteall.q_misc_util.dimension.DimId;
 import qouteall.q_misc_util.my_util.*;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
@@ -431,7 +440,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     
     /**
      * Determines whether the player should be able to reach through the portal or not.
-     * Can be overridden by a sub class.
+     * Can be overridden by a subclass.
      *
      * @return the interactability of the portal
      */
@@ -478,6 +487,10 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         return visible;
     }
     
+    /**
+     * Set whether the portal is visible.
+     * Note: Don't use vanilla's {@link Entity#setInvisible(boolean)}. It has no effect on portals.
+     */
     public void setIsVisible(boolean visible) {
         this.visible = visible;
     }
@@ -523,13 +536,9 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     /**
      * @return the portal's rotation transformation. will not be null.
      */
+    @Nonnull
     public DQuaternion getRotationD() {
-        if (rotation == null) {
-            return DQuaternion.identity;
-        }
-        else {
-            return rotation;
-        }
+        return DQuaternion.fromNullable(getRotation());
     }
     
     @Override
@@ -553,17 +562,17 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         axisH = newAxisH.normalize();
         updateCache();
     }
-
+    
     public void setWidth(double newWidth) {
         width = newWidth;
         updateCache();
     }
-
+    
     public void setHeight(double newHeight) {
         height = newHeight;
         updateCache();
     }
-
+    
     public DQuaternion getOrientationRotation() {
         return PortalManipulation.getPortalOrientationQuaternion(axisW, axisH);
     }
@@ -578,6 +587,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     
     /**
      * NOTE: This is not the portal orientation. It's the rotation transformation.
+     *
      * @param quaternion The new rotation transformation.
      */
     public void setRotation(@Nullable DQuaternion quaternion) {
@@ -1379,67 +1389,55 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
                 );
     }
     
-    public static class TransformationDesc {
-        public final ResourceKey<Level> dimensionTo;
-        @Nullable
-        public final DQuaternion rotation;
-        public final double scaling;
-        public final Vec3 offset;
-        public final boolean isMirror;
-        
-        public TransformationDesc(
-            ResourceKey<Level> dimensionTo,
-            @Nullable DQuaternion rotation, double scaling,
-            Vec3 offset, boolean isMirror
-        ) {
-            this.dimensionTo = dimensionTo;
-            this.rotation = rotation;
-            this.scaling = scaling;
-            this.offset = offset;
-            this.isMirror = isMirror;
-        }
-        
-        private static boolean rotationRoughlyEquals(DQuaternion a, DQuaternion b) {
-            if (a == null && b == null) {
-                return true;
-            }
-            if (a == null || b == null) {
+    public Matrix4d getFullSpaceTransformation() {
+        Vec3 originPos = getOriginPos();
+        Vec3 destPos = getDestPos();
+        DQuaternion rot = getRotationD();
+        return new Matrix4d()
+            .translation(destPos.x, destPos.y, destPos.z)
+            .scale(getScale())
+            .rotate(rot.toMcQuaternion())
+            .translate(-originPos.x, -originPos.y, -originPos.z);
+    }
+
+    public record TransformationDesc(
+        ResourceKey<Level> dimensionTo,
+        Matrix4d fullSpaceTransformation,
+        DQuaternion rotation,
+        double scaling
+    ) {
+        public static boolean isRoughlyEqual(TransformationDesc a, TransformationDesc b) {
+            if (a.dimensionTo != b.dimensionTo) {
                 return false;
             }
             
-            return DQuaternion.isClose(a, b, 0.01f);
-        }
-        
-        //roughly equals
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            TransformationDesc that = (TransformationDesc) o;
-            
-            if (isMirror || that.isMirror) {
-                return false;
-            }
-            
-            return Double.compare(that.scaling, scaling) == 0 &&
-                dimensionTo == that.dimensionTo &&
-                rotationRoughlyEquals(rotation, that.rotation) &&//approximately
-                offset.distanceToSqr(that.offset) < 0.01;//approximately
-        }
-        
-        @Override
-        public int hashCode() {
-            throw new RuntimeException("This cannot be put into a container");
+            Matrix4d diff = new Matrix4d().set(a.fullSpaceTransformation).sub(b.fullSpaceTransformation);
+            double diffSquareSum = diff.m00() * diff.m00()
+                + diff.m01() * diff.m01()
+                + diff.m02() * diff.m02()
+                + diff.m03() * diff.m03()
+                + diff.m10() * diff.m10()
+                + diff.m11() * diff.m11()
+                + diff.m12() * diff.m12()
+                + diff.m13() * diff.m13()
+                + diff.m20() * diff.m20()
+                + diff.m21() * diff.m21()
+                + diff.m22() * diff.m22()
+                + diff.m23() * diff.m23()
+                + diff.m30() * diff.m30()
+                + diff.m31() * diff.m31()
+                + diff.m32() * diff.m32()
+                + diff.m33() * diff.m33();
+            return diffSquareSum < 0.1;
         }
     }
     
     public TransformationDesc getTransformationDesc() {
         return new TransformationDesc(
             getDestDim(),
-            getRotation(),
-            getScale(),
-            getDestPos().scale(1.0 / getScale()).subtract(getOriginPos()),
-            this instanceof Mirror
+            getFullSpaceTransformation(),
+            getRotationD(),
+            getScale()
         );
     }
     
@@ -1547,6 +1545,14 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         return hasCrossPortalCollision;
     }
     
+    public boolean getTeleportChangesScale() {
+        return teleportChangesScale;
+    }
+
+    public void setTeleportChangesScale(boolean teleportChangesScale) {
+        this.teleportChangesScale = teleportChangesScale;
+    }
+
     public boolean getTeleportChangesGravity() {
         return teleportChangesGravity;
     }
@@ -1555,6 +1561,13 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         teleportChangesGravity = cond;
     }
     
+    public Direction getTeleportedGravityDirection(Direction oldGravityDir) {
+        if (!getTeleportChangesGravity()) {
+            return oldGravityDir;
+        }
+        return getTransformedGravityDirection(oldGravityDir);
+    }
+
     public Direction getTransformedGravityDirection(Direction oldGravityDir) {
         Vec3 oldGravityVec = Vec3.atLowerCornerOf(oldGravityDir.getNormal());
         
@@ -1629,14 +1642,14 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     
     public void updatePortalFromNbt(CompoundTag newNbt) {
         CompoundTag data = writePortalDataToNbt();
-
+        
         newNbt.getAllKeys().forEach(
             key -> data.put(key, newNbt.get(key))
         );
-
+        
         readPortalDataFromNbt(data);
     }
-
+    
     @Deprecated
     public void rectifyClusterPortals() {
         PortalExtension.get(this).rectifyClusterPortals(this, true);
@@ -1675,32 +1688,32 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     public AnimationView getAnimationView() {
         PortalExtension extension = PortalExtension.get(this);
         if (extension.flippedPortal != null) {
-            if (extension.flippedPortal.animation.hasRunningAnimationDriver()) {
+            if (extension.flippedPortal.animation.hasAnimationDriver()) {
                 return new AnimationView(
                     this, extension.flippedPortal,
                     IntraClusterRelation.FLIPPED
                 );
             }
         }
-    
+
         if (extension.reversePortal != null) {
-            if (extension.reversePortal.animation.hasRunningAnimationDriver()) {
+            if (extension.reversePortal.animation.hasAnimationDriver()) {
                 return new AnimationView(
                     this, extension.reversePortal,
                     IntraClusterRelation.REVERSE
                 );
             }
         }
-    
+
         if (extension.parallelPortal != null) {
-            if (extension.parallelPortal.animation.hasRunningAnimationDriver()) {
+            if (extension.parallelPortal.animation.hasAnimationDriver()) {
                 return new AnimationView(
                     this, extension.parallelPortal,
                     IntraClusterRelation.PARALLEL
                 );
             }
         }
-    
+
         return new AnimationView(
             this, this,
             IntraClusterRelation.SAME
@@ -1709,18 +1722,11 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     
     public boolean isOtherSideChunkLoaded() {
         Validate.isTrue(!level.isClientSide());
-        ChunkPos destChunkPos = new ChunkPos(new BlockPos(getDestPos()));
-        LevelChunk chunk = McHelper.getServerChunkIfPresent(
-            dimensionTo, destChunkPos.x, destChunkPos.z
+        
+        return McHelper.isServerChunkFullyLoaded(
+            (ServerLevel) getDestWorld(),
+            new ChunkPos(new BlockPos(getDestPos()))
         );
-        
-        if (chunk == null) {
-            return false;
-        }
-        
-        boolean entitiesLoaded = ((ServerLevel) getDestWorld()).areEntitiesLoaded(destChunkPos.toLong());
-        
-        return entitiesLoaded;
     }
     
     // return null if the portal is not yet initialized

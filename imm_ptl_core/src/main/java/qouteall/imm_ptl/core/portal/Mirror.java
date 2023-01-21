@@ -5,6 +5,11 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import qouteall.imm_ptl.core.platform_specific.IPRegistry;
+import org.joml.Matrix3d;
+import org.joml.Matrix4d;
+import org.joml.Quaterniond;
+import org.joml.Quaternionf;
+import qouteall.q_misc_util.my_util.DQuaternion;
 
 public class Mirror extends Portal {
     public static EntityType<Mirror> entityType = IPRegistry.MIRROR.get();
@@ -38,5 +43,37 @@ public class Mirror extends Portal {
     @Override
     public Vec3 inverseTransformLocalVecNonScale(Vec3 localVec) {
         return super.inverseTransformLocalVecNonScale(getMirrored(localVec));
+    }
+
+    @Override
+    public Matrix4d getFullSpaceTransformation() {
+        Vec3 originPos = getOriginPos();
+        Vec3 destPos = getDestPos();
+        DQuaternion rot = getRotationD();
+        return new Matrix4d()
+            .translation(destPos.x, destPos.y, destPos.z)
+            .reflect(getNormal().x, getNormal().y, getNormal().z, 0)
+            .scale(getScale())
+            .rotate(rot.toMcQuaternion())
+            .translate(-originPos.x, -originPos.y, -originPos.z);
+    }
+
+    /**
+     * the mirror's transformation: firstly rotate, then mirror
+     * totalTrans = mirror * rotation
+     * the mirror transform is applied after rotation, so the reflection direction is rotated, which is not what we want
+     * to make the new mirror's rotation to visually match, we need
+     * visualRotation = newRotation * mirror
+     * newRotation = visualRotation * mirror^-1
+     * mirror = mirror^-1
+     */
+    public void setRotationTransformationForMirror(DQuaternion visualRotation) {
+        Matrix3d mirrorTrans = new Matrix3d().reflect(
+            getNormal().x, getNormal().y, getNormal().z
+        );
+        Matrix3d visualRotationTrans = new Matrix3d().rotate(visualRotation.toMcQuaternion());
+        Matrix3d newRotation = new Matrix3d().mul(visualRotationTrans).mul(mirrorTrans);
+        Quaterniond mirrorRotation = new Quaterniond().setFromNormalized(newRotation);
+        setRotation(DQuaternion.fromMcQuaternion(mirrorRotation));
     }
 }

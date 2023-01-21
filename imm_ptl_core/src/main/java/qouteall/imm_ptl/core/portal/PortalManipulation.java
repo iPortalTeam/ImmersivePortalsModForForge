@@ -1,5 +1,6 @@
 package qouteall.imm_ptl.core.portal;
 
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -15,6 +16,7 @@ import qouteall.imm_ptl.core.IPMcHelper;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.api.PortalAPI;
 import qouteall.imm_ptl.core.platform_specific.IPRegistry;
+import qouteall.imm_ptl.core.commands.PortalCommand;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.my_util.DQuaternion;
@@ -23,6 +25,7 @@ import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -91,8 +94,7 @@ public class PortalManipulation {
         newPortal.axisH = portal.axisH;
         
         if (portal.specialShape != null) {
-            newPortal.specialShape = new GeometryPortalShape();
-            initFlippedShape(newPortal, portal.specialShape, portal.scaling);
+            newPortal.specialShape = portal.specialShape.getFlippedWithScaling(portal.scaling);
         }
         
         newPortal.initCullableRange(
@@ -142,8 +144,7 @@ public class PortalManipulation {
         newPortal.axisH = portal.axisH;
         
         if (portal.specialShape != null) {
-            newPortal.specialShape = new GeometryPortalShape();
-            initFlippedShape(newPortal, portal.specialShape, 1);
+            newPortal.specialShape = portal.specialShape.getFlippedWithScaling(1);
         }
         
         newPortal.initCullableRange(
@@ -193,19 +194,7 @@ public class PortalManipulation {
         
         return newPortal;
     }
-    
-    private static void initFlippedShape(Portal newPortal, GeometryPortalShape specialShape, double scale) {
-        newPortal.specialShape.triangles = specialShape.triangles.stream()
-            .map(triangle -> new GeometryPortalShape.TriangleInPlane(
-                -triangle.x1 * scale,
-                triangle.y1 * scale,
-                -triangle.x2 * scale,
-                triangle.y2 * scale,
-                -triangle.x3 * scale,
-                triangle.y3 * scale
-            )).collect(Collectors.toList());
-    }
-    
+
     public static void completeBiWayBiFacedPortal(
         Portal portal, Consumer<Portal> removalInformer,
         Consumer<Portal> addingInformer, EntityType<Portal> entityType
@@ -326,7 +315,7 @@ public class PortalManipulation {
         AABB viewBox = Helper.getBoxByBottomPosAndSize(boxBottomCenter, viewBoxSize);
         for (Direction direction : Direction.values()) {
             Portal portal = createOrthodoxPortal(
-                    IPRegistry.PORTAL.get(),
+                IPRegistry.PORTAL.get(),
                 boxWorld, areaWorld,
                 direction, Helper.getBoxSurface(viewBox, direction),
                 Helper.getBoxSurface(area, direction).getCenter()
@@ -465,7 +454,8 @@ public class PortalManipulation {
             0,
             p1 -> p1.getOriginPos().subtract(portal.getDestPos()).lengthSqr() < 0.01 &&
                 p1.getDestPos().subtract(portal.getOriginPos()).lengthSqr() < 0.01 &&
-                p1.getNormal().dot(portal.getContentDirection()) < -0.9
+                p1.getNormal().dot(portal.getContentDirection()) < -0.9 &&
+                !(p1 instanceof Mirror)
         ));
     }
     
@@ -478,7 +468,8 @@ public class PortalManipulation {
             0,
             p1 -> p1.getOriginPos().subtract(portal.getDestPos()).lengthSqr() < 0.01 &&
                 p1.getDestPos().subtract(portal.getOriginPos()).lengthSqr() < 0.01 &&
-                p1.getNormal().dot(portal.getContentDirection()) > 0.9
+                p1.getNormal().dot(portal.getContentDirection()) > 0.9 &&
+                !(p1 instanceof Mirror)
         ));
     }
     
@@ -490,7 +481,16 @@ public class PortalManipulation {
             portal.getOriginPos(),
             0,
             p1 -> p1.getOriginPos().subtract(portal.getOriginPos()).lengthSqr() < 0.01 &&
-                p1.getNormal().dot(portal.getNormal()) < -0.9
+                p1.getNormal().dot(portal.getNormal()) < -0.9 &&
+                p1.getDestPos().distanceToSqr(portal.getDestPos()) < 0.01 &&
+                !(p1 instanceof Mirror)
         ));
     }
+
+    public static Optional<Pair<Portal, Vec3>> raytracePortals(
+        Level world, Vec3 from, Vec3 to, boolean includeGlobalPortal
+    ) {
+        return PortalCommand.raytracePortals(world, from, to, includeGlobalPortal);
+    }
+
 }

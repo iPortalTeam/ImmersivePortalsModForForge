@@ -15,7 +15,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -32,6 +32,7 @@ import qouteall.imm_ptl.core.ducks.IEPlayerPositionLookS2CPacket;
 import qouteall.imm_ptl.core.ducks.IEServerPlayNetworkHandler;
 import qouteall.imm_ptl.core.miscellaneous.IPVanillaCopy;
 import qouteall.q_misc_util.Helper;
+import qouteall.q_misc_util.my_util.LimitedLogger;
 
 import java.util.Set;
 
@@ -89,6 +90,14 @@ public abstract class MixinServerGamePacketListenerImpl implements IEServerPlayN
     @Shadow
     private boolean clientVehicleIsFloating;
     
+    @Shadow
+    @Final
+    private static Logger LOGGER;
+    
+    private static LimitedLogger ip_limitedLogger = new LimitedLogger(20);
+    
+    private int ip_dubiousMoveCount = 0;
+    
     //do not process move packet when client dimension and server dimension are not synced
     @Inject(
         method = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;handleMovePlayer(Lnet/minecraft/network/protocol/game/ServerboundMovePlayerPacket;)V",
@@ -103,6 +112,8 @@ public abstract class MixinServerGamePacketListenerImpl implements IEServerPlayN
         ResourceKey<Level> packetDimension = ((IEPlayerMoveC2SPacket) packet).getPlayerDimension();
         
         if (packetDimension == null) {
+            // this actually never happens, because the vanilla client will disconnect immediately
+            // when receiving the position sync packet that has the extra dimension field
             Helper.err("Player move packet is missing dimension info. Maybe the player client doesn't have ImmPtl");
             IPGlobal.serverTaskList.addTask(() -> {
                 player.connection.disconnect(Component.literal(
@@ -118,13 +129,25 @@ public abstract class MixinServerGamePacketListenerImpl implements IEServerPlayN
         }
         
         if (player.level.dimension() != packetDimension) {
-            IPGlobal.serverTaskList.addTask(() -> {
-                IPGlobal.serverTeleportationManager.acceptDubiousMovePacket(
-                    player, packet, packetDimension
+            ip_limitedLogger.lInfo(LOGGER, "[ImmPtl] Ignoring player move packet %s %s".formatted(player, packetDimension.location()));
+            
+            ip_dubiousMoveCount += 1;
+            
+            if (ip_dubiousMoveCount > 200) {
+                LOGGER.info(
+                    "[ImmPtl] Force move player {} {} {}",
+                    player, player.level.dimension().location(), player.position()
                 );
-                return true;
-            });
+                IPGlobal.serverTeleportationManager.forceMovePlayer(
+                    player, player.level.dimension(), player.position()
+                );
+                ip_dubiousMoveCount = 0;
+            }
+            
             ci.cancel();
+        }
+        else {
+            ip_dubiousMoveCount = 0;
         }
     }
     

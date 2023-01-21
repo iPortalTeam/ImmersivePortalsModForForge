@@ -5,7 +5,9 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -22,6 +24,8 @@ import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.ClientWorldLoader;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
+import qouteall.imm_ptl.core.compat.GravityChangerInterface;
+import qouteall.imm_ptl.core.compat.PehkuiInterface;
 import qouteall.imm_ptl.core.ducks.IEEntity;
 import qouteall.imm_ptl.core.miscellaneous.IPVanillaCopy;
 import qouteall.imm_ptl.core.mixin.common.collision.IEEntity_Collision;
@@ -34,9 +38,11 @@ import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.my_util.LimitedLogger;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 public class CollisionHelper {
     
@@ -97,6 +103,8 @@ public class CollisionHelper {
         return testingPos.subtract(planePos).dot(planeNormal) < 0;
     }
     
+    // For single portals, the player can collide with it only if the eye pos is in portal projection.
+    // However, for portal groups, there is no in-projection restriction.
     public static boolean canCollideWithPortal(Entity entity, Portal portal, float partialTick) {
         if (portal.canTeleportEntity(entity)) {
             Vec3 cameraPosVec = entity.getEyePosition(partialTick);
@@ -136,9 +144,9 @@ public class CollisionHelper {
         entity.level.getProfiler().pop();
         
         return new Vec3(
-            correctXZCoordinate(attemptedMove.x, otherSideMove.x),
-            correctYCoordinate(attemptedMove.y, otherSideMove.y),
-            correctXZCoordinate(attemptedMove.z, otherSideMove.z)
+            fixCoordinateFloatingPointError(attemptedMove.x, otherSideMove.x),
+            fixCoordinateFloatingPointError(attemptedMove.y, otherSideMove.y),
+            fixCoordinateFloatingPointError(attemptedMove.z, otherSideMove.z)
         );
     }
     
@@ -154,7 +162,7 @@ public class CollisionHelper {
         int portalLayer
     ) {
         // limit max recursion layer
-        if (portalLayer >= 100) {
+        if (portalLayer >= 10) {
             return attemptedMove;
         }
         
@@ -181,7 +189,27 @@ public class CollisionHelper {
                 return attemptedMove;
             }
             else {
-                return attemptedMove.subtract(innerDirection.scale(innerDirection.dot(attemptedMove)));
+                // when the other side chunk is not loaded, don't let the player to go into the portal.
+                // this works fine for global portals.
+                // however, for normal portals, if the portal is not in the same chunk as player, the portal
+                // may not load in time and this will not stop player from start falling through solid ground on the other side.
+                // When the portal loads, push the bounding box out of portal.
+                
+                double innerSignedDistance = Arrays.stream(Helper.eightVerticesOf(originalBoundingBox))
+                    .mapToDouble(
+                        pos -> pos.subtract(collidingPortal.getOriginPos()).dot(collidingPortal.getNormal())
+                    )
+                    .min().orElseThrow();
+                
+                if (innerSignedDistance < 0) {
+                    return attemptedMove
+                        .add(collidingPortal.getNormal().scale(-innerSignedDistance))
+                        .subtract(innerDirection.scale(innerDirection.dot(attemptedMove)));
+                }
+                else {
+                    return attemptedMove
+                        .subtract(innerDirection.scale(innerDirection.dot(attemptedMove)));
+                }
             }
         }
         
@@ -205,11 +233,15 @@ public class CollisionHelper {
         
         entity.level = destinationWorld;
         entity.setBoundingBox(boxOtherSide);
+        
         if (collidingPortal.getScale() > 1) {
             entity.maxUpStep = (float) (oldStepHeight * collidingPortal.getScale() * 1.01);
         }
         
         try {
+            // TODO the indirect collision handling is still incomplete
+            // it should firstly check whether the entity can touch that portal
+            // it should also transform gravity direction if needed
             if (!indirectCollidingPortals.isEmpty()) {
                 return getOtherSideMove(
                     entity, transformedAttemptedMove, indirectCollidingPortals.get(0),
@@ -217,21 +249,40 @@ public class CollisionHelper {
                 );
             }
             
-            Vec3 collided = handleCollisionWithClipping(
-                entity, transformedAttemptedMove,
-                collidingPortal.getDestPos(), collidingPortal.getContentDirection()
-            );
+            PortalLike collisionHandlingUnit = getCollisionHandlingUnit(collidingPortal);
+            Direction transformedGravityDirection = collidingPortal.getTransformedGravityDirection(GravityChangerInterface.invoker.getGravityDirection(entity));
+            
+            Vec3 collided;
+            if (collisionHandlingUnit != collidingPortal) {
+                // This is a workaround for scale boxes.
+                // Currently, the portal groups are mostly scale boxes.
+                // There is no collision inside the entrance of scale box, so do no clipping.
+                // Handling it correctly requires complex clipping code and is slower.
+                collided = handleCollisionWithShapeProcessor(
+                    entity, transformedAttemptedMove,
+                    s -> s,
+                    transformedGravityDirection
+                );
+            }
+            else {
+                collided = handleCollisionWithShapeProcessor(
+                    entity, transformedAttemptedMove,
+                    shape -> clipVoxelShape(shape, collidingPortal.getDestPos(), collidingPortal.getContentDirection()),
+                    transformedGravityDirection
+                );
+            }
             
             collided = new Vec3(
-                correctXZCoordinate(transformedAttemptedMove.x, collided.x),
-                correctYCoordinate(transformedAttemptedMove.y, collided.y),
-                correctXZCoordinate(transformedAttemptedMove.z, collided.z)
+                fixCoordinateFloatingPointError(transformedAttemptedMove.x, collided.x),
+                fixCoordinateFloatingPointError(transformedAttemptedMove.y, collided.y),
+                fixCoordinateFloatingPointError(transformedAttemptedMove.z, collided.z)
             );
             
             Vec3 result = collidingPortal.inverseTransformLocalVec(collided);
             
             return result;
-        } finally {
+        }
+        finally {
             entity.level = oldWorld;
             McHelper.setPosAndLastTickPos(entity, oldPos, oldLastTickPos);
             entity.setBoundingBox(originalBoundingBox);
@@ -240,7 +291,9 @@ public class CollisionHelper {
     }
     
     // floating point deviation may cause collision issues
-    private static double correctXZCoordinate(double attemptedMove, double result) {
+    private static double fixCoordinateFloatingPointError(
+        double attemptedMove, double result
+    ) {
         //rotation may cause a free move to reduce a little bit and the game think that it's collided
         if (Math.abs(attemptedMove - result) < 0.001) {
             return attemptedMove;
@@ -249,34 +302,6 @@ public class CollisionHelper {
         //0 may become 0.0000001 after rotation. avoid falling through floor
         if (Math.abs(result) < 0.0001) {
             return 0;
-        }
-        
-        //pushing away
-        if (Math.abs(result) > Math.abs(attemptedMove) + 0.01) {
-            return result;
-        }
-        
-        //1 may become 0.999999 after rotation. avoid going into wall
-        return result * 0.999;
-    }
-    
-    private static double correctYCoordinate(double attemptedMove, double result) {
-        if (Math.abs(attemptedMove - result) < 0.001) {
-            return attemptedMove;
-        }
-        
-        //0 may become 0.0000001 after rotation. avoid falling through floor
-        if (Math.abs(result) < 0.0001) {
-            return 0;
-        }
-        
-        //pushing away
-        if (Math.abs(result) > Math.abs(attemptedMove) + 0.01) {
-            return result;
-        }
-        
-        if (result < 0) {
-            return result * 0.999;//stepping onto floor won't get reduced
         }
         
         return result;
@@ -288,100 +313,211 @@ public class CollisionHelper {
         Portal collidingPortal,
         AABB originalBoundingBox
     ) {
+        Direction gravity = GravityChangerInterface.invoker.getGravityDirection(entity);
+        
+        PortalLike collisionHandlingUnit = getCollisionHandlingUnit(collidingPortal);
+        if (collisionHandlingUnit != collidingPortal) {
+            // This is a workaround for scale boxes.
+            // Currently, the portal groups are mostly scale boxes.
+            // There is no collision inside the entrance of scale box, so do no clipping.
+            // Handling it correctly requires complex clipping code and is slower.
+            return handleCollisionWithShapeProcessor(
+                entity, attemptedMove,
+                s -> s,
+                gravity
+            );
+        }
+        
         Vec3 clippingPlanePos = collidingPortal.getOriginPos();
         Vec3 clippingPlaneNormal = collidingPortal.getNormal();
         
-        return handleCollisionWithClipping(entity, attemptedMove, clippingPlanePos, clippingPlaneNormal);
+        return handleCollisionWithShapeProcessor(
+            entity, attemptedMove,
+            shape -> clipVoxelShape(shape, clippingPlanePos, clippingPlaneNormal),
+            gravity
+        );
     }
     
-    /**
-     * Vanilla copy {@link Entity#collide(Vec3)}
-     * But filters collisions behind the clipping plane
-     */
-    @IPVanillaCopy
-    private static Vec3 handleCollisionWithClipping(
-        Entity entity, Vec3 attemptedMove, Vec3 clippingPlanePos, Vec3 clippingPlaneNormal
-    ) {
-        Function<VoxelShape, VoxelShape> filter = shape -> {
-            AABB shapeBoundingBox = shape.bounds();
-            boolean boxBehindPlane = isBoxFullyBehindPlane(
-                clippingPlanePos, clippingPlaneNormal, shapeBoundingBox
-            );
-            if (boxBehindPlane) {
-                return null;
-            }
-            
-            boolean isFullyInFrontOfPlane = isBoxFullyBehindPlane(
-                clippingPlanePos, clippingPlaneNormal.scale(-1), shapeBoundingBox
-            );
-            
-            if (isFullyInFrontOfPlane) {
-                return shape;
-            }
-            
-            // the shape is intersecting the clipping plane
-            // clip the shape
-            AABB clippedBoundingBox = clipBox(
-                shapeBoundingBox, clippingPlanePos, clippingPlaneNormal
-            );
-            
-            if (clippedBoundingBox == null) {
-                return null;
-            }
-            
-            VoxelShape result = Shapes.joinUnoptimized(
-                shape,
-                Shapes.create(clippedBoundingBox),
-                BooleanOp.AND
-            );
-            
-            return result;
-        };
+    @Nullable
+    public static VoxelShape clipVoxelShape(VoxelShape shape, Vec3 clippingPlanePos, Vec3 clippingPlaneNormal) {
+        if (shape.isEmpty()) {
+            return null;
+        }
         
+        AABB shapeBoundingBox = shape.bounds();
+        boolean boxBehindPlane = isBoxFullyBehindPlane(
+            clippingPlanePos, clippingPlaneNormal, shapeBoundingBox
+        );
+        if (boxBehindPlane) {
+            return null;
+        }
+        
+        boolean isFullyInFrontOfPlane = isBoxFullyBehindPlane(
+            clippingPlanePos, clippingPlaneNormal.scale(-1), shapeBoundingBox
+        );
+        
+        if (isFullyInFrontOfPlane) {
+            return shape;
+        }
+        
+        // the shape is intersecting the clipping plane
+        // clip the shape
+        AABB clippedBoundingBox = clipBox(
+            shapeBoundingBox, clippingPlanePos, clippingPlaneNormal
+        );
+        
+        if (clippedBoundingBox == null) {
+            return null;
+        }
+        
+        VoxelShape result = Shapes.joinUnoptimized(
+            shape,
+            Shapes.create(clippedBoundingBox),
+            BooleanOp.AND
+        );
+        
+        return result;
+    }
+    
+    // only for reference
+    private static Vec3 refHandleCollisionWithShapeProcessor(Entity entity, Vec3 attemptedMove, Function<VoxelShape, VoxelShape> filter) {
         AABB boundingBox = entity.getBoundingBox();
         List<VoxelShape> entityCollisions = entity.level.getEntityCollisions(entity, boundingBox.expandTowards(attemptedMove));
-        Vec3 collidedMovement = attemptedMove.lengthSqr() == 0.0D ? attemptedMove : collideBoundingBox(
-            entity, attemptedMove, boundingBox, entity.level, entityCollisions, filter
-        );
-        boolean moveX = attemptedMove.x != collidedMovement.x;
-        boolean moveY = attemptedMove.y != collidedMovement.y;
-        boolean moveZ = attemptedMove.z != collidedMovement.z;
-        boolean touchGround = entity.isOnGround() || moveY && attemptedMove.y < 0.0D;
-        if (entity.maxUpStep > 0.0F && touchGround && (moveX || moveZ)) {
-            Vec3 stepping = collideBoundingBox(
-                entity,
+        
+        // introduce a helper func to reduce argument count
+        BiFunction<Vec3, AABB, Vec3> collisionFunc = (attempt, bb) ->
+            collideBoundingBox(entity, attempt, bb, entity.level, entityCollisions, filter);
+        
+        // firstly do a normal collision regardless of stepping
+        Vec3 collidedMovement = attemptedMove.lengthSqr() == 0.0D ? attemptedMove :
+            collisionFunc.apply(attemptedMove, boundingBox);
+        boolean collideX = attemptedMove.x != collidedMovement.x;
+        boolean collideY = attemptedMove.y != collidedMovement.y;
+        boolean collideZ = attemptedMove.z != collidedMovement.z;
+        boolean collidesWithFloor = collideY && attemptedMove.y < 0.0D;
+        boolean touchGround = entity.isOnGround() || collidesWithFloor;
+        boolean collidesHorizontally = collideX || collideZ;
+        if (entity.maxUpStep > 0.0F && touchGround && collidesHorizontally) {
+            // the entity is touching ground and has horizontal collision now
+            // try to directly move to stepped position, make it approach the stair
+            Vec3 stepping = collisionFunc.apply(
                 new Vec3(attemptedMove.x, (double) entity.maxUpStep, attemptedMove.z),
-                boundingBox, entity.level, entityCollisions, filter
+                boundingBox
             );
-            Vec3 verticalStep = collideBoundingBox(
-                entity, new Vec3(0.0D, (double) entity.maxUpStep, 0.0D),
-                boundingBox.expandTowards(attemptedMove.x, 0.0D, attemptedMove.z),
-                entity.level, entityCollisions, filter
+            // try to move up in step height with expanded box
+            Vec3 verticalStep = collisionFunc.apply(
+                new Vec3(0.0D, (double) entity.maxUpStep, 0.0D),
+                boundingBox.expandTowards(attemptedMove.x, 0.0D, attemptedMove.z)
             );
             if (verticalStep.y < (double) entity.maxUpStep) {
-                Vec3 horizontalMoveAfterVerticalStepping = collideBoundingBox(
-                    entity, new Vec3(attemptedMove.x, 0.0D, attemptedMove.z),
-                    boundingBox.move(verticalStep), entity.level, entityCollisions, filter
+                // try to move horizontally after moving up
+                Vec3 horizontalMoveAfterVerticalStepping = collisionFunc.apply(
+                    new Vec3(attemptedMove.x, 0.0D, attemptedMove.z),
+                    boundingBox.move(verticalStep)
                 ).add(verticalStep);
+                // if it's further than directly stepping, use that as the stepped movement
                 if (horizontalMoveAfterVerticalStepping.horizontalDistanceSqr() > stepping.horizontalDistanceSqr()) {
                     stepping = horizontalMoveAfterVerticalStepping;
                 }
             }
             
             if (stepping.horizontalDistanceSqr() > collidedMovement.horizontalDistanceSqr()) {
-                Vec3 moveAfterStepping = collideBoundingBox(
-                    entity,
+                // in the stepped position, move down (because the max step height may be higher than slab height)
+                Vec3 movingDown = collisionFunc.apply(
                     new Vec3(0.0D, -stepping.y + attemptedMove.y, 0.0D),
-                    boundingBox.move(stepping),
-                    entity.level,
-                    entityCollisions,
-                    filter
+                    boundingBox.move(stepping)
                 );
-                return stepping.add(moveAfterStepping);
+                return stepping.add(movingDown);
             }
         }
         
         return collidedMovement;
+    }
+    
+    /**
+     * Vanilla copy {@link Entity#collide(Vec3)}
+     * But filters collisions behind the clipping plane and handles stepping with rotated gravity.
+     */
+    @IPVanillaCopy
+    private static Vec3 handleCollisionWithShapeProcessor(
+        Entity entity, Vec3 attemptedMove, Function<VoxelShape, VoxelShape> filter,
+        Direction gravity
+    ) {
+        Direction jumpDirection = gravity.getOpposite();
+        Direction.Axis gravityAxis = gravity.getAxis();
+        
+        AABB boundingBox = entity.getBoundingBox();
+        List<VoxelShape> entityCollisions = entity.level.getEntityCollisions(entity, boundingBox.expandTowards(attemptedMove));
+        
+        // introduce a helper func to reduce argument count
+        BiFunction<Vec3, AABB, Vec3> collisionFunc = (attempt, bb) ->
+            collideBoundingBox(entity, attempt, bb, entity.level, entityCollisions, filter);
+        
+        // firstly do a normal collision regardless of stepping
+        Vec3 collidedMovement = attemptedMove.lengthSqr() == 0.0D ? attemptedMove :
+            collisionFunc.apply(attemptedMove, boundingBox);
+        Vec3 collisionDelta = attemptedMove.subtract(collidedMovement);
+        boolean collidesOnGravityAxis = Helper.getCoordinate(collisionDelta, gravityAxis) != 0;
+        boolean attemptToMoveAlongGravity = Helper.getSignedCoordinate(attemptedMove, gravity) > 0;
+        boolean collidesWithFloor = collidesOnGravityAxis && attemptToMoveAlongGravity;
+        boolean touchGround = entity.isOnGround() || collidesWithFloor;
+        boolean collidesHorizontally = movesOnNonGravityAxis(collisionDelta, gravityAxis);
+        float maxUpStep = entity.maxUpStep * PehkuiInterface.invoker.getBaseScale(entity);
+        if (maxUpStep > 0.0F && touchGround && collidesHorizontally) {
+            // the entity is touching ground and has horizontal collision now
+            // try to directly move to stepped position, make it approach the stair
+            Vec3 stepping = collisionFunc.apply(
+                Helper.putSignedCoordinate(attemptedMove, jumpDirection, maxUpStep),
+                boundingBox
+            );
+            // try to move up in step height with expanded box
+            Vec3 expandVec = Helper.putSignedCoordinate(attemptedMove, gravity, 0);
+            Vec3 verticalStep = collisionFunc.apply(
+                Helper.putSignedCoordinate(Vec3.ZERO, jumpDirection, maxUpStep),
+                boundingBox.expandTowards(expandVec)
+            );
+            // add 0.001 because of floating point error
+            if (Helper.getSignedCoordinate(verticalStep, jumpDirection) < (double) maxUpStep + 0.001) {
+                // try to move horizontally after moving up
+                Vec3 horizontalMoveAfterVerticalStepping = collisionFunc.apply(
+                    expandVec,
+                    boundingBox.move(verticalStep)
+                ).add(verticalStep);
+                // if it's further than directly stepping, use that as the stepped movement
+                if (Helper.getDistanceSqrOnAxisPlane(horizontalMoveAfterVerticalStepping, gravityAxis) >
+                    Helper.getDistanceSqrOnAxisPlane(stepping, gravityAxis)
+                ) {
+                    stepping = horizontalMoveAfterVerticalStepping;
+                }
+            }
+            
+            if (Helper.getDistanceSqrOnAxisPlane(stepping, gravityAxis) >
+                Helper.getDistanceSqrOnAxisPlane(collidedMovement, gravityAxis)
+            ) {
+                double steppingVerticalLen = Helper.getSignedCoordinate(stepping, jumpDirection);
+                double attemptMoveVerticalLen = Helper.getSignedCoordinate(attemptedMove, jumpDirection);
+                
+                // in the stepped position, move down (because the max step height may be higher than slab height)
+                Vec3 movingDown = collisionFunc.apply(
+                    Helper.putSignedCoordinate(
+                        Vec3.ZERO, jumpDirection,
+                        -steppingVerticalLen + attemptMoveVerticalLen
+                    ),
+                    boundingBox.move(stepping)
+                );
+                return stepping.add(movingDown);
+            }
+        }
+        
+        return collidedMovement;
+    }
+    
+    private static boolean movesOnNonGravityAxis(Vec3 vec, Direction.Axis gravityAxis) {
+        return switch (gravityAxis) {
+            case X -> vec.y != 0 || vec.z != 0;
+            case Y -> vec.x != 0 || vec.z != 0;
+            case Z -> vec.x != 0 || vec.y != 0;
+        };
     }
     
     /**
@@ -436,50 +572,6 @@ public class CollisionHelper {
             clippingPos,
             portal.getNormal()
         );
-    }
-    
-    @Deprecated
-    private static AABB getCollisionBoxOtherSide(
-        PortalLike portalLike,
-        AABB originalBox,
-        Vec3 transformedAttemptedMove
-    ) {
-        if (portalLike instanceof Portal) {
-            Portal portal = (Portal) portalLike;
-            
-            AABB otherSideBox = transformBox(portal, originalBox);
-            
-            Vec3 clippingPos = portal.getDestPos().subtract(transformedAttemptedMove);
-            
-            AABB box = clipBox(
-                otherSideBox,
-                clippingPos,
-                portal.getContentDirection()
-            );
-            
-            if (box != null) {
-                // special handling in high speed (not perfect)
-                Vec3 contentDirection = portal.getContentDirection();
-                boolean movingIntoPortal =
-                    contentDirection.dot(transformedAttemptedMove) > 0;
-                
-                if (movingIntoPortal && transformedAttemptedMove.lengthSqr() > 1) {
-                    // the box is not clipped
-                    if (box.getCenter().subtract(otherSideBox.getCenter()).lengthSqr() < 0.2) {
-                        // avoid colliding with blocks behind the portal destination
-                        box = box.move(
-                            contentDirection.scale(transformedAttemptedMove.dot(contentDirection))
-                        );
-                    }
-                }
-            }
-            
-            return box;
-        }
-        else {
-            PortalGroup portalGroup = (PortalGroup) portalLike;
-            return transformBox(portalGroup.getFirstPortal(), originalBox);
-        }
     }
     
     private static AABB transformBox(PortalLike portal, AABB originalBox) {
@@ -585,7 +677,7 @@ public class CollisionHelper {
         
         McHelper.foreachEntitiesByBoxApproximateRegions(
             Entity.class, portal.level,
-            portalBoundingBox, 3,
+            portalBoundingBox, 8,
             entity -> {
                 if (entity instanceof Portal) {
                     return;
@@ -638,7 +730,15 @@ public class CollisionHelper {
         // the velocity updates later after updating colliding portal
         // expand the velocity to avoid not collide with portal in time
         Vec3 expand = McHelper.getWorldVelocity(entity).scale(1.2);
-        return entity.getBoundingBox().expandTowards(expand);
+        AABB box = entity.getBoundingBox().expandTowards(expand);
+        
+        // when the scale is big, the entity could move quickly abruptly
+        float scale = PehkuiInterface.invoker.getBaseScale(entity);
+        if (scale > 4) {
+            box = box.inflate(scale);
+        }
+        
+        return box;
     }
     
     private static boolean thisTickStagnate = false;
@@ -702,5 +802,25 @@ public class CollisionHelper {
             return a;
         }
         return b;
+    }
+    
+    @Nullable
+    public static AABB getTotalBlockCollisionBox(Entity entity, AABB box, Function<VoxelShape, VoxelShape> shapeFilter) {
+        Iterable<VoxelShape> collisions = entity.level.getBlockCollisions(entity, box);
+        
+        AABB collisionUnion = null;
+        for (VoxelShape c : collisions) {
+            VoxelShape currCollision = shapeFilter.apply(c);
+            if (currCollision != null && !currCollision.isEmpty()) {
+                AABB collisionBoundingBox = currCollision.bounds();
+                if (collisionUnion == null) {
+                    collisionUnion = collisionBoundingBox;
+                }
+                else {
+                    collisionUnion = collisionUnion.minmax(collisionBoundingBox);
+                }
+            }
+        }
+        return collisionUnion;
     }
 }

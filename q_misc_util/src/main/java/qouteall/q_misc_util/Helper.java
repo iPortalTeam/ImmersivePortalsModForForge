@@ -105,27 +105,52 @@ public class Helper {
     }
     
     public static Vec3 putCoordinate(Vec3 v, Direction.Axis axis, double value) {
-        if (axis == Direction.Axis.X) {
-            return new Vec3(value, v.y, v.z);
-        }
-        else if (axis == Direction.Axis.Y) {
-            return new Vec3(v.x, value, v.z);
-        }
-        else {
-            return new Vec3(v.x, v.y, value);
-        }
+        return switch (axis) {
+            case X -> new Vec3(value, v.y, v.z);
+            case Y -> new Vec3(v.x, value, v.z);
+            default -> new Vec3(v.x, v.y, value);
+        };
     }
     
     public static BlockPos putCoordinate(Vec3i v, Direction.Axis axis, int value) {
-        if (axis == Direction.Axis.X) {
-            return new BlockPos(value, v.getY(), v.getZ());
-        }
-        else if (axis == Direction.Axis.Y) {
-            return new BlockPos(v.getX(), value, v.getZ());
-        }
-        else {
-            return new BlockPos(v.getX(), v.getY(), value);
-        }
+        return switch (axis) {
+            case X -> new BlockPos(value, v.getY(), v.getZ());
+            case Y -> new BlockPos(v.getX(), value, v.getZ());
+            default -> new BlockPos(v.getX(), v.getY(), value);
+        };
+    }
+    
+    public static Vec3 putSignedCoordinate(Vec3 vec, Direction direction, double value) {
+        return switch (direction) {
+            case DOWN -> new Vec3(vec.x, -value, vec.z);
+            case UP -> new Vec3(vec.x, value, vec.z);
+            case NORTH -> new Vec3(vec.x, vec.y, -value);
+            case SOUTH -> new Vec3(vec.x, vec.y, value);
+            case WEST -> new Vec3(-value, vec.y, vec.z);
+            case EAST -> new Vec3(value, vec.y, vec.z);
+            default -> throw new RuntimeException();
+        };
+    }
+    
+    public static double getSignedCoordinate(Vec3 vec, Direction direction) {
+        // fully written by Copilot
+        return switch (direction) {
+            case DOWN -> -vec.y;
+            case UP -> vec.y;
+            case NORTH -> -vec.z;
+            case SOUTH -> vec.z;
+            case WEST -> -vec.x;
+            case EAST -> vec.x;
+            default -> throw new RuntimeException();
+        };
+    }
+    
+    public static double getDistanceSqrOnAxisPlane(Vec3 vec, Direction.Axis axis) {
+        return switch (axis) {
+            case X -> vec.y * vec.y + vec.z * vec.z;
+            case Y -> vec.x * vec.x + vec.z * vec.z;
+            case Z -> vec.x * vec.x + vec.y * vec.y;
+        };
     }
     
     public static double getBoxCoordinate(AABB box, Direction direction) {
@@ -203,6 +228,14 @@ public class Helper {
     
     public static BlockPos divide(Vec3i v, int d) {
         return new BlockPos(v.getX() / d, v.getY() / d, v.getZ() / d);
+    }
+    
+    public static BlockPos floorDiv(Vec3i v, int d) {
+        return new BlockPos(
+            Math.floorDiv(v.getX(), d),
+            Math.floorDiv(v.getY(), d),
+            Math.floorDiv(v.getZ(), d)
+        );
     }
     
     public static Direction[] getAnotherFourDirections(Direction.Axis axisOfNormal) {
@@ -355,7 +388,8 @@ public class Helper {
     ) {
         try {
             func.run();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
             throw e;
         }
@@ -490,12 +524,16 @@ public class Helper {
     
     /**
      * It's safe to modify the result array list.
+     * Note: if the deserializer returns null, it won't be in the result list.
      */
     public static <X> ArrayList<X> listTagToList(ListTag listTag, Function<CompoundTag, X> deserializer) {
         ArrayList<X> result = new ArrayList<>();
         listTag.forEach(tag -> {
             CompoundTag compoundTag = (CompoundTag) tag;
-            result.add(deserializer.apply(compoundTag));
+            X obj = deserializer.apply(compoundTag);
+            if (obj != null) {
+                result.add(obj);
+            }
         });
         return result;
     }
@@ -569,7 +607,8 @@ public class Helper {
     public static <T> T noError(Callable<T> func) {
         try {
             return func.call();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new IllegalStateException(e);
         }
     }

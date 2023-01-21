@@ -382,6 +382,56 @@ public class IntBox {
         );
     }
     
+    public static IntBox getBoxByPosAndSignedSize(
+        BlockPos basePos,
+        BlockPos signedSize
+    ) {
+        return new IntBox(
+            basePos,
+            new BlockPos(
+                getEndCoordWithSignedSize(basePos.getX(), signedSize.getX()),
+                getEndCoordWithSignedSize(basePos.getY(), signedSize.getY()),
+                getEndCoordWithSignedSize(basePos.getZ(), signedSize.getZ())
+            )
+        );
+    }
+    
+    private static int getEndCoordWithSignedSize(int base, int signedSize) {
+        if (signedSize > 0) {
+            return base + signedSize - 1;
+        }
+        else if (signedSize < 0) {
+            return base + signedSize + 1;
+        }
+        else {
+            throw new IllegalArgumentException("Signed size cannot be zero");
+        }
+    }
+    
+    public boolean isOnSurface(BlockPos pos) {
+        boolean xOnEnd = pos.getX() == l.getX() || pos.getX() == h.getX();
+        boolean yOnEnd = pos.getY() == l.getY() || pos.getY() == h.getY();
+        boolean zOnEnd = pos.getZ() == l.getZ() || pos.getZ() == h.getZ();
+        
+        return xOnEnd || yOnEnd || zOnEnd;
+    }
+    
+    public boolean isOnEdge(BlockPos pos) {
+        boolean xOnEnd = pos.getX() == l.getX() || pos.getX() == h.getX();
+        boolean yOnEnd = pos.getY() == l.getY() || pos.getY() == h.getY();
+        boolean zOnEnd = pos.getZ() == l.getZ() || pos.getZ() == h.getZ();
+        
+        return (xOnEnd && yOnEnd) || (yOnEnd && zOnEnd) || (zOnEnd && xOnEnd);
+    }
+    
+    public boolean isOnVertex(BlockPos pos) {
+        boolean xOnEnd = pos.getX() == l.getX() || pos.getX() == h.getX();
+        boolean yOnEnd = pos.getY() == l.getY() || pos.getY() == h.getY();
+        boolean zOnEnd = pos.getZ() == l.getZ() || pos.getZ() == h.getZ();
+        
+        return xOnEnd && yOnEnd && zOnEnd;
+    }
+    
     @Override
     public String toString() {
         return String.format(

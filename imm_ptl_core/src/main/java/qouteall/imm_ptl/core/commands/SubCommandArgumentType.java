@@ -15,7 +15,7 @@ import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.synchronization.ArgumentTypeInfo;
-import net.minecraft.commands.synchronization.ArgumentTypeInfos;
+import net.minecraft.commands.synchronization.SingletonArgumentInfo;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.RegisterEvent;
@@ -78,58 +78,12 @@ public class SubCommandArgumentType implements ArgumentType<String> {
         return context.getArgument(name, String.class);
     }
     
-    private static class CustomArgumentTypeInfo implements ArgumentTypeInfo<SubCommandArgumentType, ArgumentTypeInfo.Template<SubCommandArgumentType>> {
-        @Override
-        public void serializeToNetwork(Template<SubCommandArgumentType> template, FriendlyByteBuf friendlyByteBuf) {
-            // no data needs serializing
-        }
-        
-        @Override
-        public ArgumentTypeInfo.Template<SubCommandArgumentType> deserializeFromNetwork(FriendlyByteBuf friendlyByteBuf) {
-            return getTemplate();
-        }
-        
-        @Override
-        public void serializeToJson(Template<SubCommandArgumentType> template, JsonObject jsonObject) {
-            // no data needs serializing
-        }
-        
-        @Override
-        public ArgumentTypeInfo.Template<SubCommandArgumentType> unpack(SubCommandArgumentType argumentType) {
-            return getTemplate();
-        }
-        
-        private ArgumentTypeInfo.Template<SubCommandArgumentType> getTemplate() {
-            // the new java feature "var" is surprisingly useful here
-            var this_ = this;
-            return new ArgumentTypeInfo.Template<SubCommandArgumentType>() {
-                @Override
-                public SubCommandArgumentType instantiate(CommandBuildContext commandBuildContext) {
-                    return instance;
-                }
-                
-                @Override
-                public ArgumentTypeInfo<SubCommandArgumentType, ?> type() {
-                    return this_;
-                }
-            };
-        }
-    }
-
-    @SubscribeEvent
-    public static void init(RegisterEvent event) {
-//        DeferredRegister<ArgumentType> argumentType = DeferredRegister.create()
-        ArgumentTypeInfos.registerByClass(SubCommandArgumentType.class, new CustomArgumentTypeInfo());
-//        event.register(ForgeRegistries.Keys.COMMAND_ARGUMENT_TYPES, helper -> {
-//            helper.register(new ResourceLocation("imm_ptl:sub_command_argument_type"), new SubCommandArgumentType.CustomArgumentTypeInfo());
-//        });
-//        ForgeRegistries.COMMAND_ARGUMENT_TYPES.register(new ResourceLocation("imm_ptl:sub_command_argument_type"), new CustomArgumentTypeInfo());
-
-//        ArgumentTypeRegistry.registerArgumentType( //TODO @Nick1st Check if that registration procedure is correct
-//            new ResourceLocation("imm_ptl:sub_command_argument_type"),
-//            SubCommandArgumentType.class,
-//            new CustomArgumentTypeInfo()
-//        );
+    public static void init() {
+        ArgumentTypeRegistry.registerArgumentType(
+            new ResourceLocation("imm_ptl:sub_command_argument_type"),
+            SubCommandArgumentType.class,
+            SingletonArgumentInfo.contextFree(() -> instance)
+        );
         
     }
 }

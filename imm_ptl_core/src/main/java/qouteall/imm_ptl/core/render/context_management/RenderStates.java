@@ -43,8 +43,9 @@ public class RenderStates {
     /**
      * This does not always equal Minecraft.getFrameTime.
      * It will be 0 right after ticking.
+     * TODO rename to partialTick in MC 1.20
      */
-    public static float tickDelta = 0; // TODO rename to partialTick in MC 1.20
+    public static float tickDelta = 0;
     
     public static Set<ResourceKey<Level>> renderedDimensions = new HashSet<>();
     public static List<List<WeakReference<PortalLike>>> lastPortalRenderInfos = new ArrayList<>();
@@ -177,6 +178,10 @@ public class RenderStates {
     public static double getViewBobbingOffsetMultiplier() {
         if (!IPGlobal.viewBobbingReduce) {
             return 1;
+        }
+    
+        if (!WorldRenderInfo.isViewBobbingEnabled()) {
+            return 0;
         }
         
         double allScaling = PortalRendering.getExtraModelViewScaling();

@@ -7,6 +7,7 @@
     "IELevelStorageAccess_Misc",
     "MixinMappedRegistry",
     "MixinMinecraftServer_Misc",
+    "MixinServerGamePacketListenerImpl_Misc",
     "dimension.IELayeredRegistryAccess",
     "dimension.IEMappedRegistry",
     "dimension.IEWorldBorder",
@@ -16,7 +17,8 @@
     "dimension.MixinWorldGenSettings"
   ],
   "client": [
-    "client.IEClientPacketListener_Misc"
+    "client.IEClientPacketListener_Misc",
+    "client.MixinClientboundCustomPayloadPacket_Misc"
   ],
   "injectors": {
     "defaultRequire": 1

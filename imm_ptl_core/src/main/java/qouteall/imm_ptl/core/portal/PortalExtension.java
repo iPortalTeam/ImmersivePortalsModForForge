@@ -146,6 +146,10 @@ public class PortalExtension {
     }
     
     private void updateClusterStatusServer(Portal portal) {
+        if (portal instanceof Mirror) {
+            return;
+        }
+        
         boolean needsUpdate = false;
         
         if (bindCluster) {
@@ -312,8 +316,8 @@ public class PortalExtension {
             flippedPortal.setOriginPos(portal.getOriginPos());
             flippedPortal.setDestination(portal.getDestPos());
             
-            flippedPortal.axisW = portal.axisW;
-            flippedPortal.axisH = portal.axisH.scale(-1);
+            flippedPortal.axisW = portal.axisW.scale(-1);
+            flippedPortal.axisH = portal.axisH;
             
             flippedPortal.scaling = portal.scaling;
             flippedPortal.rotation = portal.rotation;
@@ -323,7 +327,6 @@ public class PortalExtension {
                 flippedPortal.height = portal.height;
             }
             
-            // it will copy animation
             PortalManipulation.copyAdditionalProperties(flippedPortal, portal, false);
             
             flippedPortal.animation.defaultAnimation.inverseScale = false;
@@ -345,8 +348,8 @@ public class PortalExtension {
             reversePortal.setOriginPos(portal.getDestPos());
             reversePortal.setDestination(portal.getOriginPos());
             
-            reversePortal.axisW = portal.transformLocalVecNonScale(portal.axisW);
-            reversePortal.axisH = portal.transformLocalVecNonScale(portal.axisH.scale(-1));
+            reversePortal.axisW = portal.transformLocalVecNonScale(portal.axisW.scale(-1));
+            reversePortal.axisH = portal.transformLocalVecNonScale(portal.axisH);
             reversePortal.scaling = 1.0 / portal.scaling;
             if (portal.rotation != null) {
                 reversePortal.rotation = portal.rotation.getConjugated();
@@ -360,7 +363,6 @@ public class PortalExtension {
                 reversePortal.height = portal.height * portal.getScale();
             }
             
-            // it will copy animation
             PortalManipulation.copyAdditionalProperties(reversePortal, portal, false);
             
             reversePortal.animation.defaultAnimation.inverseScale = true;
@@ -397,7 +399,6 @@ public class PortalExtension {
                 parallelPortal.height = portal.height * portal.getScale();
             }
             
-            // it will copy animation
             PortalManipulation.copyAdditionalProperties(parallelPortal, portal, false);
             
             parallelPortal.animation.defaultAnimation.inverseScale = true;

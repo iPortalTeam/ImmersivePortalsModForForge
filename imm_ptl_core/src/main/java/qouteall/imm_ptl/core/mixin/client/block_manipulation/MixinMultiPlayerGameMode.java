@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import qouteall.imm_ptl.core.block_manipulation.BlockManipulationClient;
 import qouteall.imm_ptl.core.ducks.IEClientPlayerInteractionManager;
-import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
+import qouteall.imm_ptl.core.network.forge.networking.IPMessage;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.PlayerAction;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.RightClick;
 import qouteall.q_misc_util.Helper;

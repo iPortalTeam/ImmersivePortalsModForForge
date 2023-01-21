@@ -11,7 +11,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
@@ -29,6 +28,7 @@ import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.AbortableIterationConsumer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
@@ -67,6 +67,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -137,7 +138,8 @@ public class McHelper {
                     else {
                         finishBehavior.obj = onNotFound;
                     }
-                } catch (Throwable t) {
+                }
+                catch (Throwable t) {
                     t.printStackTrace();
                     finishBehavior.obj = () -> {
                         t.printStackTrace();
@@ -415,7 +417,13 @@ public class McHelper {
     //it's a little bit incorrect with corner glass pane
     @Nullable
     public static AABB getWallBox(Level world, IntBox glassArea) {
-        return glassArea.stream().map(blockPos -> {
+        Stream<BlockPos> blockPosStream = glassArea.stream();
+        return getWallBox(world, blockPosStream);
+    }
+    
+    @Nullable
+    public static AABB getWallBox(Level world, Stream<BlockPos> blockPosStream) {
+        return blockPosStream.map(blockPos -> {
             VoxelShape collisionShape = world.getBlockState(blockPos).getCollisionShape(world, blockPos);
             
             if (collisionShape.isEmpty()) {
@@ -424,6 +432,21 @@ public class McHelper {
             
             return collisionShape.bounds().move(Vec3.atLowerCornerOf(blockPos));
         }).filter(b -> b != null).reduce(AABB::minmax).orElse(null);
+    }
+    
+    
+    public static boolean isServerChunkFullyLoaded(ServerLevel world, ChunkPos chunkPos) {
+        LevelChunk chunk = getServerChunkIfPresent(
+            world.dimension(), chunkPos.x, chunkPos.z
+        );
+        
+        if (chunk == null) {
+            return false;
+        }
+        
+        boolean entitiesLoaded = world.areEntitiesLoaded(chunkPos.toLong());
+        
+        return entitiesLoaded;
     }
     
     public static interface ChunkAccessor {
@@ -464,9 +487,40 @@ public class McHelper {
         return result;
     }
     
+    @Nullable
+    public static <T extends Entity, R> R traverseEntities(
+        Class<T> entityClass, LevelEntityGetter<Entity> entityLookup,
+        int chunkXStart, int chunkXEnd,
+        int chunkYStart, int chunkYEnd,
+        int chunkZStart, int chunkZEnd,
+        Function<T, R> function
+    ) {
+        Validate.isTrue(chunkXEnd >= chunkXStart);
+        Validate.isTrue(chunkYEnd >= chunkYStart);
+        Validate.isTrue(chunkZEnd >= chunkZStart);
+        Validate.isTrue(chunkXEnd - chunkXStart < 1000, "range too big");
+        Validate.isTrue(chunkZEnd - chunkZStart < 1000, "range too big");
+        
+        EntityTypeTest<Entity, T> typeFilter = EntityTypeTest.forClass(entityClass);
+        
+        EntitySectionStorage<Entity> cache =
+            (EntitySectionStorage<Entity>) ((IELevelEntityGetterAdapter) entityLookup).getCache();
+        
+        return ((IESectionedEntityCache<Entity>) cache).ip_traverseSectionInBox(
+            chunkXStart, chunkXEnd,
+            chunkYStart, chunkYEnd,
+            chunkZStart, chunkZEnd,
+            entityTrackingSection -> {
+                return ((IEEntityTrackingSection<Entity>) entityTrackingSection).ip_traverse(
+                    typeFilter, function
+                );
+            }
+        );
+    }
+    
     /**
      * the range is inclusive on both ends
-     * similar to {@link EntitySectionStorage#forEachAccessibleNonEmptySection(AABB, Consumer)}
+     * similar to {@link EntitySectionStorage#forEachAccessibleNonEmptySection(AABB, AbortableIterationConsumer)}
      * but without hardcoding the max entity radius
      */
     public static <T extends Entity> void foreachEntities(
@@ -476,25 +530,14 @@ public class McHelper {
         int chunkZStart, int chunkZEnd,
         Consumer<T> consumer
     ) {
-        Validate.isTrue(chunkXEnd >= chunkXStart);
-        Validate.isTrue(chunkYEnd >= chunkYStart);
-        Validate.isTrue(chunkZEnd >= chunkZStart);
-        Validate.isTrue(chunkXEnd - chunkXStart < 1000, "too big");
-        Validate.isTrue(chunkZEnd - chunkZStart < 1000, "too big");
-        
-        EntityTypeTest<T, T> typeFilter = EntityTypeTest.forClass(entityClass);
-        
-        EntitySectionStorage<Entity> cache =
-            (EntitySectionStorage<Entity>) ((IELevelEntityGetterAdapter) entityLookup).getCache();
-        
-        ((IESectionedEntityCache) cache).forEachSectionInBox(
+        traverseEntities(
+            entityClass, entityLookup,
             chunkXStart, chunkXEnd,
             chunkYStart, chunkYEnd,
             chunkZStart, chunkZEnd,
-            entityTrackingSection -> {
-                ((IEEntityTrackingSection) entityTrackingSection).myForeach(
-                    typeFilter, consumer
-                );
+            e -> {
+                consumer.accept(e);
+                return null;
             }
         );
     }
@@ -581,13 +624,26 @@ public class McHelper {
         Class<T> entityClass, Level world, Vec3 point, int roughRadius,
         Consumer<T> consumer
     ) {
+        traverseEntitiesByPointAndRoughRadius(
+            entityClass, world, point, roughRadius,
+            entity -> {
+                consumer.accept(entity);
+                return null;
+            }
+        );
+    }
+    
+    public static <T extends Entity, R> void traverseEntitiesByPointAndRoughRadius(
+        Class<T> entityClass, Level world, Vec3 point, int roughRadius,
+        Function<T, R> function
+    ) {
         SectionPos sectionPos = SectionPos.of(new BlockPos(point));
         int roughRadiusChunks = roughRadius / 16;
         if (roughRadiusChunks == 0) {
             roughRadiusChunks = 1;
         }
         
-        foreachEntities(
+        traverseEntities(
             entityClass, ((IEWorld) world).portal_getEntityLookup(),
             sectionPos.x() - roughRadiusChunks,
             sectionPos.x() + roughRadiusChunks,
@@ -595,7 +651,7 @@ public class McHelper {
             sectionPos.y() + roughRadiusChunks,
             sectionPos.z() - roughRadiusChunks,
             sectionPos.z() + roughRadiusChunks,
-            consumer
+            function
         );
     }
     
@@ -699,8 +755,6 @@ public class McHelper {
     
     /**
      * It will spawn even if the chunk is not loaded
-     *
-     * @link ServerWorld#addEntity(Entity)
      */
     public static void spawnServerEntity(Entity entity) {
         Validate.isTrue(!entity.level.isClientSide());
@@ -765,7 +819,8 @@ public class McHelper {
                 ).get().open();
             
             result = IOUtils.toString(inputStream, Charset.defaultCharset());
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException("Error loading " + identifier, e);
         }
         return result;

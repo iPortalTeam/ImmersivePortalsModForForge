@@ -14,13 +14,14 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.apache.commons.lang3.Validate;
-import qouteall.imm_ptl.core.CHelper;
-import qouteall.imm_ptl.core.ClientWorldLoader;
-import qouteall.imm_ptl.core.IPGlobal;
-import qouteall.imm_ptl.core.McHelper;
-import qouteall.imm_ptl.core.compat.GravityChangerInterface;
+import qouteall.imm_ptl.core.*;
 import qouteall.imm_ptl.core.compat.PehkuiInterface;
-import qouteall.imm_ptl.core.ducks.*;
+import qouteall.imm_ptl.core.compat.GravityChangerInterface;
+import qouteall.imm_ptl.core.ducks.IEClientPlayNetworkHandler;
+import qouteall.imm_ptl.core.ducks.IEEntity;
+import qouteall.imm_ptl.core.ducks.IEGameRenderer;
+import qouteall.imm_ptl.core.ducks.IEMinecraftClient;
+import qouteall.imm_ptl.core.ducks.IEParticleManager;
 import qouteall.imm_ptl.core.network.PacketRedirectionClient;
 import qouteall.imm_ptl.core.platform_specific.O_O;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
@@ -38,7 +39,10 @@ import qouteall.imm_ptl.core.render.context_management.WorldRenderInfo;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.my_util.Vec2d;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 @OnlyIn(Dist.CLIENT)
@@ -151,81 +155,93 @@ public class ClientTeleportationManager {
     
     private boolean tryTeleport(float partialTicks) {
         LocalPlayer player = client.player;
-        
+        assert player != null;
+
         Vec3 thisFrameEyePos = getPlayerEyePos(partialTicks);
         
         if (lastPlayerEyePos.distanceToSqr(thisFrameEyePos) > 1600) {
-//            Helper.log("The Player is Moving Too Fast!");
+            // when the player is moving too fast, don't do teleportation
             return false;
         }
         
+        assert client.level != null;
         long currentGameTime = client.level.getGameTime();
         
-        TeleportationUtil.Teleportation tele = CHelper.getClientNearbyPortals(32)
-            .flatMap(portal -> {
-                if (portal.canTeleportEntity(player)) {
-                    portal.animation.updateClientState(portal, teleportationCounter);
-                    
-                    // Separately handle dynamic teleportation and static teleportation.
-                    // Although the dynamic teleportation code can handle static teleportation.
-                    // I want the dynamic teleportation bugs to not affect static teleportation.
-                    if (portal.animation.clientLastFramePortalStateCounter == teleportationCounter - 1
-                        && portal.animation.clientLastFramePortalState != null
-                        && portal.animation.lastTickAnimatedState != null
-                        && portal.animation.thisTickAnimatedState != null
-                    ) {
-                        // the portal is running a real animation
-                        assert portal.animation.clientCurrentFramePortalState != null;
-        
-                        TeleportationUtil.Teleportation teleportation =
-                            TeleportationUtil.checkDynamicTeleportation(
-                                portal,
-                                portal.animation.clientLastFramePortalState,
-                                portal.animation.clientCurrentFramePortalState,
-                                lastPlayerEyePos,
-                                thisFrameEyePos,
-                                portal.animation.lastTickAnimatedState,
-                                portal.animation.thisTickAnimatedState,
-                                McHelper.getLastTickEyePos(player),
-                                McHelper.getEyePos(player)
-                            );
-        
-                        if (teleportation != null) {
-                            return Stream.of(teleportation);
-                        }
-                    }
-                    else {
-                        // the portal is static
-                        TeleportationUtil.Teleportation teleportation =
-                            TeleportationUtil.checkStaticTeleportation(
-                                portal,
-                                lastPlayerEyePos,
-                                thisFrameEyePos
-                            );
-                        if (teleportation != null) {
-                            return Stream.of(teleportation);
-                        }
+        ArrayList<TeleportationUtil.Teleportation> teleportationCandidates = new ArrayList<>();
+        IPMcHelper.traverseNearbyPortals(
+            player.level,
+            thisFrameEyePos,
+            32,
+            portal -> {
+                if (!portal.canTeleportEntity(player)) {
+                    return;
+                }
+
+                // update teleportation related data
+                portal.animation.updateClientState(portal, teleportationCounter);
+
+                // Separately handle dynamic teleportation and static teleportation.
+                // Although the dynamic teleportation code can handle static teleportation.
+                // I want the dynamic teleportation bugs to not affect static teleportation.
+                if (portal.animation.clientLastFramePortalStateCounter == teleportationCounter - 1
+                    && portal.animation.clientLastFramePortalState != null
+                    && portal.animation.lastTickAnimatedState != null
+                    && portal.animation.thisTickAnimatedState != null
+                ) {
+                    // the portal is running a real animation
+                    assert portal.animation.clientCurrentFramePortalState != null;
+
+                    TeleportationUtil.Teleportation teleportation =
+                        TeleportationUtil.checkDynamicTeleportation(
+                            portal,
+                            portal.animation.clientLastFramePortalState,
+                            portal.animation.clientCurrentFramePortalState,
+                            lastPlayerEyePos,
+                            thisFrameEyePos,
+                            portal.animation.lastTickAnimatedState,
+                            portal.animation.thisTickAnimatedState,
+                            McHelper.getLastTickEyePos(player),
+                            McHelper.getEyePos(player)
+                        );
+
+                    if (teleportation != null) {
+                        teleportationCandidates.add(teleportation);
                     }
                 }
-                return Stream.empty();
-            })
+                else {
+                    // the portal is static
+                    TeleportationUtil.Teleportation teleportation =
+                        TeleportationUtil.checkStaticTeleportation(
+                            portal,
+                            lastPlayerEyePos,
+                            thisFrameEyePos
+                        );
+                    if (teleportation != null) {
+                        teleportationCandidates.add(teleportation);
+                    }
+                }
+            }
+        );
+
+        TeleportationUtil.Teleportation teleportation = teleportationCandidates
+            .stream()
             .min(Comparator.comparingDouble(
                 p -> p.collidingPos().distanceToSqr(lastPlayerEyePos)
             ))
             .orElse(null);
         
-        if (tele != null) {
-            Portal portal = tele.portal();
-            Vec3 collidingPos = tele.collidingPos();
+        if (teleportation != null) {
+            Portal portal = teleportation.portal();
+            Vec3 collidingPos = teleportation.collidingPos();
             
             client.getProfiler().push("portal_teleport");
-            teleportPlayer(tele);
+            teleportPlayer(teleportation);
             client.getProfiler().pop();
             
             boolean allowOverlappedTeleport = portal.allowOverlappedTeleport();
             double adjustment = allowOverlappedTeleport ? -0.001 : 0.001;
             
-            lastPlayerEyePos = tele.teleportationCheckpoint()
+            lastPlayerEyePos = teleportation.teleportationCheckpoint()
                 .add(portal.getContentDirection().scale(adjustment));
             //avoid teleporting through parallel portal due to floating point inaccuracy
             
@@ -300,7 +316,7 @@ public class ClientTeleportationManager {
 
         IPMessage.sendToServer(new Teleport(fromDimension, lastTickEyePos, portal.getUUID()));
         
-        tickAfterTeleportation(player, newEyePos, newLastTickEyePos);
+        updateCollidingPortalAfterTeleportation(player, newEyePos, newLastTickEyePos);
         
         McHelper.adjustVehicle(player);
         
@@ -465,8 +481,7 @@ public class ClientTeleportationManager {
         teleportTickTimeLimit = tickTimeForTeleportation + ticks;
     }
     
-    private static void tickAfterTeleportation(LocalPlayer player, Vec3 newEyePos, Vec3 newLastTickEyePos) {
-        // update collidingPortal
+    private static void updateCollidingPortalAfterTeleportation(LocalPlayer player, Vec3 newEyePos, Vec3 newLastTickEyePos) {
         float partialTicks = RenderStates.tickDelta;
         
         McHelper.findEntitiesByBox(
@@ -489,29 +504,29 @@ public class ClientTeleportationManager {
         if (player.isSpectator()) {
             return;
         }
-        
-        // TODO cut bounding box by colliding portal
+
         AABB playerBoundingBox = player.getBoundingBox();
-        
+        Portal collidingPortal = ((IEEntity) player).getCollidingPortal();
+
         Direction gravityDir = GravityChangerInterface.invoker.getGravityDirection(player);
         Direction levitationDir = gravityDir.getOpposite();
         Vec3 eyeOffset = GravityChangerInterface.invoker.getEyeOffset(player);
         
         AABB bottomHalfBox = playerBoundingBox.contract(eyeOffset.x / 2, eyeOffset.y / 2, eyeOffset.z / 2);
-        Iterable<VoxelShape> collisions = player.level.getBlockCollisions(
-            player, bottomHalfBox
-        );
-        
-        AABB collisionUnion = null;
-        for (VoxelShape collision : collisions) {
-            AABB collisionBoundingBox = collision.bounds();
-            if (collisionUnion == null) {
-                collisionUnion = collisionBoundingBox;
+        Function<VoxelShape, VoxelShape> shapeFilter = c -> {
+            if (collidingPortal != null) {
+                return CollisionHelper.clipVoxelShape(
+                    c, collidingPortal.getOriginPos(), collidingPortal.getNormal()
+                );
             }
             else {
-                collisionUnion = collisionUnion.minmax(collisionBoundingBox);
+                return c;
             }
-        }
+        };
+
+        AABB collisionUnion = CollisionHelper.getTotalBlockCollisionBox(
+            player, bottomHalfBox, shapeFilter
+        );
         
         if (collisionUnion == null) {
             return;
@@ -577,11 +592,11 @@ public class ClientTeleportationManager {
                 Helper.getCoordinate(expectedPos, levitationDir.getAxis())
             );
             
-            Portal collidingPortal = ((IEEntity) player).getCollidingPortal();
-            if (collidingPortal != null) {
+            Portal currentCollidingPortal = ((IEEntity) player).getCollidingPortal();
+            if (currentCollidingPortal != null) {
                 Vec3 eyePos = McHelper.getEyePos(player);
                 Vec3 newEyePos = newPos.add(McHelper.getEyeOffset(player));
-                if (collidingPortal.rayTrace(eyePos, newEyePos) != null) {
+                if (currentCollidingPortal.rayTrace(eyePos, newEyePos) != null) {
                     return true;//avoid going back into the portal
                 }
             }
