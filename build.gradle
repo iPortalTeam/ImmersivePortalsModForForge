@@ -92,6 +92,11 @@ allprojects {
 
         // Cloth config
         api(fg.deobf("me.shedaniel.cloth:cloth-config-forge:${project.cloth_config}"))
+
+        // RFTools Dimensions
+        runtimeOnly fg.deobf("curse.maven:rftoolsdim-240950:4359650")
+        runtimeOnly fg.deobf("curse.maven:rftoolsbase-326041:4373507")
+        runtimeOnly fg.deobf("curse.maven:mcjtylib-233105:4372084")
     }
 
     minecraft {
