@@ -7,6 +7,7 @@ package qouteall.imm_ptl.core.compat;
 //import com.fusionflux.gravity_api.util.RotationUtil;
 //import com.fusionflux.gravity_api.util.packet.DefaultGravityPacket;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
@@ -23,52 +24,52 @@ import javax.annotation.Nullable;
 
 public class GravityChangerInterface {
     public static Invoker invoker = new Invoker();
-    
+
     public static class Invoker {
         public boolean isGravityChangerPresent() {
             return false;
         }
-        
+
         public Vec3 getEyeOffset(Entity entity) {
             return new Vec3(0, entity.getEyeHeight(), 0);
         }
-        
+
         public Direction getGravityDirection(Entity entity) {
             return Direction.DOWN;
         }
-        
+
         public void setClientPlayerGravityDirection(Player player, Direction direction) {
             warnGravityChangerNotPresent();
         }
-        
+
         public void setGravityDirectionServer(Entity entity, Direction direction) {
             // nothing
         }
-        
+
         @Nullable
         public DQuaternion getExtraCameraRotation(Direction gravityDirection) {
             return null;
         }
-        
+
         public Vec3 getWorldVelocity(Entity entity) {
             return entity.getDeltaMovement();
         }
-        
+
         public void setWorldVelocity(Entity entity, Vec3 newVelocity) {
             entity.setDeltaMovement(newVelocity);
         }
-        
+
         public Vec3 transformPlayerToWorld(Direction gravity, Vec3 vec3d) {
             return vec3d;
         }
-        
+
         public Vec3 transformWorldToPlayer(Direction gravity, Vec3 vec3d) {
             return vec3d;
         }
     }
-    
+
     private static boolean warned = false;
-    
+
     @OnlyIn(Dist.CLIENT)
     private static void warnGravityChangerNotPresent() {
         if (!warned) {
@@ -78,40 +79,42 @@ public class GravityChangerInterface {
             );
         }
     }
-    
+
     public static class OnGravityChangerPresent extends Invoker {
-        
-        
+
+
         public OnGravityChangerPresent() {
         }
-        
+
         @Override
         public boolean isGravityChangerPresent() {
             return true;
         }
-        
+
         @Override
         public Vec3 getEyeOffset(Entity entity) {
-            if (entity instanceof Player player) {
-                return GravityChangerAPI.getEyeOffset(player);
-            }
-            else {
-                return super.getEyeOffset(entity);
-            }
+//            if (entity instanceof Player player) {
+//                return GravityChangerAPI.getEyeOffset(player);
+//            }
+//            else {
+//                return super.getEyeOffset(entity);
+//            }
+            return super.getEyeOffset(entity);
         }
-        
+
         @Override
         public Direction getGravityDirection(Entity entity) {
-            return GravityChangerAPI.getGravityDirection(entity);
+//            return GravityChangerAPI.getGravityDirection(entity);
+            return Direction.DOWN;
         }
 
         @Override
         public void setGravityDirectionServer(Entity entity, Direction direction) {
-            GravityChangerAPI.setDefaultGravityDirection(
-                entity,
-                direction,
-                (new RotationParameters()).rotationTime(0)
-            );
+//            GravityChangerAPI.setDefaultGravityDirection(
+//                entity,
+//                direction,
+//                (new RotationParameters()).rotationTime(0)
+//            );
         }
 
         @Override
@@ -119,18 +122,18 @@ public class GravityChangerInterface {
             setClientPlayerGravityDirectionClientOnly(player, direction);
         }
 
-        @Environment(EnvType.CLIENT)
+        @OnlyIn(Dist.CLIENT)
         private void setClientPlayerGravityDirectionClientOnly(
             Player player, Direction direction
         ) {
             Validate.isTrue(Minecraft.getInstance().isSameThread());
-
-            GravityComponent gravityComponent = GravityChangerAPI.getGravityComponent(player);
-            gravityComponent.setDefaultGravityDirection(
-                direction,
-                (new RotationParameters()).rotationTime(0),
-                false // not initial gravity
-            );
+//
+//            GravityComponent gravityComponent = GravityChangerAPI.getGravityComponent(player);
+//            gravityComponent.setDefaultGravityDirection(
+//                direction,
+//                (new RotationParameters()).rotationTime(0),
+//                false // not initial gravity
+//            );
 
             // it does not use GravityChangerAPI.setDefaultGravityDirectionClient
             // because immptl has its own verification logic
@@ -140,41 +143,43 @@ public class GravityChangerInterface {
         @Nullable
         @Override
         public DQuaternion getExtraCameraRotation(Direction gravityDirection) {
-            if (gravityDirection == Direction.DOWN) {
-                return null;
-            }
-
-            return DQuaternion.fromMcQuaternion(RotationUtil.getWorldRotationQuaternion(gravityDirection));
+//            if (gravityDirection == Direction.DOWN) {
+//                return null;
+//            }
+//
+//            return DQuaternion.fromMcQuaternion(RotationUtil.getWorldRotationQuaternion(gravityDirection));
+            return null;
         }
 
         @Override
         public Vec3 getWorldVelocity(Entity entity) {
-            if (entity instanceof Player player) {
-                return GravityChangerAPI.getWorldVelocity(player);
-            }
-            else {
-                return super.getWorldVelocity(entity);
-            }
+//            if (entity instanceof Player player) {
+//                return GravityChangerAPI.getWorldVelocity(player);
+//            }
+//            else {
+//                return super.getWorldVelocity(entity);
+//            }
+            return super.getWorldVelocity(entity);
         }
 
         @Override
         public void setWorldVelocity(Entity entity, Vec3 newVelocity) {
-            if (entity instanceof Player player) {
-                GravityChangerAPI.setWorldVelocity(player, newVelocity);
-            }
-            else {
-                super.setWorldVelocity(entity, newVelocity);
-            }
+//            if (entity instanceof Player player) {
+//                GravityChangerAPI.setWorldVelocity(player, newVelocity);
+//            }
+//            else {
+//                super.setWorldVelocity(entity, newVelocity);
+//            }
         }
 
-        @Override
-        public Vec3 transformPlayerToWorld(Direction gravity, Vec3 vec3d) {
-            return RotationUtil.vecPlayerToWorld(vec3d, gravity);
-        }
+//        @Override
+//        public Vec3 transformPlayerToWorld(Direction gravity, Vec3 vec3d) {
+//            return RotationUtil.vecPlayerToWorld(vec3d, gravity);
+//        }
 
-        @Override
-        public Vec3 transformWorldToPlayer(Direction gravity, Vec3 vec3d) {
-            return RotationUtil.vecWorldToPlayer(vec3d, gravity);
-        }
+//        @Override
+//        public Vec3 transformWorldToPlayer(Direction gravity, Vec3 vec3d) {
+//            return RotationUtil.vecWorldToPlayer(vec3d, gravity);
+//        }
     }
 }

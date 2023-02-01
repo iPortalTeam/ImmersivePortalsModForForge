@@ -502,111 +502,111 @@ public class ClientTeleportationManager {
     }
     
     private static void adjustPlayerPosition(LocalPlayer player) {
-        if (player.isSpectator()) {
-            return;
-        }
-
-        AABB playerBoundingBox = player.getBoundingBox();
-        Portal collidingPortal = ((IEEntity) player).getCollidingPortal();
-
-        Direction gravityDir = GravityChangerInterface.invoker.getGravityDirection(player);
-        Direction levitationDir = gravityDir.getOpposite();
-        Vec3 eyeOffset = GravityChangerInterface.invoker.getEyeOffset(player);
-        
-        AABB bottomHalfBox = playerBoundingBox.contract(eyeOffset.x / 2, eyeOffset.y / 2, eyeOffset.z / 2);
-        Function<VoxelShape, VoxelShape> shapeFilter = c -> {
-            if (collidingPortal != null) {
-                return CollisionHelper.clipVoxelShape(
-                    c, collidingPortal.getOriginPos(), collidingPortal.getNormal()
-                );
-            }
-            else {
-                return c;
-            }
-        };
-
-        AABB collisionUnion = CollisionHelper.getTotalBlockCollisionBox(
-            player, bottomHalfBox, shapeFilter
-        );
-        
-        if (collisionUnion == null) {
-            return;
-        }
-        
-        Vec3 anchor = player.position();
-        AABB collisionUnionLocal = Helper.transformBox(
-            collisionUnion, v -> GravityChangerInterface.invoker.transformWorldToPlayer(
-                gravityDir, v.subtract(anchor)
-            )
-        );
-        
-        AABB playerBoxLocal = Helper.transformBox(
-            playerBoundingBox, v -> GravityChangerInterface.invoker.transformWorldToPlayer(
-                gravityDir, v.subtract(anchor)
-            )
-        );
-        
-        double targetLocalY = collisionUnionLocal.maxY + 0.01;
-        double originalLocalY = playerBoxLocal.minY;
-        double delta = targetLocalY - originalLocalY;
-        
-        if (delta <= 0) {
-            return;
-        }
-        
-        Vec3 levitationVec = Vec3.atLowerCornerOf(levitationDir.getNormal());
-        
-        Vec3 offset = levitationVec.scale(delta);
-        
-        final int ticks = 5;
-        
-        Helper.log("Adjusting Client Player Position");
-        
-        int[] counter = {0};
-        IPGlobal.clientTaskList.addTask(() -> {
-            if (player.isRemoved()) {
-                return true;
-            }
-            
-            if (GravityChangerInterface.invoker.getGravityDirection(player) != gravityDir) {
-                return true;
-            }
-            
-            if (counter[0] >= 5) {
-                return true;
-            }
-            
-            counter[0]++;
-            
-            double len = player.position().subtract(anchor).dot(levitationVec);
-            if (len < -1 || len > 2) {
-                // stop early
-                return true;
-            }
-            
-            double progress = ((double) counter[0]) / ticks;
-            progress = TransformationManager.mapProgress(progress);
-            
-            Vec3 expectedPos = anchor.add(offset.scale(progress));
-            
-            Vec3 newPos = Helper.putCoordinate(player.position(), levitationDir.getAxis(),
-                Helper.getCoordinate(expectedPos, levitationDir.getAxis())
-            );
-            
-            Portal currentCollidingPortal = ((IEEntity) player).getCollidingPortal();
-            if (currentCollidingPortal != null) {
-                Vec3 eyePos = McHelper.getEyePos(player);
-                Vec3 newEyePos = newPos.add(McHelper.getEyeOffset(player));
-                if (currentCollidingPortal.rayTrace(eyePos, newEyePos) != null) {
-                    return true;//avoid going back into the portal
-                }
-            }
-            
-            player.setPosRaw(newPos.x, newPos.y, newPos.z);
-            McHelper.updateBoundingBox(player);
-            
-            return false;
-        });
+//        if (player.isSpectator()) {
+//            return;
+//        }
+//
+//        AABB playerBoundingBox = player.getBoundingBox();
+//        Portal collidingPortal = ((IEEntity) player).getCollidingPortal();
+//
+//        Direction gravityDir = GravityChangerInterface.invoker.getGravityDirection(player);
+//        Direction levitationDir = gravityDir.getOpposite();
+//        Vec3 eyeOffset = GravityChangerInterface.invoker.getEyeOffset(player);
+//
+//        AABB bottomHalfBox = playerBoundingBox.contract(eyeOffset.x / 2, eyeOffset.y / 2, eyeOffset.z / 2);
+//        Function<VoxelShape, VoxelShape> shapeFilter = c -> {
+//            if (collidingPortal != null) {
+//                return CollisionHelper.clipVoxelShape(
+//                    c, collidingPortal.getOriginPos(), collidingPortal.getNormal()
+//                );
+//            }
+//            else {
+//                return c;
+//            }
+//        };
+//
+//        AABB collisionUnion = CollisionHelper.getTotalBlockCollisionBox(
+//            player, bottomHalfBox, shapeFilter
+//        );
+//
+//        if (collisionUnion == null) {
+//            return;
+//        }
+//
+//        Vec3 anchor = player.position();
+//        AABB collisionUnionLocal = Helper.transformBox(
+//            collisionUnion, v -> GravityChangerInterface.invoker.transformWorldToPlayer(
+//                gravityDir, v.subtract(anchor)
+//            )
+//        );
+//
+//        AABB playerBoxLocal = Helper.transformBox(
+//            playerBoundingBox, v -> GravityChangerInterface.invoker.transformWorldToPlayer(
+//                gravityDir, v.subtract(anchor)
+//            )
+//        );
+//
+//        double targetLocalY = collisionUnionLocal.maxY + 0.01;
+//        double originalLocalY = playerBoxLocal.minY;
+//        double delta = targetLocalY - originalLocalY;
+//
+//        if (delta <= 0) {
+//            return;
+//        }
+//
+//        Vec3 levitationVec = Vec3.atLowerCornerOf(levitationDir.getNormal());
+//
+//        Vec3 offset = levitationVec.scale(delta);
+//
+//        final int ticks = 5;
+//
+//        Helper.log("Adjusting Client Player Position");
+//
+//        int[] counter = {0};
+//        IPGlobal.clientTaskList.addTask(() -> {
+//            if (player.isRemoved()) {
+//                return true;
+//            }
+//
+//            if (GravityChangerInterface.invoker.getGravityDirection(player) != gravityDir) {
+//                return true;
+//            }
+//
+//            if (counter[0] >= 5) {
+//                return true;
+//            }
+//
+//            counter[0]++;
+//
+//            double len = player.position().subtract(anchor).dot(levitationVec);
+//            if (len < -1 || len > 2) {
+//                // stop early
+//                return true;
+//            }
+//
+//            double progress = ((double) counter[0]) / ticks;
+//            progress = TransformationManager.mapProgress(progress);
+//
+//            Vec3 expectedPos = anchor.add(offset.scale(progress));
+//
+//            Vec3 newPos = Helper.putCoordinate(player.position(), levitationDir.getAxis(),
+//                Helper.getCoordinate(expectedPos, levitationDir.getAxis())
+//            );
+//
+//            Portal currentCollidingPortal = ((IEEntity) player).getCollidingPortal();
+//            if (currentCollidingPortal != null) {
+//                Vec3 eyePos = McHelper.getEyePos(player);
+//                Vec3 newEyePos = newPos.add(McHelper.getEyeOffset(player));
+//                if (currentCollidingPortal.rayTrace(eyePos, newEyePos) != null) {
+//                    return true;//avoid going back into the portal
+//                }
+//            }
+//
+//            player.setPosRaw(newPos.x, newPos.y, newPos.z);
+//            McHelper.updateBoundingBox(player);
+//
+//            return false;
+//        });
         
     }
     

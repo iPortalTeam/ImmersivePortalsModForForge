@@ -7,13 +7,15 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.synchronization.ArgumentTypeInfos;
 import net.minecraft.commands.synchronization.SingletonArgumentInfo;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.registries.RegisterEvent;
 import qouteall.imm_ptl.core.portal.animation.TimingFunction;
 
 import java.util.Arrays;
@@ -60,12 +62,10 @@ public class AxisArgumentType implements ArgumentType<Direction.Axis> {
         return Arrays.stream(Direction.Axis.values())
             .map(Enum::toString).collect(Collectors.toList());
     }
-    
-    public static void init() {
-        ArgumentTypeRegistry.registerArgumentType(
-            new ResourceLocation("imm_ptl:axis"),
-            AxisArgumentType.class,
-            SingletonArgumentInfo.contextFree(() -> AxisArgumentType.instance)
-        );
+
+    @SubscribeEvent
+    public static void init(RegisterEvent event) {
+        ArgumentTypeInfos.registerByClass(AxisArgumentType.class, SingletonArgumentInfo.contextFree(() -> instance));
+
     }
 }

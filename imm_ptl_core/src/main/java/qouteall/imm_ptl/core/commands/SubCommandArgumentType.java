@@ -1,6 +1,5 @@
 package qouteall.imm_ptl.core.commands;
 
-import com.google.gson.JsonObject;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.StringReader;
@@ -13,10 +12,8 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.RootCommandNode;
-import net.minecraft.commands.CommandBuildContext;
-import net.minecraft.commands.synchronization.ArgumentTypeInfo;
+import net.minecraft.commands.synchronization.ArgumentTypeInfos;
 import net.minecraft.commands.synchronization.SingletonArgumentInfo;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.RegisterEvent;
 
@@ -77,13 +74,10 @@ public class SubCommandArgumentType implements ArgumentType<String> {
     public static String get(final CommandContext<?> context, final String name) {
         return context.getArgument(name, String.class);
     }
-    
-    public static void init() {
-        ArgumentTypeRegistry.registerArgumentType(
-            new ResourceLocation("imm_ptl:sub_command_argument_type"),
-            SubCommandArgumentType.class,
-            SingletonArgumentInfo.contextFree(() -> instance)
-        );
+
+    @SubscribeEvent
+    public static void init(RegisterEvent event) {
+        ArgumentTypeInfos.registerByClass(SubCommandArgumentType.class, SingletonArgumentInfo.contextFree(() -> instance));
         
     }
 }

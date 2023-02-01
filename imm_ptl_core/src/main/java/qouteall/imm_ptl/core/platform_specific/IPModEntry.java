@@ -14,8 +14,10 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import qouteall.imm_ptl.core.IPModMain;
+import qouteall.imm_ptl.core.commands.AxisArgumentType;
 import qouteall.imm_ptl.core.commands.PortalCommand;
 import qouteall.imm_ptl.core.commands.SubCommandArgumentType;
+import qouteall.imm_ptl.core.commands.TimingFunctionArgumentType;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
 import qouteall.q_misc_util.Helper;
 
@@ -37,6 +39,8 @@ public class IPModEntry {
         FMLJavaModLoadingContext.get().getModEventBus().register(IPModEntry.class);
         FMLJavaModLoadingContext.get().getModEventBus().register(IPRegistry.class);
         FMLJavaModLoadingContext.get().getModEventBus().register(SubCommandArgumentType.class);
+        FMLJavaModLoadingContext.get().getModEventBus().register(TimingFunctionArgumentType.class);
+        FMLJavaModLoadingContext.get().getModEventBus().register(AxisArgumentType.class);
 
         IPModMain.init();
         RequiemCompat.init();

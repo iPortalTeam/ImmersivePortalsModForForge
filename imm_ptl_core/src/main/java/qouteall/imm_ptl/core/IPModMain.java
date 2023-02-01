@@ -60,13 +60,6 @@ public class IPModMain {
         
         IPPortingLibCompat.init();
         
-        CommandRegistrationCallback.EVENT.register(
-            (dispatcher, registryAccess, environment) -> PortalCommand.register(dispatcher)
-        );
-        SubCommandArgumentType.init();
-        TimingFunctionArgumentType.init();
-        AxisArgumentType.init(); // TODO @Nick1st
-        
         // intrinsic animation driver types
         RotationAnimation.init();
         NormalAnimation.init();

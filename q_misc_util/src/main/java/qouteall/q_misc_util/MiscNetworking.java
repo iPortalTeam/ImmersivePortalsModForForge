@@ -1,7 +1,6 @@
 package qouteall.q_misc_util;
 
 import io.netty.buffer.Unpooled;
-import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
@@ -64,7 +63,7 @@ public class MiscNetworking {
         return false;
     }
 
-    @Environment(EnvType.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     public static void initClient() {
 
     }
