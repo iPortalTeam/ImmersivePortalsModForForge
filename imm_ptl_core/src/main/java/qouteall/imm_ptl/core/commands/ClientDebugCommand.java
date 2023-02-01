@@ -5,12 +5,11 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
@@ -38,12 +37,11 @@ import net.minecraft.world.level.chunk.DataLayer;
 import net.minecraft.world.level.chunk.EmptyLevelChunk;
 import net.minecraft.world.level.entity.EntityTickList;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.RegisterClientCommandsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.loading.FMLEnvironment;
-import qouteall.imm_ptl.core.*;
+import qouteall.imm_ptl.core.CHelper;
+import qouteall.imm_ptl.core.ClientWorldLoader;
+import qouteall.imm_ptl.core.IPCGlobal;
+import qouteall.imm_ptl.core.IPGlobal;
+import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.ducks.IEClientWorld;
 import qouteall.imm_ptl.core.ducks.IEEntity;
 import qouteall.imm_ptl.core.ducks.IEWorldRenderer;
@@ -62,7 +60,11 @@ import qouteall.q_misc_util.my_util.MyTaskList;
 
 import java.lang.ref.Reference;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -567,7 +569,7 @@ public class ClientDebugCommand {
         registerSwitchCommand(
             builder,
             "another_stencil",
-            cond -> IPCGlobal.useAnotherStencilFormat = cond
+            cond -> IPCGlobal.useSeparatedStencilFormat = cond
         );
         registerSwitchCommand(
             builder,
@@ -579,7 +581,12 @@ public class ClientDebugCommand {
             "portal_rendering_cave_culling",
             cond -> MyGameRenderer.enablePortalCaveCulling = cond
         );
-        
+        registerSwitchCommand(
+            builder,
+            "log_client_player_colliding_portal_update",
+            cond -> IPGlobal.logClientPlayerCollidingPortalUpdate = cond
+        );
+
         builder.then(Commands
             .literal("print_class_path")
             .executes(context -> {

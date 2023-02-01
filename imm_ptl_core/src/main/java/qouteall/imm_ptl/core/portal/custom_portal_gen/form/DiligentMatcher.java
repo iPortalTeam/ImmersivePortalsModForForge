@@ -2,7 +2,6 @@ package qouteall.imm_ptl.core.portal.custom_portal_gen.form;
 
 import com.google.common.math.IntMath;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
@@ -15,7 +14,6 @@ import qouteall.q_misc_util.my_util.IntBox;
 import qouteall.q_misc_util.my_util.IntMatrix3;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -24,79 +22,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class DiligentMatcher {
-    
-    public static int dirDotProduct(Direction dir, Direction b) {
-        if (dir.getAxis() != b.getAxis()) {
-            return 0;
-        }
-        if (dir.getAxisDirection() == b.getAxisDirection()) {
-            return 1;
-        }
-        else {
-            return -1;
-        }
-    }
-    
-    // counter clockwise
-    public static Direction rotateAlong(Direction dir, Direction axis) {
-        Tuple<Direction, Direction> ds = Helper.getPerpendicularDirections(axis);
-        Direction d1 = ds.getA();
-        Direction d2 = ds.getB();
-        
-        int c1 = dirDotProduct(dir, d1);
-        int c2 = dirDotProduct(dir, d2);
-        int ca = dirDotProduct(dir, axis);
-        
-        int nc1 = -c2;
-        int nc2 = c1;
-        
-        BlockPos finalVec = Helper.scale(d1.getNormal(), nc1)
-            .offset(Helper.scale(d2.getNormal(), nc2))
-            .offset(Helper.scale(axis.getNormal(), ca));
-        return Direction.fromNormal(finalVec.getX(), finalVec.getY(), finalVec.getZ());
-    }
-    
-    public static IntMatrix3 getRotation90(Direction direction) {
-        return new IntMatrix3(
-            rotateAlong(Direction.fromAxisAndDirection(Direction.Axis.X, Direction.AxisDirection.POSITIVE), direction).getNormal(),
-            rotateAlong(Direction.fromAxisAndDirection(Direction.Axis.Y, Direction.AxisDirection.POSITIVE), direction).getNormal(),
-            rotateAlong(Direction.fromAxisAndDirection(Direction.Axis.Z, Direction.AxisDirection.POSITIVE), direction).getNormal()
-        );
-    }
-    
-    // sorted from simpler rotations to complex rotations
-    public static final List<IntMatrix3> rotationTransformations = Util.make(() -> {
-        List<IntMatrix3> basicRotations = Arrays.stream(Direction.values())
-            .map(DiligentMatcher::getRotation90)
-            .collect(Collectors.toList());
-        
-        IntMatrix3 identity = IntMatrix3.getIdentity();
-        
-        ArrayList<IntMatrix3> rotationList = new ArrayList<>();
-        Set<IntMatrix3> rotationSet = new HashSet<>();
-        
-        rotationList.add(identity);
-        rotationSet.add(identity);
-        
-        for (int i = 0; i < 3; i++) {
-            ArrayList<IntMatrix3> newlyAdded = new ArrayList<>();
-            for (IntMatrix3 rot : rotationList) {
-                for (IntMatrix3 basicRotation : basicRotations) {
-                    IntMatrix3 newRot = rot.multiply(basicRotation);
-                    if (!rotationSet.contains(newRot)) {
-                        rotationSet.add(newRot);
-                        newlyAdded.add(newRot);
-                    }
-                }
-            }
-            
-            rotationList.addAll(newlyAdded);
-        }
-        
-        Validate.isTrue(rotationList.size() == 24);
-        
-        return rotationList;
-    });
     
     public static class TransformedShape {
         public final BlockPortalShape originalShape;
@@ -122,9 +47,8 @@ public class DiligentMatcher {
         int divFactor = getShapeShrinkFactor(original);
         
         BlockPortalShape shrinked = shrinkShapeBy(original, divFactor);
-        
-        BlockPos shrinkedShapeSize = shrinked.innerAreaBox.getSize();
-        int shrinkedShapeLen = Math.max(shrinkedShapeSize.getX(), Math.max(shrinkedShapeSize.getY(), shrinkedShapeSize.getZ()));
+    
+        int shrinkedShapeLen = shrinked.getShapeInnerLength();
         int maxMultiplyFactor = (int) Math.floor(((double) maxShapeLen) / shrinkedShapeLen);
         
         for (AARotation rotation : AARotation.rotationsSortedByAngle) {

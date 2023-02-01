@@ -5,7 +5,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -39,7 +38,6 @@ import qouteall.q_misc_util.my_util.LimitedLogger;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -616,19 +614,24 @@ public class CollisionHelper {
         }
     }
     
-    private static void updateGlobalPortalCollidingPortalForWorld(Level world) {
-        world.getProfiler().push("global_portal_colliding_portal");
+    private static void updateCollidingPortalForWorld(Level world, float tickDelta) {
+        world.getProfiler().push("update_colliding_portal");
         
         List<Portal> globalPortals = GlobalPortalStorage.getGlobalPortals(world);
         Iterable<Entity> worldEntityList = McHelper.getWorldEntityList(world);
         
-        if (!globalPortals.isEmpty()) {
-            for (Entity entity : worldEntityList) {
+        for (Entity entity : worldEntityList) {
+            if (entity instanceof Portal portal) {
+                // the colliding portal update must happen after all entities finishes ticking,
+                // because the entity moves during ticking.
+                CollisionHelper.notifyCollidingPortals(portal, tickDelta);
+            }
+            else {
                 AABB entityBoundingBoxStretched = getStretchedBoundingBox(entity);
                 for (Portal globalPortal : globalPortals) {
                     AABB globalPortalBoundingBox = globalPortal.getBoundingBox();
                     if (entityBoundingBoxStretched.intersects(globalPortalBoundingBox)) {
-                        if (canCollideWithPortal(entity, globalPortal, 0)) {
+                        if (canCollideWithPortal(entity, globalPortal, tickDelta)) {
                             ((IEEntity) entity).notifyCollidingWithPortal(globalPortal);
                         }
                     }
@@ -642,7 +645,7 @@ public class CollisionHelper {
     public static void init() {
         IPGlobal.postServerTickSignal.connect(() -> {
             for (ServerLevel world : MiscHelper.getServer().getAllLevels()) {
-                updateGlobalPortalCollidingPortalForWorld(world);
+                updateCollidingPortalForWorld(world, 0);
             }
         });
     }
@@ -654,16 +657,16 @@ public class CollisionHelper {
     
     @OnlyIn(Dist.CLIENT)
     public static void tickClient() {
-        updateGlobalPortalCollidingStatus();
+        updateClientCollidingStatus();
         
         updateClientStagnateStatus();
     }
     
     @OnlyIn(Dist.CLIENT)
-    private static void updateGlobalPortalCollidingStatus() {
+    private static void updateClientCollidingStatus() {
         if (ClientWorldLoader.getIsInitialized()) {
             for (ClientLevel world : ClientWorldLoader.getClientWorlds()) {
-                updateGlobalPortalCollidingPortalForWorld(world);
+                updateCollidingPortalForWorld(world, 0);
             }
         }
     }
@@ -696,35 +699,7 @@ public class CollisionHelper {
             }
         );
     }
-    
-    @Deprecated
-    public static void updateCollidingPortalNow(Entity entity) {
-        if (entity instanceof Portal) {
-            return;
-        }
-        
-        entity.level.getProfiler().push("update_colliding_portal_now");
-        
-        AABB boundingBox = getStretchedBoundingBox(entity);
-        McHelper.foreachEntitiesByBoxApproximateRegions(
-            Portal.class,
-            entity.level,
-            boundingBox,
-            10,
-            portal -> {
-                if (boundingBox.intersects(portal.getBoundingBox())) {
-                    // partial tick 0 maybe incorrect here
-                    // if this method runs in collision ticking
-                    if (canCollideWithPortal(entity, portal, 0)) {
-                        ((IEEntity) entity).notifyCollidingWithPortal(portal);
-                    }
-                }
-            }
-        );
-        
-        entity.level.getProfiler().pop();
-    }
-    
+
     public static AABB getStretchedBoundingBox(Entity entity) {
         // normal colliding portal update lags 1 tick before collision calculation
         // the velocity updates later after updating colliding portal

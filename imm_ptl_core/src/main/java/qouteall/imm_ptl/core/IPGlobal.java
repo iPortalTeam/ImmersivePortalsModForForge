@@ -9,6 +9,8 @@ import qouteall.q_misc_util.my_util.Signal;
 
 public class IPGlobal {
     
+    public static final int maxNormalPortalRadius = 32;
+    
     public static final Signal postClientTickSignal = new Signal();
     public static final Signal postServerTickSignal = new Signal();
     public static final Signal preGameRenderSignal = new Signal();
@@ -126,6 +128,8 @@ public class IPGlobal {
     public static boolean checkModInfoFromInternet = true;
     
     public static boolean enableUpdateNotification = true;
+    
+    public static boolean logClientPlayerCollidingPortalUpdate = false;
     
     public static enum RenderMode {
         normal,

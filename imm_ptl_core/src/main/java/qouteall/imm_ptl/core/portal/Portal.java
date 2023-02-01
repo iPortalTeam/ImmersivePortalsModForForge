@@ -862,8 +862,6 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         
         animation.tick(this);
         
-        CollisionHelper.notifyCollidingPortals(this, 0);
-        
         super.tick();
     }
     
