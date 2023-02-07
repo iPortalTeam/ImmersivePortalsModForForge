@@ -146,7 +146,7 @@ public class IPModMainClient {
         MinecraftForge.EVENT_BUS.register(ClientDebugCommand.class);
         MinecraftForge.EVENT_BUS.register(ClientWorldLoader.class);
 
-        showPreviewWarning();
+        //showPreviewWarning();
         
         showIntelVideoCardWarning();
         

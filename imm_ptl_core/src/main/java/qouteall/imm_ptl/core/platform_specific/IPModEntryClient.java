@@ -103,7 +103,7 @@ public class IPModEntryClient {
             Helper.log("Iris is not present");
         }
         
-        IPModInfoChecking.initClient();
+        //IPModInfoChecking.initClient(); // TODO @Nick1st Reenable this
     }
     
 }

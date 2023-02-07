@@ -68,13 +68,13 @@ allprojects {
         api fg.deobf("com.github.Virtuoel:Pehkui:${project.pehkui_version}")
         // Twilight Forest
         //api fg.deobf("teamtwilight:twilightforest:${project.twilightforest_version}:universal")
-//        api fg.deobf("curse.maven:twilightforest-227639:${project.twilightforest_fileid}")
+        api fg.deobf("curse.maven:twilightforest-227639:${project.twilightforest_fileid}")
         // Flywheel
         api fg.deobf("com.jozufozu.flywheel:flywheel-forge-1.19.2:${project.flywheel_version}")
         // Rubidium
         api fg.deobf("curse.maven:rubidium-574856:${project.rubidium_fileid}")
         // Oculus
-        compileOnly fg.deobf("curse.maven:oculus-581495:${project.oculus_fileid}") // TODO @Nick1st Oculus support currently non functioning
+        api fg.deobf("curse.maven:oculus-581495:${project.oculus_fileid}")
         // Curios
         runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${project.curios_version}")
         compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${project.curios_version}:api")
