@@ -41,6 +41,7 @@ import net.minecraft.world.level.entity.EntityTickList;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -445,11 +446,11 @@ public class ClientDebugCommand {
             })
         );
     
-        builder.then(ClientCommandManager
+        builder.then(Commands
             .literal("disable_update_check")
             .executes(context -> {
                 disableUpdateCheck();
-                context.getSource().sendFeedback(Component.translatable("imm_ptl.update_check_disabled"));
+                context.getSource().sendSuccess(Component.translatable("imm_ptl.update_check_disabled"), true);
                 return 0;
             })
         );

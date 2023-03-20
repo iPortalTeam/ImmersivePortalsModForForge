@@ -9,6 +9,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import qouteall.imm_ptl.core.chunk_loading.*;
+import qouteall.imm_ptl.core.commands.AxisArgumentType;
 import qouteall.imm_ptl.core.commands.PortalCommand;
 import qouteall.imm_ptl.core.commands.SubCommandArgumentType;
 import qouteall.imm_ptl.core.commands.TimingFunctionArgumentType;
@@ -24,6 +25,7 @@ import qouteall.imm_ptl.core.portal.global_portals.GlobalPortalStorage;
 import qouteall.imm_ptl.core.teleportation.CollisionHelper;
 import qouteall.imm_ptl.core.teleportation.ServerTeleportationManager;
 import qouteall.q_misc_util.Helper;
+import qouteall.q_misc_util.LifecycleHack;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -71,12 +73,12 @@ public class IPModMain {
         
         IPPortingLibCompat.init();
         
-        CommandRegistrationCallback.EVENT.register( // TODO @Nick1st Check this out
-            (dispatcher, registryAccess, environment) -> PortalCommand.register(dispatcher)
-        );
-        SubCommandArgumentType.init();
-        TimingFunctionArgumentType.init();
-        AxisArgumentType.init();
+//        CommandRegistrationCallback.EVENT.register( // TODO @Nick1st Check this out
+//            (dispatcher, registryAccess, environment) -> PortalCommand.register(dispatcher)
+//        );
+//        SubCommandArgumentType.init();
+//        TimingFunctionArgumentType.init();
+//        AxisArgumentType.init();
         
         // intrinsic animation driver types
         RotationAnimation.init();

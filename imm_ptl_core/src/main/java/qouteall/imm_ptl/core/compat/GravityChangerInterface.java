@@ -177,24 +177,24 @@ public class GravityChangerInterface {
 //            }
         }
         
-        @Override
-        public Vec3 transformPlayerToWorld(Direction gravity, Vec3 vec3d) {
-            return RotationUtil.vecPlayerToWorld(vec3d, gravity);
-        }
-        
-        @Override
-        public Vec3 transformWorldToPlayer(Direction gravity, Vec3 vec3d) {
-            return RotationUtil.vecWorldToPlayer(vec3d, gravity);
-        }
-
-        @Override
-        public Direction transformDirPlayerToWorld(Direction gravity, Direction direction) {
-            return RotationUtil.dirPlayerToWorld(direction, gravity);
-        }
-
-        @Override
-        public Direction transformDirWorldToPlayer(Direction gravity, Direction direction) {
-            return RotationUtil.dirWorldToPlayer(direction, gravity);
-        }
+//        @Override
+//        public Vec3 transformPlayerToWorld(Direction gravity, Vec3 vec3d) {
+//            return RotationUtil.vecPlayerToWorld(vec3d, gravity);
+//        }
+//
+//        @Override
+//        public Vec3 transformWorldToPlayer(Direction gravity, Vec3 vec3d) {
+//            return RotationUtil.vecWorldToPlayer(vec3d, gravity);
+//        }
+//
+//        @Override
+//        public Direction transformDirPlayerToWorld(Direction gravity, Direction direction) {
+//            return RotationUtil.dirPlayerToWorld(direction, gravity);
+//        }
+//
+//        @Override
+//        public Direction transformDirWorldToPlayer(Direction gravity, Direction direction) {
+//            return RotationUtil.dirWorldToPlayer(direction, gravity);
+//        }
     }
 }

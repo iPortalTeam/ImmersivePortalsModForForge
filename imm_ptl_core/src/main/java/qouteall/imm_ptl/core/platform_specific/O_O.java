@@ -14,11 +14,14 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import qouteall.imm_ptl.core.chunk_loading.MyClientChunkManager;
 import qouteall.imm_ptl.core.portal.custom_portal_gen.PortalGenInfo;
+import qouteall.q_misc_util.Helper;
 
 import javax.annotation.Nullable;
 import java.nio.file.Path;
@@ -72,7 +75,7 @@ public class O_O {
     }
 
     public static Path getGameDir() {
-        return FabricLoader.getInstance().getGameDir();
+        return FMLPaths.GAMEDIR.get();
     }
 
     public static void loadConfigFabric() { // TODO @Nick1st Remove or change this, as it's no longer in the upstream
@@ -156,22 +159,16 @@ public class O_O {
         }
     }
     
-//    public static boolean shouldUpdateImmPtl(String latestReleaseVersion) { // TODO @Nick1st Implement Forge Version checking
-//        Version currentVersion = FabricLoader.getInstance()
-//            .getModContainer("imm_ptl_core").get().getMetadata().getVersion();
-//        try {
-//            Version latestVersion = Version.parse(latestReleaseVersion);
-//
-//            if (latestVersion.compareTo(currentVersion) > 0) {
-//                return true;
-//            }
-//        }
-//        catch (VersionParsingException e) {
-//            e.printStackTrace();
-//        }
-//
-//        return false;
-//    }
+    public static boolean shouldUpdateImmPtl(String latestReleaseVersion) { // TODO @Nick1st Implement Forge Version checking
+        ArtifactVersion currentVersion = ModList.get().getModContainerById("imm_ptl_core").get().getModInfo().getVersion();
+        ArtifactVersion latestVersion = new DefaultArtifactVersion(latestReleaseVersion);
+
+        if (latestVersion.compareTo(currentVersion) < 0) {
+            return true;
+        }
+
+        return false;
+    }
     
     public static String getModDownloadLink() {
         return "https://www.curseforge.com/minecraft/mc-mods/immersive-portals-mod";
