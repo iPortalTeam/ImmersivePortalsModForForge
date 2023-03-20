@@ -64,8 +64,6 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class PortalCommand {
@@ -684,7 +682,7 @@ public class PortalCommand {
             .executes(context -> processPortalTargetedCommand(
                 context,
                 portal -> {
-                    makePortalRound(portal);
+                    PortalManipulation.makePortalRound(portal, 30);
                     reloadPortal(portal);
                 }
             ))
@@ -1157,7 +1155,7 @@ public class PortalCommand {
                 .executes(context -> {
                     Entity entity = EntityArgument.getEntity(context, "target");
                     
-                    IPGlobal.serverTeleportationManager.invokeTpmeCommand(
+                    IPGlobal.serverTeleportationManager.forceTeleportPlayer(
                         context.getSource().getPlayerOrException(),
                         entity.level.dimension(),
                         entity.position()
@@ -1179,7 +1177,7 @@ public class PortalCommand {
                     Vec3 dest = Vec3Argument.getVec3(context, "dest");
                     ServerPlayer player = context.getSource().getPlayerOrException();
                     
-                    IPGlobal.serverTeleportationManager.invokeTpmeCommand(
+                    IPGlobal.serverTeleportationManager.forceTeleportPlayer(
                         player,
                         player.level.dimension(),
                         dest
@@ -1205,7 +1203,7 @@ public class PortalCommand {
                         ).dimension();
                         Vec3 dest = Vec3Argument.getVec3(context, "dest");
                         
-                        IPGlobal.serverTeleportationManager.invokeTpmeCommand(
+                        IPGlobal.serverTeleportationManager.forceTeleportPlayer(
                             context.getSource().getPlayerOrException(),
                             dim,
                             dest
@@ -1337,7 +1335,7 @@ public class PortalCommand {
                     sendMessage(context, "You haven't teleported");
                 }
                 else {
-                    IPGlobal.serverTeleportationManager.invokeTpmeCommand(
+                    IPGlobal.serverTeleportationManager.forceTeleportPlayer(
                         player, lastPos.getA(), lastPos.getB()
                     );
                 }
@@ -2299,25 +2297,6 @@ public class PortalCommand {
                 portalAndHitPos -> portalAndHitPos.getSecond().distanceToSqr(from)
             )
         );
-    }
-    
-    private static void makePortalRound(Portal portal) {
-        GeometryPortalShape shape = new GeometryPortalShape();
-        final int triangleNum = 30;
-        double twoPi = Math.PI * 2;
-        shape.triangles = IntStream.range(0, triangleNum)
-            .mapToObj(i -> new GeometryPortalShape.TriangleInPlane(
-                0, 0,
-                portal.width * 0.5 * Math.cos(twoPi * ((double) i) / triangleNum),
-                portal.height * 0.5 * Math.sin(twoPi * ((double) i) / triangleNum),
-                portal.width * 0.5 * Math.cos(twoPi * ((double) i + 1) / triangleNum),
-                portal.height * 0.5 * Math.sin(twoPi * ((double) i + 1) / triangleNum)
-            )).collect(Collectors.toList());
-        portal.specialShape = shape;
-        portal.cullableXStart = 0;
-        portal.cullableXEnd = 0;
-        portal.cullableYStart = 0;
-        portal.cullableYEnd = 0;
     }
     
     /**

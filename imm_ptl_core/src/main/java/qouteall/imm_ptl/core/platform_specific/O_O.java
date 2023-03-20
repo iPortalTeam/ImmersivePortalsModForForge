@@ -19,9 +19,10 @@ import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import qouteall.imm_ptl.core.chunk_loading.MyClientChunkManager;
 import qouteall.imm_ptl.core.portal.custom_portal_gen.PortalGenInfo;
-import qouteall.q_misc_util.Helper;
 
 import javax.annotation.Nullable;
+import java.nio.file.Path;
+import java.util.Optional;
 
 public class O_O {
     public static boolean isDimensionalThreadingPresent = false;
@@ -69,15 +70,19 @@ public class O_O {
     ) {
         RequiemCompat.onPlayerTeleportedServer(player);
     }
-    
-    public static void loadConfigFabric() {
+
+    public static Path getGameDir() {
+        return FabricLoader.getInstance().getGameDir();
+    }
+
+    public static void loadConfigFabric() { // TODO @Nick1st Remove or change this, as it's no longer in the upstream
         Helper.log("Loading Immersive Portals config");
         IPConfig ipConfig = IPConfig.readConfig();
         ipConfig.onConfigChanged();
         ipConfig.saveConfigFile();
     }
     
-    public static void onServerConstructed() {
+    public static void onServerConstructed() { // TODO @Nick1st Remove this if unused
         // forge version initialize server config
     }
     
@@ -116,13 +121,12 @@ public class O_O {
     public static String getImmPtlModInfoUrl() {
         String gameVersion = SharedConstants.getCurrentVersion().getName();
         
-        int lastDotIndex = gameVersion.lastIndexOf('.');
-        
-        // only take the major version
-        // if it's 1.19.2, the major version is 1.19
-        String majorGameVersion = gameVersion.substring(0, lastDotIndex);
-        
-        return "https://qouteall.fun/immptl_info/%s.x.json".formatted(majorGameVersion);
+        if (O_O.isForge()) {
+            return "https://qouteall.fun/immptl_info/forge-%s.json".formatted(gameVersion);
+        }
+        else {
+            return "https://qouteall.fun/immptl_info/%s.json".formatted(gameVersion);
+        }
     }
     
     public static boolean isModLoadedWithinVersion(String modId, @Nullable String startVersion, @Nullable String endVersion) {
@@ -161,7 +165,8 @@ public class O_O {
 //            if (latestVersion.compareTo(currentVersion) > 0) {
 //                return true;
 //            }
-//        } catch (VersionParsingException e) {
+//        }
+//        catch (VersionParsingException e) {
 //            e.printStackTrace();
 //        }
 //

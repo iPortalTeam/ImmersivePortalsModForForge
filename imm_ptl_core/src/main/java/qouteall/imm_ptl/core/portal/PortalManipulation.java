@@ -30,8 +30,14 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class PortalManipulation {
+    // its inverse is itself
+    public static final DQuaternion flipAxisW = DQuaternion.rotationByDegrees(
+        new Vec3(0, 1, 0), 180
+    ).fixFloatingPointErrorAccumulation();
+
     public static void setPortalTransformation(
         Portal portal,
         ResourceKey<Level> destDim,
@@ -195,7 +201,7 @@ public class PortalManipulation {
         
         return newPortal;
     }
-
+    
     public static void completeBiWayBiFacedPortal(
         Portal portal, Consumer<Portal> removalInformer,
         Consumer<Portal> addingInformer, EntityType<Portal> entityType
@@ -487,11 +493,39 @@ public class PortalManipulation {
                 !(p1 instanceof Mirror)
         ));
     }
-
+    
     public static Optional<Pair<Portal, Vec3>> raytracePortals(
         Level world, Vec3 from, Vec3 to, boolean includeGlobalPortal
     ) {
         return PortalCommand.raytracePortals(world, from, to, includeGlobalPortal);
     }
 
+    public static DQuaternion computeDeltaTransformation(
+        DQuaternion thisSideOrientation, DQuaternion otherSideOrientation
+    ) {
+        // otherSideOrientation * axis = rotation * thisSideOrientation * flipAxisW * axis
+        // otherSideOrientation = rotation * thisSideOrientation * flipAxisW
+        // rotation = otherSideOrientation * flipAxisW^-1 * thisSideOrientation^-1
+        return otherSideOrientation
+            .hamiltonProduct(flipAxisW)
+            .hamiltonProduct(thisSideOrientation.getConjugated());
+    }
+
+    public static void makePortalRound(Portal portal, int triangleNum) {
+        GeometryPortalShape shape = new GeometryPortalShape();
+        double twoPi = Math.PI * 2;
+        shape.triangles = IntStream.range(0, triangleNum)
+            .mapToObj(i -> new GeometryPortalShape.TriangleInPlane(
+                0, 0,
+                portal.width * 0.5 * Math.cos(twoPi * ((double) i) / triangleNum),
+                portal.height * 0.5 * Math.sin(twoPi * ((double) i) / triangleNum),
+                portal.width * 0.5 * Math.cos(twoPi * ((double) i + 1) / triangleNum),
+                portal.height * 0.5 * Math.sin(twoPi * ((double) i + 1) / triangleNum)
+            )).collect(Collectors.toList());
+        portal.specialShape = shape;
+        portal.cullableXStart = 0;
+        portal.cullableXEnd = 0;
+        portal.cullableYStart = 0;
+        portal.cullableYEnd = 0;
+    }
 }

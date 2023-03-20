@@ -9,7 +9,6 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.Validate;
-import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.portal.GeometryPortalShape;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.q_misc_util.Helper;
@@ -27,7 +26,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class BlockPortalShape {
-    public static final int defaultLengthLimit = IPGlobal.maxNormalPortalRadius * 2;
+    public static int defaultLengthLimit = 64;
     public BlockPos anchor;
     public Set<BlockPos> area;
     public IntBox innerAreaBox;
@@ -365,11 +364,11 @@ public class BlockPortalShape {
     
     public void initPortalAxisShape(Portal portal, Vec3 center, Direction facing) {
         Validate.isTrue(facing.getAxis() == axis);
-        
+    
         Tuple<Direction, Direction> perpendicularDirections = Helper.getPerpendicularDirections(facing);
         Direction wDirection = perpendicularDirections.getA();
         Direction hDirection = perpendicularDirections.getB();
-        
+    
         portal.axisW = Vec3.atLowerCornerOf(wDirection.getNormal());
         portal.axisH = Vec3.atLowerCornerOf(hDirection.getNormal());
         portal.width = Helper.getCoordinate(innerAreaBox.getSize(), wDirection.getAxis());

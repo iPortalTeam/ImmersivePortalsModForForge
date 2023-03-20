@@ -3,9 +3,6 @@ package qouteall.imm_ptl.core.teleportation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.pathfinder.Path;
-import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.ForgeEventFactory;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.IPMcHelper;
@@ -16,6 +13,7 @@ import qouteall.imm_ptl.core.compat.GravityChangerInterface;
 import qouteall.imm_ptl.core.ducks.IEEntity;
 import qouteall.imm_ptl.core.ducks.IEServerPlayNetworkHandler;
 import qouteall.imm_ptl.core.ducks.IEServerPlayerEntity;
+import qouteall.imm_ptl.core.network.IPNetworking;
 import qouteall.imm_ptl.core.platform_specific.O_O;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.Dim_Confirm;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
@@ -299,20 +297,27 @@ public class ServerTeleportationManager {
         MiscHelper.getServer().getProfiler().pop();
     }
     
+    // TODO remove in 1.20
+    @Deprecated
     public void forceMovePlayer(
         ServerPlayer player,
         ResourceKey<Level> dimensionTo,
         Vec3 newPos
     ) {
-        invokeTpmeCommand(player, dimensionTo, newPos);
+        forceTeleportPlayer(player, dimensionTo, newPos);
     }
-
-    // TODO rename in 1.20
+    
+    // TODO remove in 1.20
+    @Deprecated
     public void invokeTpmeCommand(
         ServerPlayer player,
         ResourceKey<Level> dimensionTo,
         Vec3 newPos
     ) {
+        forceTeleportPlayer(player, dimensionTo, newPos);
+    }
+
+    public void forceTeleportPlayer(ServerPlayer player, ResourceKey<Level> dimensionTo, Vec3 newPos) {
         ServerLevel fromWorld = (ServerLevel) player.level;
         ServerLevel toWorld = MiscHelper.getServer().getLevel(dimensionTo);
         
@@ -320,7 +325,7 @@ public class ServerTeleportationManager {
             player.setPos(newPos.x, newPos.y, newPos.z);
         }
         else {
-            changePlayerDimension(player, fromWorld, toWorld, newPos);
+            changePlayerDimension(player, fromWorld, toWorld, newPos.add(McHelper.getEyeOffset(player)));
             sendPositionConfirmMessage(player);
         }
         
@@ -334,6 +339,7 @@ public class ServerTeleportationManager {
         player.connection.resetPosition();
         ((IEServerPlayNetworkHandler) player.connection).cancelTeleportRequest();
         
+        NewChunkTrackingGraph.updateForPlayer(player);
     }
     
     /**
@@ -666,7 +672,7 @@ public class ServerTeleportationManager {
         Vec3 newPos = new Vec3(x, y, z);
         if (canPlayerReachPos(player, dimension, newPos)) {
             recordLastPosition(player);
-            invokeTpmeCommand(player, dimension, newPos);
+            forceTeleportPlayer(player, dimension, newPos);
             limitedLogger.log(String.format("accepted dubious move packet %s %s %s %s %s %s %s",
                 player.level.dimension().location(), x, y, z, player.getX(), player.getY(), player.getZ()
             ));
@@ -680,7 +686,7 @@ public class ServerTeleportationManager {
     
     public static void teleportEntityGeneral(Entity entity, Vec3 targetPos, ServerLevel targetWorld) {
         if (entity instanceof ServerPlayer) {
-            IPGlobal.serverTeleportationManager.invokeTpmeCommand(
+            IPGlobal.serverTeleportationManager.forceTeleportPlayer(
                 (ServerPlayer) entity, targetWorld.dimension(), targetPos
             );
         }
@@ -782,7 +788,7 @@ public class ServerTeleportationManager {
                 ServerLevel overWorld = McHelper.getOverWorldOnServer();
                 BlockPos spawnPos = overWorld.getSharedSpawnPos();
                 
-                invokeTpmeCommand(player, Level.OVERWORLD, Vec3.atCenterOf(spawnPos));
+                forceTeleportPlayer(player, Level.OVERWORLD, Vec3.atCenterOf(spawnPos));
                 
                 player.sendSystemMessage(Component.literal(
                     "Teleported to spawn pos because dimension %s had been removed".formatted(dim.location())

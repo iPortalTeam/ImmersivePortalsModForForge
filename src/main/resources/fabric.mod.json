@@ -33,7 +33,7 @@
   ],
   "depends": {
     "fabricloader": ">=0.7.4",
-    "fabric": ">=0.28.1",
+    "fabric-api": ">=0.28.1",
     "minecraft": "1.19.3",
     "imm_ptl_core": "*",
     "q_misc_util": "*"
@@ -45,20 +45,11 @@
     "resolutioncontrol": "*",
     "canvas": "*",
     "cardboard": "*",
-    "iris": ["<1.5.1", ">1.5.1"],
-    "sodium": ["<0.4.8", ">0.4.8"]
+    "iris": ["<1.5.2", ">1.5.2"],
+    "sodium": ["<0.4.9", ">0.4.9"],
+    "portalcubed": "*"
   },
   "custom": {
-    "fabric-renderer-indigo:force_compatibility": true,
-    "lithium:options": {
-      "mixin.world.player_chunk_tick": false
-    },
-    "dashloader:disableoption": [
-      "CACHE_SHADER"
-    ],
-    "polymer:disable_mixin": {
-      "compat.immersive_portals.ip_IPNetworkingMixin": "Implemented"
-    }
   },
   "accessWidener": "imm_ptl_peripheral.accesswidener"
 }

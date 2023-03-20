@@ -2,6 +2,7 @@ package qouteall.imm_ptl.core;
 
 import com.mojang.blaze3d.platform.GlUtil;
 import net.minecraft.client.GraphicsStatus;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -31,7 +32,7 @@ import qouteall.imm_ptl.core.teleportation.CollisionHelper;
 import qouteall.q_misc_util.my_util.MyTaskList;
 
 public class IPModMainClient {
-
+    
     private static void showPreviewWarning() {
         IPGlobal.clientTaskList.addTask(MyTaskList.withDelayCondition(
             () -> Minecraft.getInstance().level == null,
@@ -57,7 +58,7 @@ public class IPModMainClient {
 //            })
 //        ));
 //    }
-
+    
     private static void showNvidiaVideoCardWarning() {
         IPGlobal.clientTaskList.addTask(MyTaskList.withDelayCondition(
             () -> Minecraft.getInstance().level == null,
@@ -66,6 +67,7 @@ public class IPModMainClient {
                     if (!SodiumInterface.invoker.isSodiumPresent()) {
                         CHelper.printChat(
                             Component.translatable("imm_ptl.nvidia_warning")
+                                .withStyle(ChatFormatting.RED)
                                 .append(McHelper.getLinkText("https://github.com/CaffeineMC/sodium-fabric/issues/1486"))
                         );
                     }
@@ -76,6 +78,8 @@ public class IPModMainClient {
 
     @SubscribeEvent
     public static void init(FMLClientSetupEvent event) {
+        IPNetworkingClient.init();
+
         ClientWorldLoader.init();
         
         Minecraft.getInstance().execute(() -> {

@@ -9,6 +9,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.forgespi.language.IModFileInfo;
+import net.minecraft.network.chat.MutableComponent;
 import org.apache.commons.lang3.Validate;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
@@ -30,27 +31,14 @@ import java.util.stream.Collectors;
 
 public class IPModInfoChecking {
     
-    // GSON does not support records https://github.com/google/gson/issues/1794
-    public static final class ModEntry {
-        public String modId;
-        public String modName;
-        @Nullable
-        public String startVersion;
-        @Nullable
-        public String endVersion;
-        
-        public ModEntry(
-            String modId,
-            String modName,
-            @Nullable String startVersion,
-            @Nullable String endVersion
-        ) {
-            this.modId = modId;
-            this.modName = modName;
-            this.startVersion = startVersion;
-            this.endVersion = endVersion;
-        }
-        
+    public static record ModIncompatInfo(
+        String modId,
+        String modName,
+        @Nullable String startVersion,
+        @Nullable String endVersion,
+        @Nullable String desc,
+        @Nullable String link
+    ) {
         boolean isModLoadedWithinVersion() {
             return O_O.isModLoadedWithinVersion(modId, startVersion, endVersion);
         }
@@ -69,65 +57,33 @@ public class IPModInfoChecking {
                 return "-" + endVersion;
             }
         }
-        
-        @Override
-        public String toString() {
-            return "ModEntry[" +
-                "modId=" + modId + ", " +
-                "modName=" + modName + ", " +
-                "startVersion=" + startVersion + ", " +
-                "endVersion=" + endVersion + ']';
-        }
-        
-    }
-    
-    public static final class LatestReleaseInfo {
-        public String modVersion;
-        public String mcVersion;
-        
-        public LatestReleaseInfo(
-            String modVersion, String mcVersion
-        ) {
-            this.modVersion = modVersion;
-            this.mcVersion = mcVersion;
-        }
-        
-        @Override
-        public String toString() {
-            return "LatestReleaseInfo[" +
-                "modVersion=" + modVersion + ", " +
-                "mcVersion=" + mcVersion + ']';
-        }
-        
+
     }
     
     public static final class ImmPtlInfo {
-        public LatestReleaseInfo latestRelease;
-        public List<ModEntry> severelyIncompatible;
-        public List<ModEntry> incompatible;
+        public String latestReleaseVersion;
+        public List<ModIncompatInfo> severelyIncompatible;
+        public List<ModIncompatInfo> incompatible;
         
-        public ImmPtlInfo(
-            LatestReleaseInfo latestRelease,
-            List<ModEntry> severelyIncompatible,
-            List<ModEntry> incompatible
-        ) {
-            this.latestRelease = latestRelease;
+        public ImmPtlInfo(String latestReleaseVersion, List<ModIncompatInfo> severelyIncompatible, List<ModIncompatInfo> incompatible) {
+            this.latestReleaseVersion = latestReleaseVersion;
             this.severelyIncompatible = severelyIncompatible;
             this.incompatible = incompatible;
         }
         
         @Override
         public String toString() {
-            return "ImmPtlInfo[" +
-                "latestRelease=" + latestRelease + ", " +
-                "severelyIncompatible=" + severelyIncompatible + ", " +
-                "incompatible=" + incompatible + ']';
+            return "ImmPtlInfo{" +
+                "latestReleaseVersion='" + latestReleaseVersion + '\'' +
+                ", severelyIncompatible=" + severelyIncompatible +
+                ", incompatible=" + incompatible +
+                '}';
         }
     }
     
     // NOTE do not run it on render thread
     @Nullable
-    @OnlyIn(Dist.CLIENT) // TODO do it on dedicated server
+    @OnlyIn(Dist.CLIENT)
     public static ImmPtlInfo fetchImmPtlInfoFromInternet() {
         String url = O_O.getImmPtlModInfoUrl();
         
@@ -184,44 +140,65 @@ public class IPModInfoChecking {
             IPGlobal.clientTaskList.addTask(MyTaskList.withDelayCondition(
                 () -> Minecraft.getInstance().level == null,
                 MyTaskList.oneShotTask(() -> {
-//                    if (IPGlobal.enableUpdateNotification) { //TODO @Nick1st implement Forge Version Check
-//                        if (O_O.shouldUpdateImmPtl(immPtlInfo.latestRelease.modVersion)) {
-//                            CHelper.printChat(Component.translatable(
-//                                "imm_ptl.new_version_available",
-//                                immPtlInfo.latestRelease.modVersion,
-//                                immPtlInfo.latestRelease.mcVersion
-//                            ).append(McHelper.getLinkText(O_O.getModDownloadLink())));
-//                        }
-//                    }
-    
-                    for (ModEntry mod : immPtlInfo.severelyIncompatible) {
+                    if (IPGlobal.enableUpdateNotification) {
+                        if (O_O.shouldUpdateImmPtl(immPtlInfo.latestReleaseVersion)) {
+                            MutableComponent text = Component.translatable(
+                                "imm_ptl.new_version_available",
+                                immPtlInfo.latestReleaseVersion
+                            );
+                            text.append(McHelper.getLinkText(O_O.getModDownloadLink()));
+
+                            text.append(Component.literal("  "));
+                            text.append(IPMcHelper.getDisableUpdateCheckText());
+
+                            CHelper.printChat(text);
+                        }
+                    }
+
+                    for (ModIncompatInfo mod : immPtlInfo.severelyIncompatible) {
                         if (mod != null && mod.isModLoadedWithinVersion()) {
+                            MutableComponent text;
                             if (mod.startVersion != null || mod.endVersion != null) {
-                                CHelper.printChat(
-                                    Component.translatable(
-                                        "imm_ptl.severely_incompatible_within_version",
-                                        mod.modName, mod.modId,
-                                        mod.getVersionRangeStr()
-                                    ).withStyle(ChatFormatting.RED)
-                                );
+                                text = Component.translatable(
+                                    "imm_ptl.severely_incompatible_within_version",
+                                    mod.modName, mod.modId,
+                                    mod.getVersionRangeStr()
+                                ).withStyle(ChatFormatting.RED);
                             }
                             else {
-                                CHelper.printChat(
-                                    Component.translatable("imm_ptl.severely_incompatible", mod.modName, mod.modId)
-                                        .withStyle(ChatFormatting.RED)
-                                );
+                                text = Component.translatable("imm_ptl.severely_incompatible", mod.modName, mod.modId)
+                                    .withStyle(ChatFormatting.RED);
                             }
+
+                            if (mod.desc != null) {
+                                text.append(Component.literal(" " + mod.desc + " "));
+                            }
+
+                            if (mod.link != null) {
+                                text.append(Component.literal(" "));
+                                text.append(McHelper.getLinkText(mod.link));
+                            }
+
+                            CHelper.printChat(text);
                         }
                     }
                     
-                    for (ModEntry mod : immPtlInfo.incompatible) {
+                    for (ModIncompatInfo mod : immPtlInfo.incompatible) {
                         if (mod != null && mod.isModLoadedWithinVersion()) {
                             if (IPGlobal.enableWarning) {
-                                CHelper.printChat(
-                                    Component.translatable("imm_ptl.incompatible", mod.modName, mod.modId)
-                                        .withStyle(ChatFormatting.RED)
-                                        .append(IPMcHelper.getDisableWarningText())
-                                );
+                                MutableComponent text = Component.translatable("imm_ptl.incompatible", mod.modName, mod.modId)
+                                    .withStyle(ChatFormatting.RED)
+                                    .append(IPMcHelper.getDisableWarningText());
+
+                                if (mod.desc != null) {
+                                    text.append(Component.literal(" " + mod.desc + " "));
+                                }
+
+                                if (mod.link != null) {
+                                    text.append(McHelper.getLinkText(" " + mod.link));
+                                }
+
+                                CHelper.printChat(text);
                             }
                         }
                     }
