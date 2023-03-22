@@ -20,7 +20,7 @@ public class MiscUtilModEntry {
     public MiscUtilModEntry() {
         DimensionMisc.init();
         
-        ExtraDimensionStorage.init();
+        //ExtraDimensionStorage.init();
         
         DynamicDimensionsImpl.init();
         
@@ -46,6 +46,6 @@ public class MiscUtilModEntry {
     }
 
     public static void registerCommand(RegisterCommandsEvent event) {
-        DimsCommand.register(event.getDispatcher());
+        //DimsCommand.register(event.getDispatcher());
     }
 }

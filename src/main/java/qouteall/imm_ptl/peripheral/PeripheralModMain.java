@@ -48,7 +48,7 @@ public class PeripheralModMain {
         DimStackGameRule.init();
         DimStackManagement.init();
         
-        AlternateDimensions.init();
+        //AlternateDimensions.init();
 
 //        Registry.register( //Fixme removal
 //            Registry.CHUNK_GENERATOR,
