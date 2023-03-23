@@ -18,6 +18,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import qouteall.imm_ptl.peripheral.CommandStickItem;
 import qouteall.imm_ptl.peripheral.PeripheralModMain;
+import qouteall.imm_ptl.peripheral.alternate_dimension.PeripheralRegistries;
 import qouteall.imm_ptl.peripheral.guide.IPOuterClientMisc;
 
 import javax.annotation.Nullable;
@@ -78,6 +79,8 @@ public class PeripheralModEntry {
         PeripheralModEntry.registerBlockItems(); //TODO Move this to a real DeferredRegistry @Nick1st
         BLOCKS.register(FMLJavaModLoadingContext.get().getModEventBus());
         ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
+        PeripheralRegistries.CHUNK_GENERATOR.register(FMLJavaModLoadingContext.get().getModEventBus());
+        PeripheralRegistries.BIOME_SOURCE.register(FMLJavaModLoadingContext.get().getModEventBus());
         CommandStickItem.CommandStickData.register(FMLJavaModLoadingContext.get().getModEventBus());
         
         PeripheralModMain.init();
