@@ -1,8 +1,6 @@
 package qouteall.imm_ptl.core;
 
 import me.shedaniel.autoconfig.AutoConfig;
-import me.shedaniel.autoconfig.ConfigHolder;
-import me.shedaniel.autoconfig.event.ConfigSerializeEvent;
 import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraft.world.InteractionResult;

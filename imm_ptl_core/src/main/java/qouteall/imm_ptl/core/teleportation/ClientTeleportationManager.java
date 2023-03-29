@@ -23,6 +23,7 @@ import qouteall.imm_ptl.core.ducks.IEGameRenderer;
 import qouteall.imm_ptl.core.ducks.IEMinecraftClient;
 import qouteall.imm_ptl.core.ducks.IEParticleManager;
 import qouteall.imm_ptl.core.network.PacketRedirectionClient;
+import qouteall.imm_ptl.core.network.IPNetworkingClient;
 import qouteall.imm_ptl.core.platform_specific.O_O;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.Teleport;
@@ -42,9 +43,7 @@ import qouteall.q_misc_util.my_util.Vec2d;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 @OnlyIn(Dist.CLIENT)
 public class ClientTeleportationManager {
@@ -60,7 +59,8 @@ public class ClientTeleportationManager {
     // for debug
     public static boolean isTeleportingTick = false;
     public static boolean isTeleportingFrame = false;
-    
+    public static boolean isTicking = false;
+
     private static final int teleportLimitPerFrame = 2;
     
     private static long teleportationCounter = 0;
@@ -101,11 +101,13 @@ public class ClientTeleportationManager {
         }
     }
     
-    public void manageTeleportation() {
+    public void manageTeleportation(boolean isTicking_) {
         if (IPGlobal.disableTeleportation) {
             return;
         }
         
+        isTicking = isTicking_;
+
         teleportationCounter++;
         
         isTeleportingFrame = false;
@@ -123,9 +125,16 @@ public class ClientTeleportationManager {
         client.getProfiler().push("ip_teleport");
         
         ClientPortalAnimationManagement.foreachCustomAnimatedPortals(
-            portal -> portal.animation.updateClientState(portal, teleportationCounter)
+            portal -> {
+                // update teleportation-related data
+                PortalExtension.forClusterPortals(
+                    portal, p -> p.animation.updateClientState(p, teleportationCounter)
+                );
+            }
         );
-        
+
+//        ClientPortalAnimationManagement.debugCheck();
+
         // the real partial ticks (not from stable timer)
         float realPartialTicks = RenderStates.tickDelta;
         
@@ -168,7 +177,7 @@ public class ClientTeleportationManager {
     private TeleportationUtil.Teleportation tryTeleport(float partialTicks) {
         LocalPlayer player = client.player;
         assert player != null;
-
+        
         Vec3 thisFrameEyePos = getPlayerEyePos(partialTicks);
         
         if (lastPlayerEyePos.distanceToSqr(thisFrameEyePos) > 1600) {
@@ -179,6 +188,9 @@ public class ClientTeleportationManager {
         assert client.level != null;
         long currentGameTime = client.level.getGameTime();
         
+        Vec3 lastTickEyePos = McHelper.getLastTickEyePos(player);
+        Vec3 thisTickEyePos = McHelper.getEyePos(player);
+
         ArrayList<TeleportationUtil.Teleportation> teleportationCandidates = new ArrayList<>();
         IPMcHelper.traverseNearbyPortals(
             player.level,
@@ -188,9 +200,6 @@ public class ClientTeleportationManager {
                 if (!portal.canTeleportEntity(player)) {
                     return;
                 }
-
-                // update teleportation related data
-                portal.animation.updateClientState(portal, teleportationCounter);
 
                 // Separately handle dynamic teleportation and static teleportation.
                 // Although the dynamic teleportation code can handle static teleportation.
@@ -202,7 +211,7 @@ public class ClientTeleportationManager {
                 ) {
                     // the portal is running a real animation
                     assert portal.animation.clientCurrentFramePortalState != null;
-
+                    
                     TeleportationUtil.Teleportation teleportation =
                         TeleportationUtil.checkDynamicTeleportation(
                             portal,
@@ -212,10 +221,11 @@ public class ClientTeleportationManager {
                             thisFrameEyePos,
                             portal.animation.lastTickAnimatedState,
                             portal.animation.thisTickAnimatedState,
-                            McHelper.getLastTickEyePos(player),
-                            McHelper.getEyePos(player)
+                            lastTickEyePos,
+                            thisTickEyePos,
+                            partialTicks
                         );
-
+                    
                     if (teleportation != null) {
                         teleportationCandidates.add(teleportation);
                     }
@@ -225,8 +235,8 @@ public class ClientTeleportationManager {
                     TeleportationUtil.Teleportation teleportation =
                         TeleportationUtil.checkStaticTeleportation(
                             portal,
-                            lastPlayerEyePos,
-                            thisFrameEyePos
+                            lastPlayerEyePos, thisFrameEyePos,
+                            lastTickEyePos, thisTickEyePos
                         );
                     if (teleportation != null) {
                         teleportationCandidates.add(teleportation);
@@ -234,7 +244,7 @@ public class ClientTeleportationManager {
                 }
             }
         );
-
+        
         TeleportationUtil.Teleportation teleportation = teleportationCandidates
             .stream()
             .min(Comparator.comparingDouble(
@@ -258,6 +268,12 @@ public class ClientTeleportationManager {
                 .add(portal.getContentDirection().scale(adjustment));
             //avoid teleporting through parallel portal due to floating point inaccuracy
             
+            // debug
+//            Vec3 debugCurrEyePos = getPlayerEyePos(partialTicks);
+//            if (debugCurrEyePos.distanceToSqr(lastPlayerEyePos) > 0.001) {
+//                Helper.log("ouch");
+//            }
+
             return teleportation;
         }
         else {
@@ -290,12 +306,8 @@ public class ClientTeleportationManager {
         Vec3 thisTickEyePos = McHelper.getEyePos(player);
         Vec3 lastTickEyePos = McHelper.getLastTickEyePos(player);
         
-        Tuple<Vec3, Vec3> t = TeleportationUtil.getTransformedLastTickPosAndCurrentTickPos(
-            teleportation, lastTickEyePos, thisTickEyePos
-        );
-        
-        Vec3 newEyePos = t.getB();
-        Vec3 newLastTickEyePos = t.getA();
+        Vec3 newThisTickEyePos = teleportation.newThisTickEyePos();
+        Vec3 newLastTickEyePos = teleportation.newLastTickEyePos();
         
         ClientLevel fromWorld = client.level;
         ResourceKey<Level> fromDimension = fromWorld.dimension();
@@ -303,7 +315,7 @@ public class ClientTeleportationManager {
         if (fromDimension != toDimension) {
             ClientLevel toWorld = ClientWorldLoader.getWorld(toDimension);
             
-            changePlayerDimension(player, fromWorld, toWorld, newEyePos);
+            changePlayerDimension(player, fromWorld, toWorld, newThisTickEyePos);
         }
         
         Vec3 oldRealVelocity = McHelper.getWorldVelocity(player);
@@ -322,14 +334,16 @@ public class ClientTeleportationManager {
             portal.transformVelocity(player.getVehicle());
         }
         
-        McHelper.setEyePos(player, newEyePos, newLastTickEyePos);
+        McHelper.setEyePos(player, newThisTickEyePos, newLastTickEyePos);
         McHelper.updateBoundingBox(player);
         
         PehkuiInterface.invoker.onClientPlayerTeleported(portal);
 
         IPMessage.sendToServer(new Teleport(fromDimension, lastTickEyePos, portal.getUUID()));
         
-        updateCollidingPortalAfterTeleportation(player, newEyePos, newLastTickEyePos);
+        PortalCollisionHandler.updateCollidingPortalAfterTeleportation(
+            player, newThisTickEyePos, newLastTickEyePos, RenderStates.tickDelta
+        );
         
         McHelper.adjustVehicle(player);
         
@@ -341,7 +355,10 @@ public class ClientTeleportationManager {
         //but after pre render info being updated
         RenderStates.updatePreRenderInfo(tickDelta);
         
-        Helper.log(String.format("Client Teleported %s %s", portal, tickTimeForTeleportation));
+        Helper.log(String.format(
+            "Client Teleported\nportal: %s\ntickTime: %s\nduring ticking: %s\ncounter: %s\ndynamic: %s",
+            portal, tickTimeForTeleportation, isTicking, teleportationCounter, teleportation.isDynamic()
+        ));
         
         isTeleportingTick = true;
         isTeleportingFrame = true;
@@ -490,132 +507,113 @@ public class ClientTeleportationManager {
     public void disableTeleportFor(int ticks) {
         teleportTickTimeLimit = tickTimeForTeleportation + ticks;
     }
-    
-    private static void updateCollidingPortalAfterTeleportation(LocalPlayer player, Vec3 newEyePos, Vec3 newLastTickEyePos) {
-        float partialTicks = RenderStates.tickDelta;
-        
-        ((IEEntity) player).ip_clearCollidingPortal();
-        
-        McHelper.findEntitiesByBox(
-            Portal.class,
-            player.level,
-            CollisionHelper.getStretchedBoundingBox(player),
-            IPGlobal.maxNormalPortalRadius,
-            p -> true
-        ).forEach(p -> CollisionHelper.notifyCollidingPortals(p, partialTicks));
-        
-        ((IEEntity) player).tickCollidingPortal(partialTicks);
-        
-        McHelper.setEyePos(player, newEyePos, newLastTickEyePos);
-        McHelper.updateBoundingBox(player);
-    }
-    
+
     private static void adjustPlayerPosition(LocalPlayer player) {
-//        if (player.isSpectator()) {
-//            return;
-//        }
-//
-//        AABB playerBoundingBox = player.getBoundingBox();
-//        Portal collidingPortal = ((IEEntity) player).getCollidingPortal();
-//
-//        Direction gravityDir = GravityChangerInterface.invoker.getGravityDirection(player);
-//        Direction levitationDir = gravityDir.getOpposite();
-//        Vec3 eyeOffset = GravityChangerInterface.invoker.getEyeOffset(player);
-//
-//        AABB bottomHalfBox = playerBoundingBox.contract(eyeOffset.x / 2, eyeOffset.y / 2, eyeOffset.z / 2);
-//        Function<VoxelShape, VoxelShape> shapeFilter = c -> {
-//            if (collidingPortal != null) {
-//                return CollisionHelper.clipVoxelShape(
-//                    c, collidingPortal.getOriginPos(), collidingPortal.getNormal()
-//                );
-//            }
-//            else {
-//                return c;
-//            }
-//        };
-//
-//        AABB collisionUnion = CollisionHelper.getTotalBlockCollisionBox(
-//            player, bottomHalfBox, shapeFilter
-//        );
-//
-//        if (collisionUnion == null) {
-//            return;
-//        }
-//
-//        Vec3 anchor = player.position();
-//        AABB collisionUnionLocal = Helper.transformBox(
-//            collisionUnion, v -> GravityChangerInterface.invoker.transformWorldToPlayer(
-//                gravityDir, v.subtract(anchor)
-//            )
-//        );
-//
-//        AABB playerBoxLocal = Helper.transformBox(
-//            playerBoundingBox, v -> GravityChangerInterface.invoker.transformWorldToPlayer(
-//                gravityDir, v.subtract(anchor)
-//            )
-//        );
-//
-//        double targetLocalY = collisionUnionLocal.maxY + 0.01;
-//        double originalLocalY = playerBoxLocal.minY;
-//        double delta = targetLocalY - originalLocalY;
-//
-//        if (delta <= 0) {
-//            return;
-//        }
-//
-//        Vec3 levitationVec = Vec3.atLowerCornerOf(levitationDir.getNormal());
-//
-//        Vec3 offset = levitationVec.scale(delta);
-//
-//        final int ticks = 5;
-//
-//        Helper.log("Adjusting Client Player Position");
-//
-//        int[] counter = {0};
-//        IPGlobal.clientTaskList.addTask(() -> {
-//            if (player.isRemoved()) {
-//                return true;
-//            }
-//
-//            if (GravityChangerInterface.invoker.getGravityDirection(player) != gravityDir) {
-//                return true;
-//            }
-//
-//            if (counter[0] >= 5) {
-//                return true;
-//            }
-//
-//            counter[0]++;
-//
-//            double len = player.position().subtract(anchor).dot(levitationVec);
-//            if (len < -1 || len > 2) {
-//                // stop early
-//                return true;
-//            }
-//
-//            double progress = ((double) counter[0]) / ticks;
-//            progress = TransformationManager.mapProgress(progress);
-//
-//            Vec3 expectedPos = anchor.add(offset.scale(progress));
-//
-//            Vec3 newPos = Helper.putCoordinate(player.position(), levitationDir.getAxis(),
-//                Helper.getCoordinate(expectedPos, levitationDir.getAxis())
-//            );
-//
-//            Portal currentCollidingPortal = ((IEEntity) player).getCollidingPortal();
-//            if (currentCollidingPortal != null) {
-//                Vec3 eyePos = McHelper.getEyePos(player);
-//                Vec3 newEyePos = newPos.add(McHelper.getEyeOffset(player));
-//                if (currentCollidingPortal.rayTrace(eyePos, newEyePos) != null) {
-//                    return true;//avoid going back into the portal
-//                }
-//            }
-//
-//            player.setPosRaw(newPos.x, newPos.y, newPos.z);
-//            McHelper.updateBoundingBox(player);
-//
-//            return false;
-//        });
+        if (player.isSpectator()) {
+            return;
+        }
+        
+        AABB playerBoundingBox = player.getBoundingBox();
+        Portal collidingPortal = ((IEEntity) player).getCollidingPortal();
+        
+        Direction gravityDir = GravityChangerInterface.invoker.getGravityDirection(player);
+        Direction levitationDir = gravityDir.getOpposite();
+        Vec3 eyeOffset = GravityChangerInterface.invoker.getEyeOffset(player);
+        
+        AABB bottomHalfBox = playerBoundingBox.contract(eyeOffset.x / 2, eyeOffset.y / 2, eyeOffset.z / 2);
+        Function<VoxelShape, VoxelShape> shapeFilter = c -> {
+            if (collidingPortal != null) {
+                return CollisionHelper.clipVoxelShape(
+                    c, collidingPortal.getOriginPos(), collidingPortal.getNormal()
+                );
+            }
+            else {
+                return c;
+            }
+        };
+        
+        AABB collisionUnion = CollisionHelper.getTotalBlockCollisionBox(
+            player, bottomHalfBox, shapeFilter
+        );
+        
+        if (collisionUnion == null) {
+            return;
+        }
+        
+        Vec3 anchor = player.position();
+        AABB collisionUnionLocal = Helper.transformBox(
+            collisionUnion, v -> GravityChangerInterface.invoker.transformWorldToPlayer(
+                gravityDir, v.subtract(anchor)
+            )
+        );
+        
+        AABB playerBoxLocal = Helper.transformBox(
+            playerBoundingBox, v -> GravityChangerInterface.invoker.transformWorldToPlayer(
+                gravityDir, v.subtract(anchor)
+            )
+        );
+        
+        double targetLocalY = collisionUnionLocal.maxY + 0.01;
+        double originalLocalY = playerBoxLocal.minY;
+        double delta = targetLocalY - originalLocalY;
+        
+        if (delta <= 0) {
+            return;
+        }
+        
+        Vec3 levitationVec = Vec3.atLowerCornerOf(levitationDir.getNormal());
+        
+        Vec3 offset = levitationVec.scale(delta);
+        
+        final int ticks = 5;
+        
+        Helper.log("Adjusting Client Player Position");
+        
+        int[] counter = {0};
+        IPGlobal.clientTaskList.addTask(() -> {
+            if (player.isRemoved()) {
+                return true;
+            }
+            
+            if (GravityChangerInterface.invoker.getGravityDirection(player) != gravityDir) {
+                return true;
+            }
+            
+            if (counter[0] >= 5) {
+                return true;
+            }
+            
+            counter[0]++;
+            
+            double len = player.position().subtract(anchor).dot(levitationVec);
+            if (len < -1 || len > 2) {
+                // stop early
+                return true;
+            }
+            
+            double progress = ((double) counter[0]) / ticks;
+            progress = TransformationManager.mapProgress(progress);
+            
+            Vec3 expectedPos = anchor.add(offset.scale(progress));
+            
+            Vec3 newPos = Helper.putCoordinate(player.position(), levitationDir.getAxis(),
+                Helper.getCoordinate(expectedPos, levitationDir.getAxis())
+            );
+            
+            Portal currentCollidingPortal = ((IEEntity) player).getCollidingPortal();
+            if (currentCollidingPortal != null) {
+                Vec3 eyePos = McHelper.getEyePos(player);
+                Vec3 newEyePos = newPos.add(McHelper.getEyeOffset(player));
+                if (currentCollidingPortal.rayTrace(eyePos, newEyePos) != null) {
+                    return true;//avoid going back into the portal
+                }
+            }
+            
+            player.setPosRaw(newPos.x, newPos.y, newPos.z);
+            McHelper.updateBoundingBox(player);
+            
+            return false;
+        });
         
     }
     

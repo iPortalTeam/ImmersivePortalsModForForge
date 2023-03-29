@@ -8,13 +8,10 @@ import net.minecraft.client.multiplayer.prediction.BlockStatePredictionHandler;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.EmptyLevelChunk;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.entity.EntityTickList;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import org.spongepowered.asm.mixin.Final;
@@ -28,6 +25,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import qouteall.imm_ptl.core.ClientWorldLoader;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.ducks.IEClientWorld;
+import qouteall.imm_ptl.core.ducks.IEEntity;
 import qouteall.imm_ptl.core.platform_specific.O_O;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.q_misc_util.my_util.LimitedLogger;
@@ -38,6 +36,11 @@ import java.util.function.Supplier;
 
 @Mixin(ClientLevel.class)
 public abstract class MixinClientLevel implements IEClientWorld {
+    
+    private List<Portal> portal_globalPortals;
+    
+    private static final LimitedLogger limitedLogger = new LimitedLogger(100);
+    
     @Shadow
     @Final
     @Mutable
@@ -64,12 +67,15 @@ public abstract class MixinClientLevel implements IEClientWorld {
     @Final
     private EntityTickList tickingEntities;
     
-    @Shadow protected abstract Map<String, MapItemSavedData> getAllMapData();
+    @Shadow
+    protected abstract Map<String, MapItemSavedData> getAllMapData();
     
-    @Shadow protected abstract void addMapData(Map<String, MapItemSavedData> map);
+    @Shadow
+    protected abstract void addMapData(Map<String, MapItemSavedData> map);
     
-    @Shadow @Final private BlockStatePredictionHandler blockStatePredictionHandler;
-    private List<Portal> portal_globalPortals;
+    @Shadow
+    @Final
+    private BlockStatePredictionHandler blockStatePredictionHandler;
     
     @Override
     public ClientPacketListener getNetHandler() {
@@ -143,13 +149,20 @@ public abstract class MixinClientLevel implements IEClientWorld {
         }
     }
     
-    private static final LimitedLogger limitedLogger = new LimitedLogger(100);
-    
     // for debug
     @Inject(method = "Lnet/minecraft/client/multiplayer/ClientLevel;toString()Ljava/lang/String;", at = @At("HEAD"), cancellable = true)
     private void onToString(CallbackInfoReturnable<String> cir) {
         ClientLevel this_ = (ClientLevel) (Object) this;
         cir.setReturnValue("ClientWorld " + this_.dimension().location());
+    }
+    
+    @Inject(
+        method = "tickNonPassenger",
+        at = @At("HEAD")
+    )
+    private void onTickNonPassenger(Entity entity, CallbackInfo ci) {
+        // this should be done right before setting last tick pos to this tick pos
+        ((IEEntity) entity).tickCollidingPortal();
     }
     
     @Override

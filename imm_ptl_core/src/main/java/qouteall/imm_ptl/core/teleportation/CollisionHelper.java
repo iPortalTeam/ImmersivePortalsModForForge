@@ -5,14 +5,11 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.phys.AABB;
@@ -20,11 +17,11 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jetbrains.annotations.NotNull;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.ClientWorldLoader;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
-import qouteall.imm_ptl.core.compat.GravityChangerInterface;
 import qouteall.imm_ptl.core.compat.PehkuiInterface;
 import qouteall.imm_ptl.core.ducks.IEEntity;
 import qouteall.imm_ptl.core.miscellaneous.IPVanillaCopy;
@@ -38,7 +35,6 @@ import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.my_util.LimitedLogger;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -47,11 +43,13 @@ public class CollisionHelper {
     
     private static final LimitedLogger limitedLogger = new LimitedLogger(20);
     
-    //cut a box with a plane
-    //the facing that normal points to will be remained
-    //return null for empty box
+    /**
+     * cut a box with a plane.
+     * the facing that normal points to will be remained.
+     * return null for empty box.
+     */
     @Nullable
-    private static AABB clipBox(AABB box, Vec3 planePos, Vec3 planeNormal) {
+    public static AABB clipBox(AABB box, Vec3 planePos, Vec3 planeNormal) {
         
         boolean xForward = planeNormal.x > 0;
         boolean yForward = planeNormal.y > 0;
@@ -101,219 +99,21 @@ public class CollisionHelper {
         
         return testingPos.subtract(planePos).dot(planeNormal) < 0;
     }
-    
-    // For single portals, the player can collide with it only if the eye pos is in portal projection.
-    // However, for portal groups, there is no in-projection restriction.
+
     public static boolean canCollideWithPortal(Entity entity, Portal portal, float partialTick) {
         if (portal.canTeleportEntity(entity)) {
             Vec3 cameraPosVec = entity.getEyePosition(partialTick);
-            if (portal.isInFrontOfPortal(cameraPosVec)) {
-                PortalLike collisionHandlingUnit = getCollisionHandlingUnit(portal);
-                boolean isInGroup = collisionHandlingUnit != portal;
-                if (isInGroup) {
-                    return true;
-                }
-                if (portal.isPointInPortalProjection(cameraPosVec)) {
-                    return true;
-                }
-            }
+            return portal.isInFrontOfPortal(cameraPosVec);
         }
         return false;
     }
     
-    public static Vec3 handleCollisionHalfwayInPortal(
-        Entity entity,
-        Vec3 attemptedMove,
-        Portal collidingPortal
-    ) {
-        entity.level.getProfiler().push("cross_portal_collision");
-        
-        AABB originalBoundingBox = entity.getBoundingBox();
-        
-        Vec3 thisSideMove = getThisSideMove(
-            entity, attemptedMove, collidingPortal,
-            originalBoundingBox
-        );
-        
-        Vec3 otherSideMove = getOtherSideMove(
-            entity, thisSideMove, collidingPortal,
-            originalBoundingBox, 1
-        );
-        
-        entity.level.getProfiler().pop();
-        
-        return new Vec3(
-            fixCoordinateFloatingPointError(attemptedMove.x, otherSideMove.x),
-            fixCoordinateFloatingPointError(attemptedMove.y, otherSideMove.y),
-            fixCoordinateFloatingPointError(attemptedMove.z, otherSideMove.z)
-        );
-    }
-    
-    private static double absMin(double a, double b) {
+    public static double absMin(double a, double b) {
         return Math.abs(a) < Math.abs(b) ? a : b;
     }
-    
-    private static Vec3 getOtherSideMove(
-        Entity entity,
-        Vec3 attemptedMove,
-        Portal collidingPortal,
-        AABB originalBoundingBox,
-        int portalLayer
-    ) {
-        // limit max recursion layer
-        if (portalLayer >= 10) {
-            return attemptedMove;
-        }
-        
-        if (!collidingPortal.getHasCrossPortalCollision()) {
-            return attemptedMove;
-        }
-        
-        Vec3 transformedAttemptedMove = collidingPortal.transformLocalVec(attemptedMove);
-        
-        AABB boxOtherSide = transformBox(collidingPortal, originalBoundingBox);
-        if (boxOtherSide == null) {
-            return attemptedMove;
-        }
-        
-        Level destinationWorld = collidingPortal.getDestWorld();
-        
-        if (!destinationWorld.hasChunkAt(new BlockPos(boxOtherSide.getCenter()))) {
-            if (entity instanceof Player && entity.level.isClientSide()) {
-                informClientStagnant();
-            }
-            Vec3 innerDirection = collidingPortal.getNormal().scale(-1);
-            
-            if (attemptedMove.dot(innerDirection) < 0) {
-                return attemptedMove;
-            }
-            else {
-                // when the other side chunk is not loaded, don't let the player to go into the portal.
-                // this works fine for global portals.
-                // however, for normal portals, if the portal is not in the same chunk as player, the portal
-                // may not load in time and this will not stop player from start falling through solid ground on the other side.
-                // When the portal loads, push the bounding box out of portal.
-                
-                double innerSignedDistance = Arrays.stream(Helper.eightVerticesOf(originalBoundingBox))
-                    .mapToDouble(
-                        pos -> pos.subtract(collidingPortal.getOriginPos()).dot(collidingPortal.getNormal())
-                    )
-                    .min().orElseThrow();
-                
-                if (innerSignedDistance < 0) {
-                    return attemptedMove
-                        .add(collidingPortal.getNormal().scale(-innerSignedDistance))
-                        .subtract(innerDirection.scale(innerDirection.dot(attemptedMove)));
-                }
-                else {
-                    return attemptedMove
-                        .subtract(innerDirection.scale(innerDirection.dot(attemptedMove)));
-                }
-            }
-        }
-        
-        //switch world and check collision
-        Level oldWorld = entity.level;
-        Vec3 oldPos = entity.position();
-        Vec3 oldLastTickPos = McHelper.lastTickPosOf(entity);
-        float oldStepHeight = entity.maxUpStep;
-        
-        entity.level = destinationWorld;
-        McHelper.setPosAndLastTickPos(
-            entity,
-            collidingPortal.transformPoint(oldPos),
-            collidingPortal.transformPoint(oldLastTickPos)
-        );
-        entity.setBoundingBox(boxOtherSide);
-        
-        if (collidingPortal.getScale() > 1) {
-            entity.maxUpStep = (float) (oldStepHeight * collidingPortal.getScale() * 1.01);
-        }
-        
-        try {
-            List<Portal> indirectCollidingPortals = McHelper.findEntitiesByBox(
-                Portal.class,
-                collidingPortal.getDestinationWorld(),
-                boxOtherSide.expandTowards(transformedAttemptedMove),
-                IPGlobal.maxNormalPortalRadius,
-                p -> p.getHasCrossPortalCollision()
-                    && canCollideWithPortal(entity, p, 0)
-                    && !Portal.isReversePortal(collidingPortal, p)
-                    && !Portal.isParallelPortal(collidingPortal, p)
-                    && !Portal.isFlippedPortal(collidingPortal, p)
-            );
-            
-            if (!indirectCollidingPortals.isEmpty()) {
-                return getOtherSideMove(
-                    entity, transformedAttemptedMove, indirectCollidingPortals.get(0),
-                    entity.getBoundingBox(), portalLayer + 1
-                );
-            }
-            
-            PortalLike collisionHandlingUnit = getCollisionHandlingUnit(collidingPortal);
-            Direction transformedGravityDirection = collidingPortal.getTransformedGravityDirection(GravityChangerInterface.invoker.getGravityDirection(entity));
-            
-            Vec3 collided;
-            if (collisionHandlingUnit != collidingPortal) {
-                // This is a workaround for scale boxes.
-                // Currently, the portal groups are mostly scale boxes.
-                // There is no collision inside the entrance of scale box, so do no clipping.
-                // Handling it correctly requires complex clipping code and is slower.
-                collided = handleCollisionWithShapeProcessor(
-                    entity, transformedAttemptedMove,
-                    s -> s,
-                    transformedGravityDirection
-                );
-            }
-            else {
-                collided = handleCollisionWithShapeProcessor(
-                    entity, transformedAttemptedMove,
-                    shape -> clipVoxelShape(shape, collidingPortal.getDestPos(), collidingPortal.getContentDirection()),
-                    transformedGravityDirection
-                );
-            }
-            
-            collided = new Vec3(
-                fixCoordinateFloatingPointError(transformedAttemptedMove.x, collided.x),
-                fixCoordinateFloatingPointError(transformedAttemptedMove.y, collided.y),
-                fixCoordinateFloatingPointError(transformedAttemptedMove.z, collided.z)
-            );
-            
-            Vec3 result = collidingPortal.inverseTransformLocalVec(collided);
-            
-            // debug
-//            if (entity instanceof LocalPlayer) {
-//                if (attemptedMove.y < 0 && result.y > attemptedMove.y) {
-//                    Helper.log("ouch");
-//                    indirectCollidingPortals = McHelper.findEntitiesByBox(
-//                        Portal.class,
-//                        collidingPortal.getDestinationWorld(),
-//                        boxOtherSide.expandTowards(transformedAttemptedMove),
-//                        IPGlobal.maxNormalPortalRadius,
-//                        p -> {
-//                            if (!p.getHasCrossPortalCollision()) {return false;}
-//                            if (!canCollideWithPortal(entity, p, 0)) {return false;}
-//                            if (Portal.isReversePortal(collidingPortal, p)) {return false;}
-//                            if (Portal.isParallelPortal(collidingPortal, p)) {return false;}
-//                            if (Portal.isFlippedPortal(collidingPortal, p)) return false;
-//                            return true;
-//                        }
-//                    );
-//                }
-//            }
-            
-            return result;
-        }
-        finally {
-            entity.level = oldWorld;
-            McHelper.setPosAndLastTickPos(entity, oldPos, oldLastTickPos);
-            entity.setBoundingBox(originalBoundingBox);
-            entity.maxUpStep = oldStepHeight;
-        }
-    }
-    
+
     // floating point deviation may cause collision issues
-    private static double fixCoordinateFloatingPointError(
+    public static double fixCoordinateFloatingPointError(
         double attemptedMove, double result
     ) {
         //rotation may cause a free move to reduce a little bit and the game think that it's collided
@@ -328,67 +128,7 @@ public class CollisionHelper {
         
         return result;
     }
-    
-    private static Vec3 getThisSideMove(
-        Entity entity,
-        Vec3 attemptedMove,
-        Portal collidingPortal,
-        AABB originalBoundingBox
-    ) {
-        Direction gravity = GravityChangerInterface.invoker.getGravityDirection(entity);
-        
-        PortalLike collisionHandlingUnit = getCollisionHandlingUnit(collidingPortal);
-        if (collisionHandlingUnit != collidingPortal) {
-            // This is a workaround for scale boxes.
-            // Currently, the portal groups are mostly scale boxes.
-            // There is no collision inside the entrance of scale box, so do no clipping.
-            // Handling it correctly requires complex clipping code and is slower.
-            return handleCollisionWithShapeProcessor(
-                entity, attemptedMove,
-                s -> s,
-                gravity
-            );
-        }
-        
-        return handleCollisionWithShapeProcessor(
-            entity, attemptedMove,
-            shape -> processThisSideCollisionShape(shape, collidingPortal),
-            gravity
-        );
-    }
-    
-    @Nullable
-    public static VoxelShape processThisSideCollisionShape(
-        VoxelShape shape, Portal portal
-    ) {
-        AABB shapeBounds = shape.bounds();
-        
-        boolean boxFullyBehindPlane = isBoxFullyBehindPlane(
-            portal.getOriginPos(), portal.getNormal(), shapeBounds
-        );
-        
-        // it's a workaround for diagonal portals
-        // MC does not support not axis-aligned shape collision
-        if (!boxFullyBehindPlane) {
-            return shape;
-        }
-        
-        VoxelShape exclusion = portal.getThisSideCollisionExclusion();
-        
-        
-        if (Helper.boxContains(exclusion.bounds(), shapeBounds)) {
-            return null;
-        }
-        
-        VoxelShape result = Shapes.joinUnoptimized(
-            shape,
-            exclusion,
-            BooleanOp.ONLY_FIRST
-        );
-        
-        return result;
-    }
-    
+
     @Nullable
     public static VoxelShape clipVoxelShape(VoxelShape shape, Vec3 clippingPlanePos, Vec3 clippingPlaneNormal) {
         if (shape.isEmpty()) {
@@ -490,7 +230,7 @@ public class CollisionHelper {
      * But filters collisions behind the clipping plane and handles stepping with rotated gravity.
      */
     @IPVanillaCopy
-    private static Vec3 handleCollisionWithShapeProcessor(
+    public static Vec3 handleCollisionWithShapeProcessor(
         Entity entity, Vec3 attemptedMove, Function<VoxelShape, VoxelShape> filter,
         Direction gravity
     ) {
@@ -563,7 +303,7 @@ public class CollisionHelper {
         return collidedMovement;
     }
     
-    private static boolean movesOnNonGravityAxis(Vec3 vec, Direction.Axis gravityAxis) {
+    public static boolean movesOnNonGravityAxis(Vec3 vec, Direction.Axis gravityAxis) {
         return switch (gravityAxis) {
             case X -> vec.y != 0 || vec.z != 0;
             case Y -> vec.x != 0 || vec.z != 0;
@@ -610,14 +350,15 @@ public class CollisionHelper {
         return IEEntity_Collision.ip_CollideWithShapes(vec, collisionBox, builder.build());
     }
     
-    private static AABB getCollisionBoxThisSide(
+    @Deprecated
+    @Nullable
+    public static AABB getCollisionBoxThisSide(
         Portal portal,
-        AABB originalBox,
-        Vec3 attemptedMove
+        @NotNull AABB originalBox
     ) {
         //cut the collision box a little bit more for horizontal portals
         //because the box will be stretched by attemptedMove when calculating collision
-        Vec3 clippingPos = portal.getOriginPos().subtract(attemptedMove);
+        Vec3 clippingPos = portal.getOriginPos();
         return clipBox(
             originalBox,
             clippingPos,
@@ -625,7 +366,7 @@ public class CollisionHelper {
         );
     }
     
-    private static AABB transformBox(PortalLike portal, AABB originalBox) {
+    public static AABB transformBox(PortalLike portal, AABB originalBox) {
         if (portal.getRotation() == null && portal.getScale() == 1) {
             return originalBox.move(portal.getDestPos().subtract(portal.getOriginPos()));
         }
@@ -647,27 +388,7 @@ public class CollisionHelper {
         return ((IEEntity) entity).getCollidingPortal() != null;
     }
     
-    public static AABB getActiveCollisionBox(Entity entity) {
-        Portal collidingPortal = ((IEEntity) entity).getCollidingPortal();
-        if (collidingPortal != null) {
-            AABB thisSideBox = getCollisionBoxThisSide(
-                collidingPortal,
-                entity.getBoundingBox(),
-                Vec3.ZERO //is it ok?
-            );
-            if (thisSideBox != null) {
-                return thisSideBox;
-            }
-            else {
-                return new AABB(0, 0, 0, 0, 0, 0);
-            }
-        }
-        else {
-            return entity.getBoundingBox();
-        }
-    }
-    
-    private static void updateCollidingPortalForWorld(Level world, float tickDelta) {
+    public static void updateCollidingPortalForWorld(Level world, float tickDelta) {
         world.getProfiler().push("update_colliding_portal");
         
         List<Portal> globalPortals = GlobalPortalStorage.getGlobalPortals(world);
@@ -685,7 +406,7 @@ public class CollisionHelper {
                     AABB globalPortalBoundingBox = globalPortal.getBoundingBox();
                     if (entityBoundingBoxStretched.intersects(globalPortalBoundingBox)) {
                         if (canCollideWithPortal(entity, globalPortal, tickDelta)) {
-                            ((IEEntity) entity).notifyCollidingWithPortal(globalPortal);
+                            ((IEEntity) entity).ip_notifyCollidingWithPortal(globalPortal);
                         }
                     }
                 }
@@ -724,6 +445,12 @@ public class CollisionHelper {
         }
     }
     
+    /**
+     * Note that there are 3 kinds of portals in the aspect of collision:
+     * 1. non-teleportable portal, doesn't affect collision
+     * 2. teleportable but non-hasCrossPortalCollision, only affect this-side collision
+     * 3. teleportable and hasCrossPortalCollision
+     */
     public static void notifyCollidingPortals(Portal portal, float partialTick) {
         if (!portal.teleportable) {
             return;
@@ -748,11 +475,11 @@ public class CollisionHelper {
                     return;
                 }
                 
-                ((IEEntity) entity).notifyCollidingWithPortal(portal);
+                ((IEEntity) entity).ip_notifyCollidingWithPortal(portal);
             }
         );
     }
-
+    
     public static AABB getStretchedBoundingBox(Entity entity) {
         // normal colliding portal update lags 1 tick before collision calculation
         // the velocity updates later after updating colliding portal
@@ -776,7 +503,7 @@ public class CollisionHelper {
     private static boolean lastTickStagnate = false;
     
     @OnlyIn(Dist.CLIENT)
-    private static void informClientStagnant() {
+    public static void informClientStagnant() {
         thisTickStagnate = true;
         limitedLogger.log("client movement stagnated");
     }
@@ -813,12 +540,13 @@ public class CollisionHelper {
     }
     
     @OnlyIn(Dist.CLIENT)
-    private static PortalLike getCollisionHandlingUnitClient(Portal portal) {
+    public static PortalLike getCollisionHandlingUnitClient(Portal portal) {
         return PortalGroup.getPortalUnit(portal);
     }
     
     // currently does not support handling the case of colliding with multiple portals at the same time
     // select one (this is a workaround)
+    @Deprecated
     public static Portal chooseCollidingPortalBetweenTwo(
         Entity entity,
         Portal a,
@@ -854,4 +582,5 @@ public class CollisionHelper {
         }
         return collisionUnion;
     }
+
 }

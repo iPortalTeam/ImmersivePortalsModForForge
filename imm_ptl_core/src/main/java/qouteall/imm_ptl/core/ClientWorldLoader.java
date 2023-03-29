@@ -66,8 +66,6 @@ public class ClientWorldLoader {
     public static boolean isClientRemoteTicking = false;
     
     public static void init() {
-        IPGlobal.postClientTickSignal.connect(ClientWorldLoader::tick);
-        
         IPGlobal.clientCleanupSignal.connect(ClientWorldLoader::cleanUp);
 
         MinecraftForge.EVENT_BUS.register(ClientWorldLoader.class);
@@ -106,7 +104,7 @@ public class ClientWorldLoader {
         return isCreatingClientWorld;
     }
     
-    private static void tick() {
+    public static void tick() {
         if (IPCGlobal.isClientRemoteTickingEnabled) {
             isClientRemoteTicking = true;
             clientWorldMap.values().forEach(world -> {

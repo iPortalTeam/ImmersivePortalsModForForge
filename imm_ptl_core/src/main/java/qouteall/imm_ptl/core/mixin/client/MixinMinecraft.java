@@ -7,6 +7,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -15,6 +16,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import qouteall.imm_ptl.core.ClientWorldLoader;
 import qouteall.imm_ptl.core.IPCGlobal;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.ducks.IEMinecraftClient;
@@ -56,6 +58,38 @@ public abstract class MixinMinecraft implements IEMinecraftClient {
     @Final
     private RenderBuffers renderBuffers;
     
+    /**
+     * The whole process involving portal animation and teleportation:
+     * - begin ticking
+     * <p>
+     * - tick entities:
+     * - set last tick pos to current pos
+     * - do collision calculation for movements, update current pos
+     * - portal.animation.lastTickAnimatedState = thisTickAnimatedState, thisTickAnimatedState = null
+     * - increase game time
+     * - end ticking
+     * - partialTick should be 0
+     * - update portal animation (set thisTickAnimatedState as 1 tick later)
+     * - manage teleportation (right after updating portal animation)
+     * - rendering (interpolate between last tick pos and current pos)
+     * Note: the camera position is always behind the current tick position
+     * - partialTick should be 1
+     * - loop
+     */
+    @Inject(
+        method = "tick",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/multiplayer/ClientLevel;tickEntities()V"
+        )
+    )
+    private void onBeforeTickingEntities(CallbackInfo ci) {
+//        RenderStates.tickDelta = 1;
+//        StableClientTimer.update(level.getGameTime(), RenderStates.tickDelta);
+//        ClientPortalAnimationManagement.update();
+//        IPCGlobal.clientTeleportationManager.manageTeleportation(true);
+    }
+    
     // this happens after ticking client world and entities
     @Inject(
         method = "Lnet/minecraft/client/Minecraft;tick()V",
@@ -68,17 +102,14 @@ public abstract class MixinMinecraft implements IEMinecraftClient {
     private void onAfterClientTick(CallbackInfo ci) {
         getProfiler().push("imm_ptl_client_tick");
         
-        /*
-          The client ticking process {@link Minecraft#tick()}
-          1. Tick entities (including portals)
-          2. Increase game time
-          This happens right after increasing game time, so partialTick is 0
-         */
+        // including ticking remote worlds
+        ClientWorldLoader.tick();
+        
         RenderStates.tickDelta = 0;
         StableClientTimer.tick();
         StableClientTimer.update(level.getGameTime(), RenderStates.tickDelta);
-        ClientPortalAnimationManagement.onAfterClientTick();
-        IPCGlobal.clientTeleportationManager.manageTeleportation();
+        ClientPortalAnimationManagement.tick(); // must be after remote world ticking
+        IPCGlobal.clientTeleportationManager.manageTeleportation(true);
         
         IPGlobal.postClientTickSignal.emit();
         
