@@ -29,6 +29,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.network.NetworkDirection;
 import org.apache.commons.lang3.Validate;
 import org.joml.Matrix4d;
@@ -698,6 +699,15 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         if (!teleportable) {
             return false;
         }
+        //#########################################################
+        //                   Forge Patch below
+        //#########################################################
+        if (!ForgeHooks.onTravelToDimension(entity, dimensionTo)) {
+            return false;
+        }
+        //#########################################################
+        //                   Forge Patch above
+        //#########################################################
         if (entity instanceof Portal) {
             return false;
         }
