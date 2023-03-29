@@ -67,7 +67,7 @@ allprojects {
         // Pehkui
         api fg.deobf("com.github.Virtuoel:Pehkui:${project.pehkui_version}")
         // Twilight Forest
-        //api fg.deobf("teamtwilight:twilightforest:${project.twilightforest_version}:universal")
+        api fg.deobf("teamtwilight:twilightforest:${project.twilightforest_version}:universal")
 //        api fg.deobf("curse.maven:twilightforest-227639:${project.twilightforest_fileid}")
         // Flywheel
         compileOnly fg.deobf("com.jozufozu.flywheel:flywheel-forge-1.19.3:${project.flywheel_version}") // TODO @Nick1st there's no flywheel yet
