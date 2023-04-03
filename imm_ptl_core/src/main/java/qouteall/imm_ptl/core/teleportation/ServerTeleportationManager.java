@@ -77,6 +77,18 @@ public class ServerTeleportationManager {
         DynamicDimensionsImpl.beforeRemovingDimensionSignal.connect(this::evacuatePlayersFromDimension);
     }
     
+    private void tick() {
+        teleportingEntities = new HashSet<>();
+        long tickTimeNow = McHelper.getServerGameTime();
+        if (tickTimeNow % 30 == 7) {
+            for (ServerPlayer player : McHelper.getRawPlayerList()) {
+                updateForPlayer(tickTimeNow, player);
+            }
+        }
+        
+        manageGlobalPortalTeleportation();
+    }
+    
     public static boolean shouldEntityTeleport(Portal portal, Entity entity) {
         if (entity.level != portal.level) {return false;}
         if (!portal.canTeleportEntity(entity)) {return false;}
@@ -428,18 +440,6 @@ public class ServerTeleportationManager {
     
     public static void sendPositionConfirmMessage(ServerPlayer player) {
         IPMessage.sendToPlayer(new Dim_Confirm(player.level.dimension(), player.position()), player);
-    }
-    
-    private void tick() {
-        teleportingEntities = new HashSet<>();
-        long tickTimeNow = McHelper.getServerGameTime();
-        if (tickTimeNow % 30 == 7) {
-            for (ServerPlayer player : McHelper.getRawPlayerList()) {
-                updateForPlayer(tickTimeNow, player);
-            }
-        }
-        
-        manageGlobalPortalTeleportation();
     }
     
     private void manageGlobalPortalTeleportation() {
