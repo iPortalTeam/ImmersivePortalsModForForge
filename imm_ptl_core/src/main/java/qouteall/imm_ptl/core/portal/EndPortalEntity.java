@@ -37,8 +37,6 @@ public class EndPortalEntity extends Portal {
     // call code in the outer mod
     // TODO move end portal to the outer mod
     public static Runnable updateDragonFightStatusFunc;
-
-    public static EntityType<EndPortalEntity> entityType = IPRegistry.END_PORTAL.get();
     
     // only used by scaled view type end portal
     private EndPortalEntity clientFakedReversePortal;
@@ -85,7 +83,7 @@ public class EndPortalEntity extends Portal {
     }
     
     private static void generateClassicalEndPortal(ServerLevel world, Vec3 destination, Vec3 portalCenter) {
-        Portal portal = new EndPortalEntity(entityType, world);
+        Portal portal = new EndPortalEntity(IPRegistry.END_PORTAL.get(), world);
         
         portal.setPos(portalCenter.x, portalCenter.y, portalCenter.z);
         
@@ -119,7 +117,7 @@ public class EndPortalEntity extends Portal {
         
         for (Direction direction : Direction.values()) {
             Portal portal = PortalManipulation.createOrthodoxPortal(
-                EndPortalEntity.entityType,
+                IPRegistry.END_PORTAL.get(),
                 world, endWorld,
                 direction, Helper.getBoxSurface(thisSideBox, direction),
                 Helper.getBoxSurface(otherSideBox, direction).getCenter()
