@@ -12,6 +12,7 @@ import qouteall.q_misc_util.dimension.DimensionMisc;
 import qouteall.q_misc_util.dimension.DimsCommand;
 import qouteall.q_misc_util.dimension.DynamicDimensionsImpl;
 import qouteall.q_misc_util.dimension.ExtraDimensionStorage;
+import qouteall.q_misc_util.forge.hooks.LevelLoadEvent;
 import qouteall.q_misc_util.forge.networking.Message;
 
 @Mod("q_misc_util")
@@ -29,6 +30,7 @@ public class MiscUtilModEntry {
         FMLJavaModLoadingContext.get().getModEventBus().register(MiscUtilModEntry.class);
         MinecraftForge.EVENT_BUS.addListener(MiscUtilModEntry::serverTick);
         MinecraftForge.EVENT_BUS.addListener(MiscUtilModEntry::registerCommand);
+        MinecraftForge.EVENT_BUS.register(LevelLoadEvent.class);
     }
 
     @SubscribeEvent
