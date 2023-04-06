@@ -188,5 +188,7 @@
   "imm_ptl.incompatible": "WARNING: Immersive Portals mod maybe has compatibility issues with mod %1$s(%2$s).",
   "imm_ptl.client_performance_adjustment": "Enable Client Performance Adjustment",
   "entity.immersive_portals.portal": "Portal",
-  "entity.immersive_portals.nether_portal_new": "Nether Portal"
+  "entity.immersive_portals.nether_portal_new": "Nether Portal",
+  "entity.imm_ptl_core.portal": "Portal",
+  "entity.imm_ptl_core.nether_portal_new": "Nether Portal"
 }
