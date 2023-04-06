@@ -24,8 +24,12 @@ import qouteall.imm_ptl.peripheral.guide.IPOuterClientMisc;
 import javax.annotation.Nullable;
 import java.util.List;
 
-@Mod("immersive_portals")
+import static qouteall.imm_ptl.peripheral.platform_specific.PeripheralModEntry.MODID;
+
+@Mod(MODID)
 public class PeripheralModEntry {
+
+    public static final String MODID = "immersive_portals";
     public static class PortalHelperItem extends BlockItem {
         
         public PortalHelperItem(Block block, Properties settings) {
@@ -51,8 +55,8 @@ public class PeripheralModEntry {
         }
     }
 
-    private static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, "immersive_portals");
-    private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, "immersive_portals");
+    private static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
+    private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MODID);
 
     public static final RegistryObject<Block> PORTAL_HELPER_BLOCK = BLOCKS.register("portal_helper", () -> new Block(BlockBehaviour.Properties.of(Material.METAL).noOcclusion().isRedstoneConductor((a, b, c) -> false)));
     public static final RegistryObject<Item> PORTAL_HELPER_ITEM = ITEMS.register("portal_helper", () -> new PortalHelperItem(PORTAL_HELPER_BLOCK.get(), new Item.Properties()));

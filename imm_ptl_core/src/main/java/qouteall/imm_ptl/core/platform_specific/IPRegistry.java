@@ -27,12 +27,12 @@ public class IPRegistry {
     public static void registerMyDimensionsFabric() {
     }
 
-    public static final RegistryObject<Block> NETHER_PORTAL_BLOCK = RegistryObject.create(new ResourceLocation(IPModEntry.MODID, "nether_portal_block"), ForgeRegistries.BLOCKS);
+    public static final RegistryObject<Block> NETHER_PORTAL_BLOCK = RegistryObject.create(new ResourceLocation("immersive_portals", "nether_portal_block"), ForgeRegistries.BLOCKS);
 
     @SubscribeEvent
     public static void registerBlocks(RegisterEvent event) {
         event.register(ForgeRegistries.Keys.BLOCKS, handler -> handler.register(
-            new ResourceLocation("imm_ptl_core", "nether_portal_block"),
+            new ResourceLocation("immersive_portals" , "nether_portal_block"),
             new PortalPlaceholderBlock(BlockBehaviour.Properties
                 .of(Material.PORTAL)
                 .noCollission()
@@ -45,7 +45,7 @@ public class IPRegistry {
     }
 
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES =
-            DeferredRegister.create(ForgeRegistries.Keys.ENTITY_TYPES, IPModEntry.MODID);
+            DeferredRegister.create(ForgeRegistries.Keys.ENTITY_TYPES, "immersive_portals");
 
     public static final RegistryObject<EntityType<Portal>> PORTAL =
             ENTITY_TYPES.register("portal",
