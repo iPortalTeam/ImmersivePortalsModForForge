@@ -62,7 +62,7 @@ allprojects {
         annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
         // Pehkui
-        api fg.deobf("com.github.Virtuoel:Pehkui:${project.pehkui_version}")
+        compileOnly fg.deobf("com.github.Virtuoel:Pehkui:${project.pehkui_version}") // Currently broken somehow
         // Twilight Forest
         //api fg.deobf("teamtwilight:twilightforest:${project.twilightforest_version}:universal")
         api fg.deobf("curse.maven:twilightforest-227639:${project.twilightforest_fileid}")
@@ -83,7 +83,7 @@ allprojects {
         // Mekanism
         api fg.deobf("curse.maven:mekanism-268560:${project.mekanism_fileid}")
         // Immersive Engineering
-        api fg.deobf("curse.maven:immersiveengineering-231951:${project.immersiveengineering_fileid}")
+//        api fg.deobf("curse.maven:immersiveengineering-231951:${project.immersiveengineering_fileid}") // Is having issues with new Rubidium
 
         compileOnly 'com.demonwav.mcdev:annotations:1.0'
     }
