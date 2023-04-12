@@ -53,6 +53,14 @@ allprojects {
         maven {
             url = "https://modmaven.dev/"
         }
+        maven {
+            name "aether"
+            url = "https://maven.pkg.github.com/Gilded-Games/The-Aether"
+            credentials {
+                username "$mavenDownUser"
+                password "$mavenDownPassword"
+            }
+        }
 
         flatDir {
             dirs 'deps'
@@ -97,6 +105,9 @@ allprojects {
         runtimeOnly fg.deobf("curse.maven:rftoolsdim-240950:4359650")
         runtimeOnly fg.deobf("curse.maven:rftoolsbase-326041:4373507")
         runtimeOnly fg.deobf("curse.maven:mcjtylib-233105:4372084")
+
+        // Dimension Sync broken report?
+        runtimeOnly fg.deobf("com.gildedgames.aether:aether:1.19.2-0.2.0")
     }
 
     minecraft {
