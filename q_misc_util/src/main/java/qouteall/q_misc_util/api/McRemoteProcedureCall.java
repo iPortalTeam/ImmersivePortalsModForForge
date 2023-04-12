@@ -152,7 +152,7 @@ public class McRemoteProcedureCall {
         String methodPath,
         Object... arguments
     ) {
-        ServerboundCustomPayloadPacket packet =
+        Packet packet =
             ImplRemoteProcedureCall.createC2SPacket(methodPath, arguments);
         Minecraft.getInstance().getConnection().send(packet);
     }

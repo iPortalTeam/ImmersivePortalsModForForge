@@ -32,6 +32,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkDirection;
 import org.apache.commons.lang3.Validate;
 import qouteall.q_misc_util.forge.networking.Message;
+import qouteall.q_misc_util.forge.networking.Remote_CtS;
 import qouteall.q_misc_util.forge.networking.Remote_StC;
 
 import java.lang.reflect.InvocationTargetException;
@@ -159,15 +160,16 @@ public class ImplRemoteProcedureCall {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public static ServerboundCustomPayloadPacket createC2SPacket(
+    public static Packet createC2SPacket(
         String methodPath,
         Object... arguments
     ) {
-        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-        
-        serializeStringWithArguments(methodPath, arguments, buf);
-        
-        return new ServerboundCustomPayloadPacket(MiscNetworking.id_ctsRemote, buf);
+//        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+//
+//        serializeStringWithArguments(methodPath, arguments, buf);
+//
+//        return new ServerboundCustomPayloadPacket(MiscNetworking.id_ctsRemote, buf);
+        return Message.INSTANCE.toVanillaPacket(new Remote_CtS(methodPath, arguments), NetworkDirection.PLAY_TO_SERVER);
     }
     
     public static Packet createS2CPacket(
