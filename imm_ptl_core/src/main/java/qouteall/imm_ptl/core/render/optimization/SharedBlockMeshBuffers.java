@@ -93,7 +93,7 @@ public class SharedBlockMeshBuffers {
     }
     
     public static String getDebugString() {
-        if (IPGlobal.enableSharedBlockMeshBuffers) {
+        if (IPGlobal.enableSharedBlockMeshBuffers && threadBuffers != null) {
             return "SharedBlockMeshBuffers " + Integer.toString(threadBuffers.size());
         }
         return "";
