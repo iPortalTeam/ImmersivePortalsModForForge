@@ -1,5 +1,10 @@
 package qouteall.imm_ptl.peripheral.dim_stack;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSyntaxException;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.JsonOps;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
@@ -16,6 +21,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.loading.FMLPaths;
+import org.apache.logging.log4j.LogManager;
 import qouteall.imm_ptl.core.portal.global_portals.GlobalPortalStorage;
 import qouteall.imm_ptl.core.portal.global_portals.VerticalConnectingPortal;
 import qouteall.q_misc_util.Helper;
@@ -23,6 +30,9 @@ import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.api.McRemoteProcedureCall;
 import qouteall.q_misc_util.dimension.DimId;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +52,21 @@ public class DimStackManagement {
     // make sure the bedrock replacement map for overworld is initialized in time
     public static void onServerEarlyInit(MinecraftServer server) {
         Map<ResourceKey<Level>, BlockState> newMap = new HashMap<>();
+
+        if (dimStackToApply == null && Paths.get(FMLPaths.CONFIGDIR.get().toString(), "imm_ptl_dim_stack.json").toFile().exists()) {
+            try {
+                String dimStackConfig = Files.readString(Paths.get(FMLPaths.CONFIGDIR.get().toString(), "imm_ptl_dim_stack.json"));
+                JsonElement JSON = new GsonBuilder().create().fromJson(dimStackConfig, JsonElement.class);
+                DataResult<CompoundTag> result = CompoundTag.CODEC.parse(JsonOps.INSTANCE, JSON);
+                DimStackInfo info = DimStackInfo.fromNbt(result.result().get());
+
+                dimStackToApply = info;
+
+                Helper.log("Generating dimension stack world");
+            } catch (JsonSyntaxException | IOException e) {
+                LogManager.getLogger().error("Failed to read ImmersivePortals Dimension Stack Config: ", e);
+            }
+        }
         
         if (dimStackToApply != null) {
             for (DimStackEntry entry : dimStackToApply.entries) {

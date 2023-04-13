@@ -70,6 +70,33 @@ public class DimEntryWidget extends ContainerObjectSelectionList.Entry<DimEntryW
         
         entry = new DimStackEntry(dimension);
     }
+
+    public DimEntryWidget(
+            ResourceKey<Level> dimension,
+            DimListWidget parent,
+            Consumer<DimEntryWidget> selectCallback,
+            Type type,
+            DimStackEntry entry
+    ) {
+        this.dimension = dimension;
+        this.parent = parent;
+        this.selectCallback = selectCallback;
+        this.type = type;
+
+        this.dimIconPath = getDimensionIconPath(this.dimension);
+
+        this.dimensionName = getDimensionName(dimension);
+
+        try {
+            Minecraft.getInstance().getResourceManager().getResource(dimIconPath);
+        }
+        catch (IOException e) {
+            Helper.err("Cannot load texture " + dimIconPath);
+            dimensionIconPresent = false;
+        }
+
+        this.entry = entry;
+    }
     
     private final List<GuiEventListener> children = new ArrayList<>();
     

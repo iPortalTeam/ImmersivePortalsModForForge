@@ -127,6 +127,8 @@ public class IPGlobal {
 
     public static boolean enableModelDataFix = true;
 
+    public static boolean editGlobalDimensionStack = false;
+
     public static enum RenderMode {
         normal,
         compatibility,

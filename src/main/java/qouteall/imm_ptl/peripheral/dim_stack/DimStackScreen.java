@@ -1,22 +1,36 @@
 package qouteall.imm_ptl.peripheral.dim_stack;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSyntaxException;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.JsonOps;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.ForgeConfig;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.loading.FMLPaths;
+import org.apache.logging.log4j.LogManager;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.peripheral.alternate_dimension.AlternateDimensions;
 import qouteall.q_misc_util.my_util.GuiHelper;
 
 import javax.annotation.Nullable;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -36,6 +50,8 @@ public class DimStackScreen extends Screen {
     
     private final Button loopButton;
     private final Button gravityModeButton;
+
+    private final Button saveAsGlobalConfig;
     
     private int titleY;
     
@@ -119,6 +135,14 @@ public class DimStackScreen extends Screen {
                 onEditEntry();
             }
         );
+
+        saveAsGlobalConfig = new Button(
+                0, 0, 72, 20,
+                new TextComponent("Save to disk"),
+                (buttonWidget) -> {
+                    onSaveDimStack();
+                }
+        );
         
         dimListWidget = new DimListWidget(
             width,
@@ -139,8 +163,45 @@ public class DimStackScreen extends Screen {
         dimListWidget.entryWidgets.add(createDimEntryWidget(Level.NETHER));
         
         helpButton = createHelpButton(this);
+
+        if (Paths.get(FMLPaths.CONFIGDIR.get().toString(), "imm_ptl_dim_stack.json").toFile().exists()) {
+            try {
+                String dimStackConfig = Files.readString(Paths.get(FMLPaths.CONFIGDIR.get().toString(), "imm_ptl_dim_stack.json"));
+                JsonElement JSON = new GsonBuilder().create().fromJson(dimStackConfig, JsonElement.class);
+                DataResult<CompoundTag> result = CompoundTag.CODEC.parse(JsonOps.INSTANCE, JSON);
+                DimStackInfo info = DimStackInfo.fromNbt(result.result().get());
+                isEnabled = true;
+                loopEnabled = info.loop;
+                localGravityEnabled = info.gravityChange;
+                dimListWidget.entryWidgets.retainAll(new ArrayList<DimEntryWidget>());
+                info.entries.stream().forEach(dimStackEntry -> {
+                    DimEntryWidget widget =
+                            new DimEntryWidget(dimStackEntry.dimension, dimListWidget, getElementSelectCallback(), DimEntryWidget.Type.withAdvancedOptions, dimStackEntry);
+                    dimListWidget.entryWidgets.add(widget);
+                });
+            } catch (JsonSyntaxException | IOException e) {
+                LogManager.getLogger().error("Failed to read ImmersivePortals Dimension Stack Config: ", e);
+            }
+        }
     }
-    
+
+    private void onSaveDimStack() {
+        if (getDimStackInfo() == null) {
+            try {
+                Files.deleteIfExists(Paths.get(FMLPaths.CONFIGDIR.get().toString(), "imm_ptl_dim_stack.json"));
+            } catch (IOException e) {
+                LogManager.getLogger().error("Failed to delete ImmersivePortals Dimension Stack Config: ", e);
+            }
+        } else {
+            try (FileWriter writer = new FileWriter(Paths.get(FMLPaths.CONFIGDIR.get().toString(), "imm_ptl_dim_stack.json").toFile())) {
+                DataResult<JsonElement> result = CompoundTag.CODEC.encodeStart(JsonOps.INSTANCE, getDimStackInfo().toNbt());
+                writer.write(new GsonBuilder().setPrettyPrinting().create().toJson(result.result().get()));
+            } catch (IOException e) {
+                LogManager.getLogger().error("Failed to write ImmersivePortals Dimension Stack Config: ", e);
+            }
+        }
+    }
+
     public static Button createHelpButton(Screen parent) {
         return new Button(
             0, 0, 30, 20,
@@ -185,6 +246,10 @@ public class DimStackScreen extends Screen {
         addRenderableWidget(helpButton);
         addRenderableWidget(loopButton);
         addRenderableWidget(gravityModeButton);
+
+        if (IPGlobal.editGlobalDimensionStack) {
+            addRenderableWidget(saveAsGlobalConfig);
+        }
         
         setEnabled(isEnabled);
         
@@ -199,6 +264,11 @@ public class DimStackScreen extends Screen {
                 helpButton.x = width - 50;
                 helpButton.y = from;
                 helpButton.setWidth(30);
+            }),
+            new GuiHelper.LayoutElement(true, 20, (from, to) -> {
+                saveAsGlobalConfig.x = width - 150;
+                saveAsGlobalConfig.y = from - 20;
+                saveAsGlobalConfig.setWidth(90);
             }),
             new GuiHelper.LayoutElement(
                 true, 20,

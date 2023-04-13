@@ -45,6 +45,7 @@ public class IPConfig {
     public static ForgeConfigSpec.EnumValue<IPGlobal.NetherPortalMode> netherPortalMode;
     public static ForgeConfigSpec.EnumValue<IPGlobal.EndPortalMode> endPortalMode;
     public static ForgeConfigSpec.BooleanValue enableModelDataFix;
+    public static ForgeConfigSpec.BooleanValue editGlobalDimensionStack;
 
     public static void register(ForgeConfigSpec.Builder builder) {
         builder.comment("Check the wiki at https://qouteall.fun/immptl/wiki/Config-Options for more information");
@@ -83,6 +84,7 @@ public class IPConfig {
         enableServerPerformanceAdjustment = builder.define("enableServerPerformanceAdjustment", true);
         netherPortalMode = builder.defineEnum("netherPortalMode", IPGlobal.NetherPortalMode.normal, IPGlobal.NetherPortalMode.values());
         endPortalMode = builder.defineEnum("endPortalMode", IPGlobal.EndPortalMode.normal, IPGlobal.EndPortalMode.values());
+        editGlobalDimensionStack = builder.define("enableGlobalDimensionStack", false);
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, builder.build());
     }
@@ -141,6 +143,8 @@ public class IPConfig {
         if (Boolean.TRUE.equals(enableDepthClampForPortalRendering.get())) {
             IPGlobal.enableDepthClampForPortalRendering = true;
         }
+
+        IPGlobal.editGlobalDimensionStack = editGlobalDimensionStack.get();
 
         Helper.log("IP Config Applied");
     }
