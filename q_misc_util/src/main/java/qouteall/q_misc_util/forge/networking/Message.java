@@ -42,11 +42,7 @@ public class Message {
                 .consumer(Remote_StC::handle)
                 .add();
 
-        INSTANCE.messageBuilder(Remote_CtS.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(Remote_CtS::new)
-                .encoder(Remote_CtS::toBytes)
-                .consumer(Remote_CtS::handle)
-                .add();
+        INSTANCE.registerMessage(id(), Remote_CtS.class, Remote_CtS::toBytes, Remote_CtS::new, Remote_CtS::handle);
     }
 
     public static <MSG> void sendToServer(MSG message) {

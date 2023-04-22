@@ -1,13 +1,12 @@
 package qouteall.q_misc_util.api;
 
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraft.client.Minecraft;
-import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
-import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
-import net.minecraft.server.level.ServerPlayer;
 import qouteall.q_misc_util.ImplRemoteProcedureCall;
+import qouteall.q_misc_util.forge.networking.Message;
+import qouteall.q_misc_util.forge.networking.Remote_CtS;
 
 /**
  * <p>
@@ -152,8 +151,8 @@ public class McRemoteProcedureCall {
         String methodPath,
         Object... arguments
     ) {
-        Packet packet =
+        Remote_CtS packet =
             ImplRemoteProcedureCall.createC2SPacket(methodPath, arguments);
-        Minecraft.getInstance().getConnection().send(packet);
+        Message.INSTANCE.sendToServer(packet);
     }
 }

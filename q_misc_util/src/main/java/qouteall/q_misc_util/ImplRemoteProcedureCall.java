@@ -159,7 +159,7 @@ public class ImplRemoteProcedureCall {
     }
     
     @OnlyIn(Dist.CLIENT)
-    public static Packet createC2SPacket(
+    public static Remote_CtS createC2SPacket(
         String methodPath,
         Object... arguments
     ) {
@@ -168,7 +168,7 @@ public class ImplRemoteProcedureCall {
 //        serializeStringWithArguments(methodPath, arguments, buf);
 //
 //        return new ServerboundCustomPayloadPacket(MiscNetworking.id_ctsRemote, buf);
-        return Message.INSTANCE.toVanillaPacket(new Remote_CtS(methodPath, arguments), NetworkDirection.PLAY_TO_SERVER);
+        return new Remote_CtS(methodPath, arguments);
     }
     
     public static Packet createS2CPacket(

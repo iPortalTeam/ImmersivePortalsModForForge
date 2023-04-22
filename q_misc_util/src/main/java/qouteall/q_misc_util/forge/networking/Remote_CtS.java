@@ -26,11 +26,10 @@ public class Remote_CtS {
         ImplRemoteProcedureCall.serializeStringWithArguments(methodPath, arguments, buf);
     }
 
-    public boolean handle(Supplier<NetworkEvent.Context> supplier) {
+    public void handle(Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context ctx = supplier.get();
-        ctx.enqueueWork(() -> MiscHelper.executeOnServerThread(
-                ImplRemoteProcedureCall.serverReadPacketAndGetHandler(ctx.getSender(), receivedBuffer)
-        ));
-        return true;
+        Runnable remoteCallable = ImplRemoteProcedureCall.serverReadPacketAndGetHandler(ctx.getSender(), receivedBuffer);
+        ctx.enqueueWork(() -> MiscHelper.executeOnServerThread(remoteCallable));
+        ctx.setPacketHandled(true);
     }
 }
