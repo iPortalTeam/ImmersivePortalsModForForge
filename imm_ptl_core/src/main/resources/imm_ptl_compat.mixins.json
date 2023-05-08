@@ -21,7 +21,15 @@
     "MixinSodiumShaderLoader",
     "MixinSodiumWorldRenderer"
   ],
+  "client": [
+    "MixinLucent",
+    "MixinLucentClient",
+    "MixinLucentChunkRenderDispatcherHooks",
+    "MixinLucentLevelRenderer",
+    "LucentThreadAccessor"
+  ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "refmap": "mixins.imm_ptl.refmap.json"
 }

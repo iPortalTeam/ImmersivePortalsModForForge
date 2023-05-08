@@ -17,6 +17,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.commons.lang3.Validate;
+import qouteall.imm_ptl.core.compat.IPCompatMixinPlugin;
 import qouteall.imm_ptl.core.ducks.*;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.render.context_management.DimensionRenderHelper;
@@ -263,7 +264,7 @@ public class ClientWorldLoader {
      */
     public static ClientLevel getWorld(ResourceKey<Level> dimension) {
         Validate.notNull(dimension);
-        Validate.isTrue(client.isSameThread());
+//        Validate.isTrue(client.isSameThread() || IPCompatMixinPlugin.asyncModCanAccessClientThreadOnlyMethod()); // TODO @Nick1st FORGE ONLY FOR LUCENT. MAKE SURE THIS DOESN'T BREAK ANYTHING.
         
         initializeIfNeeded();
         
