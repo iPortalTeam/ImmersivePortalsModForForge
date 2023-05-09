@@ -63,7 +63,7 @@ public class MixinLucent {
     }
 
     // Make sure Lucent gets the entities from the right level
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getEntitiesOfClass(Ljava/lang/Class;Lnet/minecraft/world/phys/AABB;)Ljava/util/List;"))
+    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getEntitiesOfClass(Ljava/lang/Class;Lnet/minecraft/world/phys/AABB;)Ljava/util/List;"), remap = true)
     private static List<Entity> getAllEntitiesFromTheRightDimension(ClientLevel instance, Class<Entity> entityClass, AABB aabb) {
         aabb = RenderStates.originalPlayerBoundingBox.inflate(LucentData.maxVisibleDistance);
         List<Entity> allEntities = ClientWorldLoader.getWorld(RenderStates.originalPlayerDimension).getEntitiesOfClass(entityClass, aabb);
@@ -80,13 +80,13 @@ public class MixinLucent {
     }
 
     // Give Lucent the correct level to clip
-    @Redirect(method = "getEntityLightLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;clip(Lnet/minecraft/world/level/ClipContext;)Lnet/minecraft/world/phys/BlockHitResult;"))
+    @Redirect(method = "getEntityLightLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;clip(Lnet/minecraft/world/level/ClipContext;)Lnet/minecraft/world/phys/BlockHitResult;"), remap = true)
     private static BlockHitResult clipWithRightPosition(Level instance, ClipContext clipContext) {
         return ClientWorldLoader.getWorld(RenderStates.originalPlayerDimension).clip(clipContext);
     }
 
     // Calculate the distance correctly.
-    @Redirect(method = "getEntityLightLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;distanceTo(Lnet/minecraft/world/entity/Entity;)F"))
+    @Redirect(method = "getEntityLightLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;distanceTo(Lnet/minecraft/world/entity/Entity;)F"), remap = true)
     private static float correctAlwaysVisibleDistanceCheck(LocalPlayer instance, Entity entity) {
         Vec3 entityPos = new Vec3(entity.getX(), entity.getY(), entity.getZ());
         if (entity instanceof LocalPlayer) {
@@ -96,7 +96,7 @@ public class MixinLucent {
     }
 
     // Calculate the correct Skylight value
-    @Redirect(method = "getEntityLightLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getBrightness(Lnet/minecraft/world/level/LightLayer;Lnet/minecraft/core/BlockPos;)I"))
+    @Redirect(method = "getEntityLightLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getBrightness(Lnet/minecraft/world/level/LightLayer;Lnet/minecraft/core/BlockPos;)I"), remap = true)
     private static int correctSkyLight(ClientLevel instance, LightLayer lightLayer, BlockPos blockPos) {
         return ClientWorldLoader.getWorld(RenderStates.originalPlayerDimension).getBrightness(lightLayer, blockPos);
     }
@@ -112,6 +112,14 @@ public class MixinLucent {
     @ModifyVariable(method = "calcLight", at = @At(value = "HEAD"), argsOnly = true)
     private static BlockAndTintGetter getCorrectSkylightLevel(BlockAndTintGetter level) {
         return ClientWorldLoader.getWorld(RenderStates.originalPlayerDimension);
+    }
+
+    // Fix a race condition if the Renderstate originalPlayerDimension is not yet set.
+    @Inject(method = "blockChanged", at = @At("HEAD"), cancellable = true)
+    private static void injectNullCheck(BlockPos pos, CallbackInfo ci) {
+        if (RenderStates.originalPlayerDimension == null) {
+            ci.cancel();
+        }
     }
 
 }
