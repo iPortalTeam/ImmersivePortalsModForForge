@@ -264,8 +264,25 @@ public class ClientWorldLoader {
      */
     public static ClientLevel getWorld(ResourceKey<Level> dimension) {
         Validate.notNull(dimension);
-//        Validate.isTrue(client.isSameThread() || IPCompatMixinPlugin.asyncModCanAccessClientThreadOnlyMethod()); // TODO @Nick1st FORGE ONLY FOR LUCENT. MAKE SURE THIS DOESN'T BREAK ANYTHING.
+        Validate.isTrue(client.isSameThread());
         
+        initializeIfNeeded();
+        
+        if (!clientWorldMap.containsKey(dimension)) {
+            return createSecondaryClientWorld(dimension);
+        }
+        
+        return clientWorldMap.get(dimension);
+    }
+
+    /**
+     * Get the client world and create if missing.
+     * If the dimension id is invalid, it will throw an error
+     * Use {@link #getWorld(ResourceKey)} instead if possible.
+     */
+    public static synchronized ClientLevel getWorldAsync(ResourceKey<Level> dimension) {
+        Validate.notNull(dimension);
+
         initializeIfNeeded();
         
         if (!clientWorldMap.containsKey(dimension)) {

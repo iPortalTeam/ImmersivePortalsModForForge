@@ -5,10 +5,8 @@ import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BooleanSupplier;
 
 public class IPCompatMixinPlugin implements IMixinConfigPlugin {
     @Override
@@ -48,9 +46,6 @@ public class IPCompatMixinPlugin implements IMixinConfigPlugin {
 
         if (mixinClassName.contains("Lucent")) {
             boolean lucentLoaded = LoadingModList.get().getModFileById("lucent") != null;
-//            if (lucentLoaded) {
-//                asyncModChecks.add(LucentCompat::canAccessClientOnlyThread);
-//            }
             return lucentLoaded;
         }
         
@@ -77,14 +72,4 @@ public class IPCompatMixinPlugin implements IMixinConfigPlugin {
     
     }
 
-//    private static final List<BooleanSupplier> asyncModChecks = new ArrayList<>();
-//
-//    public static boolean asyncModCanAccessClientThreadOnlyMethod() {
-//        for (BooleanSupplier check : asyncModChecks) {
-//            if (check.getAsBoolean()) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
 }

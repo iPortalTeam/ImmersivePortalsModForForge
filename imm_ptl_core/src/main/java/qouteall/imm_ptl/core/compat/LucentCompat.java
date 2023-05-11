@@ -5,16 +5,11 @@ import com.legacy.lucent.api.plugin.LucentPlugin;
 import com.legacy.lucent.api.registry.EntityLightSourcePosRegistry;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.Vec3;
-import qouteall.imm_ptl.core.compat.mixin.LucentThreadAccessor;
 import qouteall.imm_ptl.core.platform_specific.IPModEntry;
 import qouteall.imm_ptl.core.render.context_management.RenderStates;
 
 @LucentPlugin
 public class LucentCompat implements ILucentPlugin {
-
-    public static boolean canAccessClientOnlyThread() {
-        return Thread.currentThread() == LucentThreadAccessor.getLucentThread();
-    }
 
     @Override
     public String ownerModID() {
