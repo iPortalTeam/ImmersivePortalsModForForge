@@ -50,6 +50,11 @@ allprojects {
         maven {
             url = "https://modmaven.dev/"
         }
+        maven {
+            name "Modding Legacy Maven"
+            url "https://maven.moddinglegacy.com/artifactory/modding-legacy/"
+        }
+
 
         flatDir {
             dirs 'deps'
@@ -84,6 +89,8 @@ allprojects {
         api fg.deobf("curse.maven:mekanism-268560:${project.mekanism_fileid}")
         // Immersive Engineering
         api fg.deobf("curse.maven:immersiveengineering-231951:${project.immersiveengineering_fileid}")
+        // Lucent
+        api fg.deobf("com.legacy:lucent:${project.lucent_version}")
 
         compileOnly 'com.demonwav.mcdev:annotations:1.0'
     }

@@ -43,6 +43,11 @@ public class IPCompatMixinPlugin implements IMixinConfigPlugin {
             boolean flywheelLoaded = LoadingModList.get().getModFileById("flywheel") != null;
             return flywheelLoaded;
         }
+
+        if (mixinClassName.contains("Lucent")) {
+            boolean lucentLoaded = LoadingModList.get().getModFileById("lucent") != null;
+            return lucentLoaded;
+        }
         
         return false;
     }
@@ -66,4 +71,5 @@ public class IPCompatMixinPlugin implements IMixinConfigPlugin {
     public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
     
     }
+
 }
