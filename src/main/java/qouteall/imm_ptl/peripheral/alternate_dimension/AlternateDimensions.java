@@ -1,6 +1,7 @@
 package qouteall.imm_ptl.peripheral.alternate_dimension;
 
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceKey;
@@ -180,7 +181,7 @@ public class AlternateDimensions {
         Registry<StructureSet> structureSets = rm.registryOrThrow(Registry.STRUCTURE_SET_REGISTRY);
         
         FlatLevelGeneratorSettings flatChunkGeneratorConfig =
-            new FlatLevelGeneratorSettings(Optional.empty(), biomeRegistry);
+            new FlatLevelGeneratorSettings(Optional.of(HolderSet.direct()), biomeRegistry);
         flatChunkGeneratorConfig.getLayersInfo().add(new FlatLayerInfo(1, Blocks.AIR));
         flatChunkGeneratorConfig.updateLayers();
         
