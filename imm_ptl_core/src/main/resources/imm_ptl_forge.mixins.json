@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "package": "qouteall.imm_ptl.core.platform_specific.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "common.MixinPlayerManager_MA",
+    "common.MixinServerPlayerEntity_MA",
+    "common.MixinPlayerChangedDimensionEvent"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "mixins.imm_ptl.refmap.json"
+}

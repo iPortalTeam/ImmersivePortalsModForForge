@@ -18,7 +18,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import org.apache.commons.lang3.Validate;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.IPMcHelper;
@@ -32,6 +33,7 @@ import qouteall.imm_ptl.core.ducks.IEServerPlayerEntity;
 import qouteall.imm_ptl.core.platform_specific.O_O;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.Dim_Confirm;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
+import qouteall.imm_ptl.core.platform_specific.IsVanilla;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.global_portals.GlobalPortalStorage;
 import qouteall.imm_ptl.core.portal.global_portals.GlobalTrackedPortal;
@@ -380,7 +382,10 @@ public class ServerTeleportationManager {
 
         // fire forge event
         Helper.dbg("Forge Event PlayerEvent.PlayerChangedDimensionEvent fired");
-        ForgeEventFactory.firePlayerChangedDimensionEvent(player, fromWorld.dimension(), toWorld.dimension());
+        PlayerEvent.PlayerChangedDimensionEvent event = new PlayerEvent.PlayerChangedDimensionEvent(player, fromWorld.dimension(), toWorld.dimension());
+        ((IsVanilla) (Object) event).setNotVanilla();
+        MinecraftForge.EVENT_BUS.post(event);
+        //ForgeEventFactory.firePlayerChangedDimensionEvent(player, fromWorld.dimension(), toWorld.dimension());
 
         /*##################################################################################################
         ##                                          Forge specific end                                    ##

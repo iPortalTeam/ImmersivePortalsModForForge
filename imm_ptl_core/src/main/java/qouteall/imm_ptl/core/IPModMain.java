@@ -58,9 +58,9 @@ public class IPModMain {
         MinecraftForge.EVENT_BUS.register(IPModMain.class);
     }
 
-    @SubscribeEvent
-    public static void playerRespawn(PlayerEvent.Clone event) {
-        System.out.println("Test");
-    }
+//    @SubscribeEvent
+//    public static void testEvents(PlayerEvent.PlayerLoggedInEvent event) {
+//        System.out.println("Test");
+//    }
     
 }
