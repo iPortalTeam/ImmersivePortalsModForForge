@@ -77,7 +77,7 @@ public class IPConfig {
         enableDatapackPortalGen = builder.define("enableDatapackPortalGen", true);
         enableCrossPortalView = builder.define("enableCrossPortalView", true);
         enableClippingMechanism = builder.define("enableClippingMechanism", true);
-        enableDepthClampForPortalRendering = builder.define("enableDepthClampForPortalRendering", false);
+        enableDepthClampForPortalRendering = builder.define("enableDepthClampForPortalRendering", true);
         lightVanillaNetherPortalWhenCrouching = builder.define("lightVanillaNetherPortalWhenCrouching", false);
         enableNetherPortalEffect = builder.define("enableNetherPortalEffect", true);
         enableClientPerformanceAdjustment = builder.define("enableClientPerformanceAdjustment", true);
