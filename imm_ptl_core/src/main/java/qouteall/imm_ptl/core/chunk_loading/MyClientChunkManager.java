@@ -1,12 +1,14 @@
 package qouteall.imm_ptl.core.chunk_loading;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.multiplayer.ClientChunkCache;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkPacketData;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
@@ -20,6 +22,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.ClientWorldLoader;
 import qouteall.imm_ptl.core.platform_specific.O_O;
 import qouteall.q_misc_util.my_util.SignalArged;
@@ -43,7 +46,7 @@ public class MyClientChunkManager extends ClientChunkCache {
     public static final SignalArged<LevelChunk> clientChunkUnloadSignal = new SignalArged<>();
     
     public MyClientChunkManager(ClientLevel clientWorld, int loadDistance) {
-        super(clientWorld, loadDistance);
+        super(clientWorld, 1); // the chunk array is unused. make it small by passing 1 as load distance to super constructor
         this.world = clientWorld;
         this.emptyChunk = new EmptyLevelChunk(
             clientWorld, new ChunkPos(0, 0),
@@ -118,11 +121,11 @@ public class MyClientChunkManager extends ClientChunkCache {
             ChunkPos chunkPos = new ChunkPos(x, z);
             if (!isValidChunk(worldChunk, x, z)) {
                 worldChunk = new LevelChunk(this.world, chunkPos);
-                worldChunk.replaceWithPacketData(buf, nbt, consumer);
+                loadChunkDataFromPacket(buf, nbt, worldChunk, consumer);
                 chunkMap.put(chunkPosLong, worldChunk);
             }
             else {
-                worldChunk.replaceWithPacketData(buf, nbt, consumer);
+                loadChunkDataFromPacket(buf, nbt, worldChunk, consumer);
             }
         }
         
@@ -133,6 +136,40 @@ public class MyClientChunkManager extends ClientChunkCache {
         clientChunkLoadSignal.emit(worldChunk);
         
         return worldChunk;
+    }
+
+    /**
+     * {@link net.minecraft.core.IdMap#byIdOrThrow(int)}
+     * {@link net.minecraft.world.level.chunk.LinearPalette#read(FriendlyByteBuf)}
+     */
+    private void loadChunkDataFromPacket(
+            FriendlyByteBuf buf,
+            CompoundTag nbt,
+            LevelChunk worldChunk,
+            Consumer<ClientboundLevelChunkPacketData.BlockEntityTagOutput> consumer
+    ) {
+        try {
+            worldChunk.replaceWithPacketData(buf, nbt, consumer);
+        }
+        catch (Exception e) {
+            LOGGER.error(
+                    "Error deserializing chunk packet {} {}",
+                    worldChunk.getLevel().dimension().location(),
+                    worldChunk.getPos(),
+                    e
+            );
+//            CHelper.printChat(
+//                    new TextComponent("Failed to deserialize chunk packet. %s %s %s".formatted(
+//                                    worldChunk.getLevel().dimension().location(),
+//                                    worldChunk.getPos().x, worldChunk.getPos().z
+//                            ))
+//                            .append(new TextComponent(" Report issue:"))
+//                            //.append(McHelper.getLinkText(O_O.getIssueLink())) // TODO @Nick1st Backport eventually
+//                            .withStyle(ChatFormatting.RED)
+//            );
+//
+//            throw new RuntimeException(e);
+        }
     }
     
     public List<LevelChunk> getCopiedChunkList() {
