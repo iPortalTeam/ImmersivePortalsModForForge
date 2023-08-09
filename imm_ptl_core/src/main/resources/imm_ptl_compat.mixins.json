@@ -23,8 +23,7 @@
   ],
   "client": [
     "MixinLucent",
-    "MixinLucentChunkRenderDispatcherHooks",
-    "MixinLucentLevelRenderer"
+    "MixinLucentChunkRenderDispatcherHooks"
   ],
   "injectors": {
     "defaultRequire": 1
