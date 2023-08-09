@@ -23,3 +23,6 @@ run
 
 # Files from Forge MDK
 forge*changelog.txt
+
+# Things for that I maybe don't have the rights to distribute
+libs/*\.jar

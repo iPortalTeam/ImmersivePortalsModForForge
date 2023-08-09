@@ -57,7 +57,7 @@ allprojects {
 
 
         flatDir {
-            dirs 'deps'
+            dirs rootProject.file('libs')
         }
 
     }
@@ -91,6 +91,16 @@ allprojects {
         api fg.deobf("curse.maven:immersiveengineering-231951:${project.immersiveengineering_fileid}")
         // Lucent
         api fg.deobf("com.legacy:lucent:${project.lucent_version}")
+        // Music Triggers
+        api fg.deobf("curse.maven:musictriggers-518410:${project.musictrigger_fileid}")
+        api fg.deobf("curse.maven:impossiblelib-661115:${project.impossiblelib_fileid}")
+        // Vampirism
+        api fg.deobf("curse.maven:vampirism-233029:${project.vampirism_fileid}")
+        api fg.deobf("curse.maven:guide-api-village-and-pillage-380771:3677523")
+        // Agicraft
+        //implementation fg.deobf("curse.maven:agricraft-225635:4595095")
+        implementation fg.deobf('flat.dev.agricraft:agricraft-1.18.2:3.1.6')
+        implementation fg.deobf("curse.maven:infinitylib-251396:3883932")
 
         compileOnly 'com.demonwav.mcdev:annotations:1.0'
     }
@@ -171,10 +181,11 @@ jar {
 mixin {
     add sourceSets.main, 'mixins.imm_ptl.refmap.json'
     config 'imm_ptl.mixins.json'
+    config 'imm_ptl_forge.mixins.json'
     config 'imm_ptl_peripheral.mixins.json'
     config 'imm_ptl_compat.mixins.json'
     config 'q_misc_util.mixins.json'
-    debug = false
+    debug = false // Using true apparently crashes in dev env
 }
 
 // Example configuration to allow publishing using the maven-publish task
