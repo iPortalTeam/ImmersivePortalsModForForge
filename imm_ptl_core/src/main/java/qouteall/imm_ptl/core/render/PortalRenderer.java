@@ -59,8 +59,12 @@ public abstract class PortalRenderer {
     public abstract boolean replaceFrameBufferClearing();
     
     protected List<PortalLike> getPortalsToRender(PoseStack matrixStack) {
-        Validate.isTrue(client.cameraEntity.level == client.level);
-        
+        try {
+            Validate.isTrue(client.cameraEntity.level == client.level); // TODO @Nick1st Re-enable this / Fix this in a better fashion / Hope this breaks nothing
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+
         Supplier<Frustum> frustumSupplier = Helper.cached(() -> {
             Frustum frustum = new Frustum(
                 matrixStack.last().pose(),
