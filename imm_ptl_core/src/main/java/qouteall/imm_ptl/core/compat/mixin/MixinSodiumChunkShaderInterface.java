@@ -27,15 +27,15 @@ public class MixinSodiumChunkShaderInterface {
     }
 
     @Inject(
-            method = "<init>",
-            at = @At("RETURN"),
-            require = 0,
-            remap = false
+        method = "<init>",
+        at = @At("RETURN"),
+        require = 0,
+        remap = false
     )
     private void onInit(
-            ShaderBindingContext context,
-            ChunkShaderOptions options,
-            CallbackInfo ci
+        ShaderBindingContext context,
+        ChunkShaderOptions options,
+        CallbackInfo ci
     ) {
         if (context instanceof GlObject glObject) {
             ip_init(glObject.handle());
@@ -45,25 +45,25 @@ public class MixinSodiumChunkShaderInterface {
     }
 
     @Inject(
-            method = "setup",
-            at = @At("RETURN"),
-            remap = false
+        method = "setup",
+        at = @At("RETURN"),
+        remap = false
     )
     private void onSetup(ChunkVertexType vertexType, CallbackInfo ci) {
         if (uIPClippingEquation != -1) {
             if (FrontClipping.isClippingEnabled) {
                 double[] equation = FrontClipping.getActiveClipPlaneEquationForEntities();
                 GL20C.glUniform4f(
-                        uIPClippingEquation,
-                        (float) equation[0],
-                        (float) equation[1],
-                        (float) equation[2],
-                        (float) equation[3]
+                    uIPClippingEquation,
+                    (float) equation[0],
+                    (float) equation[1],
+                    (float) equation[2],
+                    (float) equation[3]
                 );
             } else {
                 GL20C.glUniform4f(
-                        uIPClippingEquation,
-                        0, 0, 0, 1
+                    uIPClippingEquation,
+                    0, 0, 0, 1
                 );
             }
         }

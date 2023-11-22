@@ -53,6 +53,14 @@ allprojects {
         maven {
             url = "https://modmaven.dev/"
         }
+        maven {
+            name "aether"
+            url = "https://maven.pkg.github.com/The-Aether-Team/The-Aether"
+            credentials {
+                username "$mavenDownUser"
+                password "$mavenDownPassword"
+            }
+        }
 
         flatDir {
             dirs 'deps'
@@ -99,7 +107,7 @@ allprojects {
         runtimeOnly fg.deobf("curse.maven:mcjtylib-233105:4372084")
 
         // Dimension Sync broken report?
-        runtimeOnly fg.deobf("curse.maven:aether-255308:${aether_fileid}")
+        runtimeOnly fg.deobf("com.aetherteam.aether:aether:${aether_version}")
 
         // Curios (required by Aether)
         runtimeOnly fg.deobf("curse.maven:curios-309927:4834339")
