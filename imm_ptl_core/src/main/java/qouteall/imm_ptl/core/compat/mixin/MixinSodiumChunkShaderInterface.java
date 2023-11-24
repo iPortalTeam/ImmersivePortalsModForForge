@@ -16,8 +16,8 @@ import qouteall.q_misc_util.Helper;
 @Pseudo
 @Mixin(targets = "me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderInterface", remap = false)
 public class MixinSodiumChunkShaderInterface {
-    private int uIPClippingEquation;
-    
+    private int uIPClippingEquation = -1;
+
     private void ip_init(int shaderId) {
         uIPClippingEquation = GL20C.glGetUniformLocation(shaderId, "imm_ptl_ClippingEquation");
         if (uIPClippingEquation < 0) {
@@ -25,7 +25,7 @@ public class MixinSodiumChunkShaderInterface {
             uIPClippingEquation = -1;
         }
     }
-    
+
     @Inject(
         method = "<init>",
         at = @At("RETURN"),
@@ -37,9 +37,13 @@ public class MixinSodiumChunkShaderInterface {
         ChunkShaderOptions options,
         CallbackInfo ci
     ) {
-        ip_init(((GlObject) context).handle());
+        if (context instanceof GlObject glObject) {
+            ip_init(glObject.handle());
+        } else {
+            Helper.log("Skipping sodium shader init injection");
+        }
     }
-    
+
     @Inject(
         method = "setup",
         at = @At("RETURN"),
@@ -56,8 +60,7 @@ public class MixinSodiumChunkShaderInterface {
                     (float) equation[2],
                     (float) equation[3]
                 );
-            }
-            else {
+            } else {
                 GL20C.glUniform4f(
                     uIPClippingEquation,
                     0, 0, 0, 1

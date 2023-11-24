@@ -55,7 +55,7 @@ allprojects {
         }
         maven {
             name "aether"
-            url = "https://maven.pkg.github.com/Gilded-Games/The-Aether"
+            url = "https://maven.pkg.github.com/The-Aether-Team/The-Aether"
             credentials {
                 username "$mavenDownUser"
                 password "$mavenDownPassword"
@@ -107,7 +107,10 @@ allprojects {
         runtimeOnly fg.deobf("curse.maven:mcjtylib-233105:4372084")
 
         // Dimension Sync broken report?
-        runtimeOnly fg.deobf("com.gildedgames.aether:aether:1.19.2-0.2.0")
+        runtimeOnly fg.deobf("com.aetherteam.aether:aether:${aether_version}")
+
+        // Curios (required by Aether)
+        runtimeOnly fg.deobf("curse.maven:curios-309927:4834339")
     }
 
     minecraft {
