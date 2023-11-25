@@ -33,7 +33,7 @@ public class MixinChunkHolder implements IEChunkHolder {
      * @reason overwriting is clearer
      */
     @Overwrite
-    private void broadcast(Packet<?> packet_1, boolean onlyOnRenderDistanceEdge) {
+    public void broadcast(Packet<?> packet_1, boolean onlyOnRenderDistanceEdge) {
         ResourceKey<Level> dimension =
             ((IEThreadedAnvilChunkStorage) playerProvider).ip_getWorld().dimension();
         
