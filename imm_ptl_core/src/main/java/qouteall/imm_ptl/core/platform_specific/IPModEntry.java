@@ -1,5 +1,7 @@
 package qouteall.imm_ptl.core.platform_specific;
 
+import net.minecraft.server.level.ServerPlayer;
+
 //import com.fusionflux.gravity_api.util.GravityChannel;
 //import com.fusionflux.gravity_api.util.packet.DefaultGravityPacket;
 
@@ -7,16 +9,20 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent.PlayerChangedDimensionEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.IPModMain;
 import qouteall.imm_ptl.core.commands.PortalCommand;
 import qouteall.imm_ptl.core.commands.SubCommandArgumentType;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
+import qouteall.imm_ptl.core.portal.custom_portal_gen.CustomPortalGenManagement;
 import qouteall.q_misc_util.Helper;
 
 import static qouteall.imm_ptl.core.platform_specific.IPModEntry.MODID;
@@ -34,6 +40,8 @@ public class IPModEntry {
 //        IPConfig.register(new ForgeConfigSpec.Builder()); //TODO @Nick1st Check if config is used / functioning
         FMLJavaModLoadingContext.get().getModEventBus().register(IPConfig.class);
         MinecraftForge.EVENT_BUS.addListener(IPModEntry::registerCommands);
+        MinecraftForge.EVENT_BUS.addListener(IPModEntry::onEntityChangeDimension);
+        MinecraftForge.EVENT_BUS.addListener(IPModEntry::onPlayerChangeDimension);
         FMLJavaModLoadingContext.get().getModEventBus().register(IPModEntry.class);
         FMLJavaModLoadingContext.get().getModEventBus().register(IPRegistry.class);
         FMLJavaModLoadingContext.get().getModEventBus().register(SubCommandArgumentType.class);
@@ -84,5 +92,16 @@ public class IPModEntry {
         Helper.log(MODID + " registerCommands called");
         PortalCommand.register(event.getDispatcher());
     }
-    
+
+    public static void onEntityChangeDimension(EntityTravelToDimensionEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player))
+            return;
+        
+        CustomPortalGenManagement.onBeforeConventionalDimensionChange(player);
+        IPGlobal.chunkDataSyncManager.removePlayerFromChunkTrackersAndEntityTrackers(player);
+    }
+
+    public static void onPlayerChangeDimension(PlayerChangedDimensionEvent event) {
+        CustomPortalGenManagement.onAfterConventionalDimensionChange((ServerPlayer) event.getEntity());
+    }
 }

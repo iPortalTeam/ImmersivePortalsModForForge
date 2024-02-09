@@ -49,7 +49,7 @@ public class CustomPortalGeneration {
     );
     
     public static ResourceKey<Registry<CustomPortalGeneration>> registryRegistryKey =
-        ResourceKey.createRegistryKey(new ResourceLocation("imm_ptl:custom_portal_generation"));
+        ResourceKey.createRegistryKey(new ResourceLocation("custom_portal_generation")); // FORGE: Custom registry namespaces not enabled in forge
     
     public static final Codec<CustomPortalGeneration> codecV1 =
         RecordCodecBuilder.create(instance -> {
