@@ -47,7 +47,7 @@ public class DimsCommand {
 //                            false
 //                        );
                         
-                        context.getSource().sendSuccess(Component.literal(
+                        context.getSource().sendSuccess(() -> Component.literal(
                             "Dynamically added dimension %s".formatted(newDimensionId)
                         ), true);
                         return 0;
@@ -72,7 +72,7 @@ public class DimsCommand {
 //                        false
 //                    );
                     
-                    context.getSource().sendSuccess(Component.literal(
+                    context.getSource().sendSuccess(() -> Component.literal(
                         "Dynamically removed dimension %s . Its world file is not yet deleted."
                             .formatted(dimension.dimension().location())
                     ), true);

@@ -27,6 +27,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import qouteall.imm_ptl.core.ClientWorldLoader;
 import qouteall.imm_ptl.core.IPMcHelper;
 import qouteall.imm_ptl.core.commands.PortalCommand;
+import qouteall.imm_ptl.core.mixin.common.MixinEntityAccess;
 import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.PortalPlaceholderBlock;
@@ -49,7 +50,7 @@ public class BlockManipulationClient {
     private static BlockHitResult createMissedHitResult(Vec3 from, Vec3 to) {
         Vec3 dir = to.subtract(from).normalize();
         
-        return BlockHitResult.miss(to, Direction.getNearest(dir.x, dir.y, dir.z), new BlockPos(to));
+        return BlockHitResult.miss(to, Direction.getNearest(dir.x, dir.y, dir.z), BlockPos.containing(to));
     }
     
     private static boolean hitResultIsMissedOrNull(HitResult bhr) {
@@ -80,7 +81,7 @@ public class BlockManipulationClient {
                     updateTargetedBlockThroughPortal(
                         cameraPos,
                         client.player.getViewVector(tickDelta),
-                        client.player.level.dimension(),
+                        client.player.level().dimension(),
                         distanceToPortalPointing,
                         reachDistance,
                         portal
@@ -173,7 +174,7 @@ public class BlockManipulationClient {
                 return BlockHitResult.miss(
                     rayTraceContext.getTo(),
                     Direction.getNearest(vec3d.x, vec3d.y, vec3d.z),
-                    new BlockPos(rayTraceContext.getTo())
+                    BlockPos.containing(rayTraceContext.getTo())
                 );
             }
         );
@@ -335,16 +336,16 @@ public class BlockManipulationClient {
         return IPMcHelper.withSwitchedContext(
             targetWorld,
             () -> {
-                Level oldWorld = client.player.level;
+                Level oldWorld = client.player.level();
                 
                 isContextSwitched = true;
-                client.player.level = targetWorld;
+                ((MixinEntityAccess)client.player).immersive_portals$callSetLevel(targetWorld);
                 try {
                     return supplier.get();
                 }
                 finally {
                     isContextSwitched = false;
-                    client.player.level = oldWorld;
+                    ((MixinEntityAccess)client.player).immersive_portals$callSetLevel(oldWorld);
                 }
             }
         );

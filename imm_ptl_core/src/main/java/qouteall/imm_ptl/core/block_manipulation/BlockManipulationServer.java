@@ -74,7 +74,7 @@ public class BlockManipulationServer {
         Vec3 pos = Vec3.atCenterOf(requestPos);
         Vec3 playerPos = player.position();
         double distanceSquare = 6 * 6 * 4 * 4 * playerScale * playerScale;
-        if (player.level.dimension() == dimension) {
+        if (player.level().dimension() == dimension) {
             if (playerPos.distanceToSqr(pos) < distanceSquare) {
                 return true;
             }
@@ -96,7 +96,7 @@ public class BlockManipulationServer {
         ServerPlayer player
     ) {
         ServerLevel destWorld = MiscHelper.getServer().getLevel(dimension);
-        ServerLevel oldWorld = player.getLevel();
+        ServerLevel oldWorld = player.serverLevel();
         
         BlockPos blockPos = packet.getPos();
         
@@ -154,7 +154,7 @@ public class BlockManipulationServer {
         }
         
         Vec3 newCenter = portal.transformPoint(hitCenter.add(sideVec.scale(0.501)));
-        BlockPos placingBlockPos = new BlockPos(newCenter);
+        BlockPos placingBlockPos = BlockPos.containing(newCenter);
         
         BlockHitResult newHitResult = new BlockHitResult(
             Vec3.ZERO,
@@ -203,9 +203,9 @@ public class BlockManipulationServer {
                 return;
             }
             
-            Level oldWorld = player.level;
+            ServerLevel oldWorld = player.serverLevel();
             
-            player.level = targetWorld;
+            player.setServerLevel(targetWorld);
             try {
                 InteractionResult actionResult = player.gameMode.useItemOn(
                     player,
@@ -219,7 +219,7 @@ public class BlockManipulationServer {
                 }
             }
             finally {
-                player.level = oldWorld;
+                player.setServerLevel(oldWorld);
             }
         }
         

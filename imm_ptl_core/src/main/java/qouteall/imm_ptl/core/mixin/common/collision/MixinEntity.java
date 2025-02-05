@@ -104,7 +104,7 @@ public abstract class MixinEntity implements IEEntity {
     )
     private Vec3 redirectHandleCollisions(Entity entity, Vec3 attemptedMove) {
         if (!IPGlobal.enableServerCollision) {
-            if (!entity.level.isClientSide()) {
+            if (!entity.level().isClientSide()) {
                 if (entity instanceof Player) {
                     return attemptedMove;
                 }
@@ -118,7 +118,7 @@ public abstract class MixinEntity implements IEEntity {
             // avoid loading too many chunks in collision calculation and lag the server
             limitedLogger.invoke(() -> {
                 Helper.err("Skipping collision calculation because entity moves too fast %s%s%d"
-                    .formatted(entity, attemptedMove, entity.level.getGameTime()));
+                    .formatted(entity, attemptedMove, entity.level().getGameTime()));
                 new Throwable().printStackTrace();
             });
             
@@ -253,7 +253,7 @@ public abstract class MixinEntity implements IEEntity {
         Entity this_ = (Entity) (Object) this;
         if (collidingPortal != null) {
             if (collidingPortal.getNormal().y > 0) {
-                BlockPos remoteLandingPos = new BlockPos(
+                BlockPos remoteLandingPos = BlockPos.containing(
                     collidingPortal.transformPoint(this_.position())
                 );
                 

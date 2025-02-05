@@ -3,6 +3,7 @@ package qouteall.imm_ptl.core.render;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexSorting;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -153,6 +154,7 @@ public class MyGameRenderer {
         // the projection matrix contains view bobbing.
         // the view bobbing is related with scale
         Matrix4f oldProjectionMatrix = RenderSystem.getProjectionMatrix();
+        VertexSorting oldVertexSorting = RenderSystem.getVertexSorting();
         
         ObjectArrayList<LevelRenderer.RenderChunkInfo> newChunkInfoList = VisibleSectionDiscovery.takeList();
         ((IEWorldRenderer) oldWorldRenderer).portal_setChunkInfoList(newChunkInfoList);
@@ -238,7 +240,7 @@ public class MyGameRenderer {
         
         ((IEWorldRenderer) worldRenderer).portal_setFrustum(oldFrustum);
         
-        RenderSystem.setProjectionMatrix(oldProjectionMatrix);
+        RenderSystem.setProjectionMatrix(oldProjectionMatrix, oldVertexSorting);
         
         IrisInterface.invoker.setPipeline(worldRenderer, irisPipeline);
         

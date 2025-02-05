@@ -44,8 +44,8 @@ public class Spawn_Entity {
         buf.writeUtf(EntityType.getKey(entity.getType()).toString());
         buf.writeInt(entity.getId());
         DimId.writeWorldId(
-                buf, entity.level.dimension(),
-                entity.level.isClientSide
+                buf, entity.level().dimension(),
+                entity.level().isClientSide
         );
         CompoundTag tag = new CompoundTag();
         entity.saveWithoutId(tag);

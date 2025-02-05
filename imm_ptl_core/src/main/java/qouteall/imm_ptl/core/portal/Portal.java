@@ -243,7 +243,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         height = compoundTag.getDouble("height");
         axisW = Helper.getVec3d(compoundTag, "axisW").normalize();
         axisH = Helper.getVec3d(compoundTag, "axisH").normalize();
-        dimensionTo = DimId.getWorldId(compoundTag, "dimensionTo", level.isClientSide);
+        dimensionTo = DimId.getWorldId(compoundTag, "dimensionTo", level().isClientSide);
         destination = (Helper.getVec3d(compoundTag, "destination"));
         specificPlayerId = Helper.getUuid(compoundTag, "specificPlayer");
         if (compoundTag.contains("specialShape")) {
@@ -494,7 +494,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         reloadAndSyncNextTick = false;
         
         Validate.isTrue(!isGlobalPortal);
-        Validate.isTrue(!level.isClientSide(), "must be used on server side");
+        Validate.isTrue(!level().isClientSide(), "must be used on server side");
         updateCache();
         
         CompoundTag customData = new CompoundTag();
@@ -502,7 +502,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         
         Packet packet = McRemoteProcedureCall.createPacketToSendToClient(
             "qouteall.imm_ptl.core.portal.Portal.RemoteCallables.acceptPortalDataSync",
-            level.dimension(),
+            level().dimension(),
             getId(),
             position(),
             customData
@@ -512,7 +512,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     }
     
     public void reloadAndSyncToClientNextTick() {
-        Validate.isTrue(!level.isClientSide(), "must be used on server side");
+        Validate.isTrue(!level().isClientSide(), "must be used on server side");
         reloadAndSyncNextTick = true;
     }
     
@@ -521,7 +521,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     }
     
     public void reloadAndSyncToClientWithTickDelay(int tickDelay) {
-        Validate.isTrue(!level.isClientSide(), "must be used on server side");
+        Validate.isTrue(!level().isClientSide(), "must be used on server side");
         IPGlobal.serverTaskList.addTask(MyTaskList.withDelay(tickDelay, () -> {
             reloadAndSyncToClientNextTick();
             return true;
@@ -656,7 +656,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     
     @Override
     public Level getOriginWorld() {
-        return level;
+        return level();
     }
     
     @Override
@@ -792,7 +792,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     }
     
     public void setOrientationRotation(DQuaternion quaternion) {
-        DQuaternion fixed = level.isClientSide() ? quaternion : quaternion.fixFloatingPointErrorAccumulation();
+        DQuaternion fixed = level().isClientSide() ? quaternion : quaternion.fixFloatingPointErrorAccumulation();
         setOrientation(
             McHelper.getAxisWFromOrientation(fixed),
             McHelper.getAxisHFromOrientation(fixed)
@@ -875,13 +875,13 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         }
         lastTickPortalState = thisTickPortalState;
         
-        if (!level.isClientSide()) {
+        if (!level().isClientSide()) {
             if (reloadAndSyncNextTick) {
                 reloadAndSyncToClient();
             }
         }
         
-        if (level.isClientSide()) {
+        if (level().isClientSide()) {
             clientPortalTickSignal.emit(this);
         }
         else {
@@ -968,22 +968,22 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
             getDestPos() != null &&
             axisW.lengthSqr() > 0.9 &&
             axisH.lengthSqr() > 0.9 &&
-            getY() > (McHelper.getMinY(level) - 100);
+            getY() > (McHelper.getMinY(level()) - 100);
         if (valid) {
-            if (level instanceof ServerLevel) {
+            if (level() instanceof ServerLevel) {
                 ServerLevel destWorld = MiscHelper.getServer().getLevel(dimensionTo);
                 if (destWorld == null) {
                     Helper.err("Portal Dest Dimension Missing " + dimensionTo.location());
                     return false;
                 }
-                boolean inWorldBorder = destWorld.getWorldBorder().isWithinBounds(new BlockPos(getDestPos()));
+                boolean inWorldBorder = destWorld.getWorldBorder().isWithinBounds(BlockPos.containing(getDestPos()));
                 if (!inWorldBorder) {
                     Helper.err("Destination out of World Border " + this);
                     return false;
                 }
             }
             
-            if (level.isClientSide()) {
+            if (level().isClientSide()) {
                 return isPortalValidClient();
             }
             
@@ -1017,7 +1017,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
             getClass().getSimpleName(),
             getId(),
             getApproximateFacingDirection(),
-            level.dimension().location(), getX(), getY(), getZ(),
+            level().dimension().location(), getX(), getY(), getZ(),
             dimensionTo.location(), getDestPos().x, getDestPos().y, getDestPos().z,
             specificPlayerId != null ? (",specificAccessor:" + specificPlayerId.toString()) : "",
             hasScaling() ? (",scale:" + scaling) : "",
@@ -1318,7 +1318,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     }
     
     public Level getDestinationWorld() {
-        return getDestinationWorld(level.isClientSide());
+        return getDestinationWorld(level().isClientSide());
     }
     
     private Level getDestinationWorld(boolean isClient) {
@@ -1331,21 +1331,21 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     }
     
     public static boolean isParallelPortal(Portal currPortal, Portal outerPortal) {
-        return currPortal.level.dimension() == outerPortal.dimensionTo &&
-            currPortal.dimensionTo == outerPortal.level.dimension() &&
+        return currPortal.level().dimension() == outerPortal.dimensionTo &&
+            currPortal.dimensionTo == outerPortal.level().dimension() &&
             !(currPortal.getNormal().dot(outerPortal.getContentDirection()) > -0.9) &&
             !outerPortal.isInside(currPortal.getOriginPos(), 0.1);
     }
     
     public static boolean isParallelOrientedPortal(Portal currPortal, Portal outerPortal) {
-        return currPortal.level.dimension() == outerPortal.dimensionTo &&
+        return currPortal.level().dimension() == outerPortal.dimensionTo &&
             currPortal.getNormal().dot(outerPortal.getContentDirection()) < -0.9 &&
             !outerPortal.isInside(currPortal.getOriginPos(), 0.1);
     }
     
     public static boolean isReversePortal(Portal a, Portal b) {
-        return a.dimensionTo == b.level.dimension() &&
-            a.level.dimension() == b.dimensionTo &&
+        return a.dimensionTo == b.level().dimension() &&
+            a.level().dimension() == b.dimensionTo &&
             a.getOriginPos().distanceTo(b.getDestPos()) < 0.1 &&
             a.getDestPos().distanceTo(b.getOriginPos()) < 0.1 &&
             a.getNormal().dot(b.getContentDirection()) > 0.9;
@@ -1355,7 +1355,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         if (a == b) {
             return false;
         }
-        return a.level == b.level &&
+        return a.level() == b.level() &&
             a.dimensionTo == b.dimensionTo &&
             a.getOriginPos().distanceTo(b.getOriginPos()) < 0.1 &&
             a.getDestPos().distanceTo(b.getDestPos()) < 0.1 &&
@@ -1554,17 +1554,17 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     public static boolean doesPortalBlockEntityView(
         LivingEntity observer, Entity target
     ) {
-        observer.level.getProfiler().push("portal_block_view");
+        observer.level().getProfiler().push("portal_block_view");
         
         List<Portal> viewBlockingPortals = McHelper.findEntitiesByBox(
             Portal.class,
-            observer.level,
+            observer.level(),
             observer.getBoundingBox().minmax(target.getBoundingBox()),
             8,
             p -> p.rayTrace(observer.getEyePosition(1), target.getEyePosition(1)) != null
         );
         
-        observer.level.getProfiler().pop();
+        observer.level().getProfiler().pop();
         
         return !viewBlockingPortals.isEmpty();
     }
@@ -1626,7 +1626,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         }
         
         return new PortalState(
-            level.dimension(),
+            level().dimension(),
             getOriginPos(),
             dimensionTo,
             getDestPos(),
@@ -1638,7 +1638,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     }
     
     public void setPortalState(PortalState state) {
-        Validate.isTrue(level.dimension() == state.fromWorld);
+        Validate.isTrue(level().dimension() == state.fromWorld);
         Validate.isTrue(dimensionTo == state.toWorld);
         
         width = state.width;
@@ -1761,11 +1761,11 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     }
     
     public boolean isOtherSideChunkLoaded() {
-        Validate.isTrue(!level.isClientSide());
+        Validate.isTrue(!level().isClientSide());
         
         return McHelper.isServerChunkFullyLoaded(
             (ServerLevel) getDestWorld(),
-            new ChunkPos(new BlockPos(getDestPos()))
+            new ChunkPos(BlockPos.containing(getDestPos()))
         );
     }
     
@@ -1843,7 +1843,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     
     public long getAnimationEffectiveTime() {
         Portal holder = getPossibleAnimationHolder();
-        return holder.animation.getEffectiveTime(holder.level.getGameTime());
+        return holder.animation.getEffectiveTime(holder.level().getGameTime());
     }
     
     public void disableDefaultAnimation() {

@@ -14,6 +14,7 @@ import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.compat.GravityChangerInterface;
 import qouteall.imm_ptl.core.ducks.IEEntity;
+import qouteall.imm_ptl.core.mixin.common.MixinEntityAccess;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.PortalLike;
 import qouteall.q_misc_util.Helper;
@@ -36,7 +37,7 @@ public class PortalCollisionHandler {
     
     public void update(Entity entity) {
         portalCollisions.removeIf(p -> {
-            if (p.portal.level != entity.level) {
+            if (p.portal.level() != entity.level()) {
                 return true;
             }
             
@@ -72,7 +73,7 @@ public class PortalCollisionHandler {
             return attemptedMove;
         }
         
-        entity.level.getProfiler().push("cross_portal_collision");
+        entity.level().getProfiler().push("cross_portal_collision");
         
         portalCollisions.sort(
             Comparator.comparingLong((PortalCollisionEntry p) -> p.activeTime).reversed()
@@ -80,7 +81,7 @@ public class PortalCollisionHandler {
         
         Vec3 result = doHandleCollision(entity, attemptedMove, 1, portalCollisions, entity.getBoundingBox());
         
-        entity.level.getProfiler().pop();
+        entity.level().getProfiler().pop();
         
         return result;
     }
@@ -136,19 +137,19 @@ public class PortalCollisionHandler {
         
         Level destinationWorld = collidingPortal.getDestWorld();
         
-        if (!destinationWorld.hasChunkAt(new BlockPos(boxOtherSide.getCenter()))) {
+        if (!destinationWorld.hasChunkAt(BlockPos.containing(boxOtherSide.getCenter()))) {
             return handleOtherSideChunkNotLoaded(
                 entity, attemptedMove, collidingPortal, originalBoundingBox
             );
         }
         
         //switch world and check collision
-        Level oldWorld = entity.level;
+        Level oldWorld = entity.level();
         Vec3 oldPos = entity.position();
         Vec3 oldLastTickPos = McHelper.lastTickPosOf(entity);
-        float oldStepHeight = entity.maxUpStep;
-        
-        entity.level = destinationWorld;
+        float oldStepHeight = entity.maxUpStep();
+
+        ((MixinEntityAccess)entity).immersive_portals$callSetLevel(destinationWorld);
         McHelper.setPosAndLastTickPosWithoutTriggeringCallback(
             entity,
             collidingPortal.transformPoint(oldPos),
@@ -157,7 +158,7 @@ public class PortalCollisionHandler {
         entity.setBoundingBox(boxOtherSide);
         
         if (collidingPortal.getScale() > 1) {
-            entity.maxUpStep = (float) (oldStepHeight * collidingPortal.getScale() * 1.01);
+            entity.setMaxUpStep((float) (oldStepHeight * collidingPortal.getScale() * 1.01));
         }
         
         try {
@@ -217,15 +218,15 @@ public class PortalCollisionHandler {
             return result;
         }
         finally {
-            entity.level = oldWorld;
+            ((MixinEntityAccess)entity).immersive_portals$callSetLevel(oldWorld);
             McHelper.setPosAndLastTickPosWithoutTriggeringCallback(entity, oldPos, oldLastTickPos);
             entity.setBoundingBox(originalBoundingBox);
-            entity.maxUpStep = oldStepHeight;
+            entity.setMaxUpStep(oldStepHeight);
         }
     }
     
     private static Vec3 handleOtherSideChunkNotLoaded(Entity entity, Vec3 attemptedMove, Portal collidingPortal, AABB originalBoundingBox) {
-        if (entity instanceof Player && entity.level.isClientSide()) {
+        if (entity instanceof Player && entity.level().isClientSide()) {
             CollisionHelper.informClientStagnant();
         }
         Vec3 innerDirection = collidingPortal.getNormal().scale(-1);
@@ -342,7 +343,7 @@ public class PortalCollisionHandler {
         
         McHelper.findEntitiesByBox(
             Portal.class,
-            entity.level,
+            entity.level(),
             CollisionHelper.getStretchedBoundingBox(entity),
             IPGlobal.maxNormalPortalRadius,
             p -> true

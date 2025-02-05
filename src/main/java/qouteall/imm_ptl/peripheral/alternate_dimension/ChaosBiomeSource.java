@@ -5,23 +5,14 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderGetter;
 import net.minecraft.core.HolderSet;
-import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.LinearCongruentialGenerator;
-import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.BiomeSource;
-import net.minecraft.world.level.biome.Biomes;
-import net.minecraft.world.level.biome.CheckerboardColumnBiomeSource;
-import net.minecraft.world.level.biome.Climate;
-import net.minecraft.world.level.biome.MultiNoiseBiomeSource;
+import net.minecraft.world.level.biome.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ChaosBiomeSource extends BiomeSource {
     
@@ -101,17 +92,17 @@ public class ChaosBiomeSource extends BiomeSource {
     private final HolderSet<Biome> allowedBiomes;
     
     public ChaosBiomeSource(HolderSet<Biome> holderSet) {
-        super(holderSet.stream());
+        super();
         this.allowedBiomes = holderSet;
     }
     
     @NotNull
-    static ChaosBiomeSource createChaosBiomeSource(HolderGetter<Biome> biomeHolderGetter) {
+    static ChaosBiomeSource createChaosBiomeSource(HolderGetter<Biome> biomeHolderGetter, HolderGetter<MultiNoiseBiomeSourceParameterList> multiNoiseBiomeSourceParameterListHolderGetter) {
         
-        MultiNoiseBiomeSource overworldBiomeSource = MultiNoiseBiomeSource.Preset.OVERWORLD.biomeSource(biomeHolderGetter);
+        MultiNoiseBiomeSource overworldBiomeSource = MultiNoiseBiomeSource.createFromPreset(multiNoiseBiomeSourceParameterListHolderGetter.getOrThrow(MultiNoiseBiomeSourceParameterLists.OVERWORLD));
         Set<Holder<Biome>> overworldBiomes = overworldBiomeSource.possibleBiomes();
         
-        MultiNoiseBiomeSource netherBiomeSource = MultiNoiseBiomeSource.Preset.NETHER.biomeSource(biomeHolderGetter);
+        MultiNoiseBiomeSource netherBiomeSource = MultiNoiseBiomeSource.createFromPreset(multiNoiseBiomeSourceParameterListHolderGetter.getOrThrow(MultiNoiseBiomeSourceParameterLists.NETHER));
         Set<Holder<Biome>> netherBiomes = overworldBiomeSource.possibleBiomes();
         
         List<Holder<Biome>> holders = new ArrayList<>();
@@ -135,7 +126,12 @@ public class ChaosBiomeSource extends BiomeSource {
     protected Codec<? extends BiomeSource> codec() {
         return CODEC;
     }
-    
+
+    @Override
+    protected Stream<Holder<Biome>> collectPossibleBiomes() {
+        return this.allowedBiomes.stream();
+    }
+
     @Override
     public Holder<Biome> getNoiseBiome(int x, int y, int z, Climate.Sampler sampler) {
         return getRandomBiome(x, z);

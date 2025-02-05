@@ -176,10 +176,10 @@ public class CustomPortalGenManagement {
     }
     
     public static void onItemTick(ItemEntity entity) {
-        if (entity.level.isClientSide()) {
+        if (entity.level().isClientSide()) {
             return;
         }
-        if (entity.getThrower() == null) {
+        if (entity.getOwner() == null) {
             return;
         }
         
@@ -189,7 +189,7 @@ public class CustomPortalGenManagement {
                 IPGlobal.serverTaskList.addTask(() -> {
                     for (CustomPortalGeneration gen : throwItemGen.get(item)) {
                         boolean result = gen.perform(
-                            ((ServerLevel) entity.level),
+                            ((ServerLevel) entity.level()),
                             entity.blockPosition(),
                             entity
                         );
@@ -219,7 +219,7 @@ public class CustomPortalGenManagement {
             
             ServerLevel startWorld = McHelper.getServerWorld(startCoord.dimension);
             
-            BlockPos startPos = new BlockPos(startCoord.pos);
+            BlockPos startPos = BlockPos.containing(startCoord.pos);
             
             for (CustomPortalGeneration gen : convGen) {
                 boolean succeeded = gen.perform(startWorld, startPos, player);

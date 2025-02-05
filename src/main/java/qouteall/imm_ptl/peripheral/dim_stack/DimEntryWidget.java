@@ -3,7 +3,7 @@ package qouteall.imm_ptl.peripheral.dim_stack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -79,7 +79,7 @@ public class DimEntryWidget extends ContainerObjectSelectionList.Entry<DimEntryW
     
     @Override
     public void render(
-        PoseStack matrixStack,
+        GuiGraphics guiGraphics,
         int index,
         int y,
         int x,
@@ -91,16 +91,14 @@ public class DimEntryWidget extends ContainerObjectSelectionList.Entry<DimEntryW
         float delta
     ) {
         Minecraft client = Minecraft.getInstance();
-        
-        client.font.draw(
-            matrixStack, dimensionName.getString(),
-            x + widgetHeight + 3, (float) (y),
+
+        guiGraphics.drawString(client.font, dimensionName.getString(),
+            x + widgetHeight + 3, (y),
             0xFFFFFFFF
         );
-        
-        client.font.draw(
-            matrixStack, dimension.location().toString(),
-            x + widgetHeight + 3, (float) (y + 10),
+
+        guiGraphics.drawString(client.font, dimension.location().toString(),
+            x + widgetHeight + 3, (y + 10),
             0xFF999999
         );
         
@@ -109,8 +107,7 @@ public class DimEntryWidget extends ContainerObjectSelectionList.Entry<DimEntryW
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             RenderSystem.setShaderTexture(0, dimIconPath);
             RenderSystem.enableBlend();
-            GuiComponent.blit(
-                matrixStack, x, y, 0.0F, 0.0F,
+            guiGraphics.blit(dimIconPath, x, y, 0.0F, 0.0F,
                 widgetHeight - 4, widgetHeight - 4,
                 widgetHeight - 4, widgetHeight - 4
             );
@@ -118,14 +115,12 @@ public class DimEntryWidget extends ContainerObjectSelectionList.Entry<DimEntryW
         }
         
         if (type == Type.withAdvancedOptions) {
-            client.font.draw(
-                matrixStack, getText1(),
-                x + widgetHeight + 3, (float) (y + 20),
+            guiGraphics.drawString(client.font, getText1(),
+                x + widgetHeight + 3, (y + 20),
                 0xFF999999
             );
-            client.font.draw(
-                matrixStack, getText2(),
-                x + widgetHeight + 3, (float) (y + 30),
+            guiGraphics.drawString(client.font, getText2(),
+                x + widgetHeight + 3, (y + 30),
                 0xFF999999
             );
         }

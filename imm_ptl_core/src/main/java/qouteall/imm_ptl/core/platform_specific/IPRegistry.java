@@ -1,15 +1,12 @@
 package qouteall.imm_ptl.core.platform_specific;
 
-import net.minecraft.core.DefaultedRegistry;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.material.Material;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.DeferredRegister;
@@ -34,7 +31,7 @@ public class IPRegistry {
         event.register(ForgeRegistries.Keys.BLOCKS, handler -> handler.register(
             new ResourceLocation("immersive_portals" , "nether_portal_block"),
             new PortalPlaceholderBlock(BlockBehaviour.Properties
-                .of(Material.PORTAL)
+                .copy(Blocks.NETHER_PORTAL)
                 .noCollission()
                 .sound(SoundType.GLASS)
                 .strength(1.0f, 0)

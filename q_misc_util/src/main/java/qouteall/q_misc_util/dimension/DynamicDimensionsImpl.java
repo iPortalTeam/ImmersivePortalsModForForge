@@ -90,7 +90,8 @@ public class DynamicDimensionsImpl {
             false, // isDebug
             obfuscatedSeed,
             ImmutableList.of(),
-            false // only true for overworld
+            false, // only true for overworld
+                null
         );
         
         worldBorder.addListener(

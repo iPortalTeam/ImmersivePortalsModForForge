@@ -36,7 +36,7 @@ public class PortalAnimationCommand {
                 );
                 
                 PortalCommand.reloadPortal(portal);
-                context.getSource().sendSuccess(getAnimationInfo(portal), false);
+                context.getSource().sendSuccess(() -> getAnimationInfo(portal), false);
             }))
         );
         
@@ -46,7 +46,7 @@ public class PortalAnimationCommand {
                     portal, Portal::pauseAnimation
                 );
                 PortalCommand.reloadPortal(portal);
-                context.getSource().sendSuccess(Component.literal("Paused"), false);
+                context.getSource().sendSuccess(() -> Component.literal("Paused"), false);
             }))
         );
         
@@ -56,7 +56,7 @@ public class PortalAnimationCommand {
                     portal, Portal::resumeAnimation
                 );
                 PortalCommand.reloadPortal(portal);
-                context.getSource().sendSuccess(Component.literal("Resumed"), false);
+                context.getSource().sendSuccess(() -> Component.literal("Resumed"), false);
             }))
         );
         
@@ -68,7 +68,7 @@ public class PortalAnimationCommand {
                         PortalExtension.forClusterPortals(
                             portal, Portal::pauseAnimation
                         );
-                        context.getSource().sendSuccess(
+                        context.getSource().sendSuccess(() ->
                             Component.literal("Paused " + portal.toString()),
                             false
                         );
@@ -80,7 +80,7 @@ public class PortalAnimationCommand {
         
         builder.then(Commands.literal("view")
             .executes(context -> PortalCommand.processPortalTargetedCommand(context, portal -> {
-                context.getSource().sendSuccess(getAnimationInfo(portal), false);
+                context.getSource().sendSuccess(() -> getAnimationInfo(portal), false);
             }))
         );
         
@@ -93,7 +93,7 @@ public class PortalAnimationCommand {
                     if (index >= 0 && index < thisSideAnimations.size()) {
                         thisSideAnimations.remove(index);
                         PortalCommand.reloadPortal(portal);
-                        context.getSource().sendSuccess(getAnimationInfo(portal), false);
+                        context.getSource().sendSuccess(() -> getAnimationInfo(portal), false);
                     }
                     else {
                         context.getSource().sendFailure(
@@ -111,7 +111,7 @@ public class PortalAnimationCommand {
                 if (!thisSideAnimations.isEmpty()) {
                     thisSideAnimations.remove(thisSideAnimations.size() - 1);
                     PortalCommand.reloadPortal(portal);
-                    context.getSource().sendSuccess(getAnimationInfo(portal), false);
+                    context.getSource().sendSuccess(() -> getAnimationInfo(portal), false);
                 }
                 else {
                     context.getSource().sendFailure(
@@ -134,7 +134,7 @@ public class PortalAnimationCommand {
                             giveRotationAnimation(portal, rotationCenter, axis, angularVelocity);
                             
                             PortalCommand.reloadPortal(portal);
-                            context.getSource().sendSuccess(getAnimationInfo(portal), false);
+                            context.getSource().sendSuccess(() -> getAnimationInfo(portal), false);
                         }))
                     )
                 )
@@ -154,7 +154,7 @@ public class PortalAnimationCommand {
                 giveRotationAnimation(portal, rotationCenter, axis, angularVelocity);
                 
                 PortalCommand.reloadPortal(portal);
-                context.getSource().sendSuccess(getAnimationInfo(portal), false);
+                context.getSource().sendSuccess(() -> getAnimationInfo(portal), false);
             }))
         );
         
@@ -211,7 +211,7 @@ public class PortalAnimationCommand {
                                         if (entity instanceof Portal portal) {
                                             PortalState endingState = portal.getAnimationEndingState();
                                             
-                                            long currTime = portal.level.getGameTime();
+                                            long currTime = portal.level().getGameTime();
                                             portal.addThisSideAnimationDriver(
                                                 new RotationAnimation.Builder()
                                                     .setInitialOffset(endingState.fromPos.subtract(rotationCenter))
@@ -253,7 +253,7 @@ public class PortalAnimationCommand {
                     giveRotationAnimation(portal, portal.getOriginPos(), portal.getNormal(), angularVelocity);
                     
                     PortalCommand.reloadPortal(portal);
-                    context.getSource().sendSuccess(getAnimationInfo(portal), false);
+                    context.getSource().sendSuccess(() -> getAnimationInfo(portal), false);
                 }))
             )
         );
@@ -274,7 +274,7 @@ public class PortalAnimationCommand {
                         TimingFunction.sine
                     ));
                     PortalCommand.reloadPortal(portal);
-                    context.getSource().sendSuccess(getAnimationInfo(portal), false);
+                    context.getSource().sendSuccess(() -> getAnimationInfo(portal), false);
                 }))
             )
         );
@@ -322,7 +322,7 @@ public class PortalAnimationCommand {
                 animation.otherSideAnimations.add(newNormalAnimation); // reusing immutable object
                 
                 PortalCommand.reloadPortal(portal);
-                context.getSource().sendSuccess(getAnimationInfo(portal), false);
+                context.getSource().sendSuccess(() -> getAnimationInfo(portal), false);
             }))
         );
         
@@ -405,7 +405,7 @@ public class PortalAnimationCommand {
                     );
                     
                     PortalCommand.reloadPortal(portal);
-                    context.getSource().sendSuccess(getAnimationInfo(portal), false);
+                    context.getSource().sendSuccess(() -> getAnimationInfo(portal), false);
                 }))
             )
         );
@@ -481,7 +481,7 @@ public class PortalAnimationCommand {
         );
         
         PortalCommand.reloadPortal(portal);
-        context.getSource().sendSuccess(getAnimationInfo(portal), false);
+        context.getSource().sendSuccess(() -> getAnimationInfo(portal), false);
     }
     
     private static AnimationBuilderContext getAnimationBuilderContext(
@@ -609,7 +609,7 @@ public class PortalAnimationCommand {
         
         PortalExtension.forClusterPortals(portal, Portal::reloadAndSyncToClientNextTick);
         
-        context.getSource().sendSuccess(getAnimationInfo(portal), false);
+        context.getSource().sendSuccess(() -> getAnimationInfo(portal), false);
     }
     
     private static void giveRotationAnimation(Portal portal, Vec3 rotationCenter, Vec3 axis, double angularVelocity) {

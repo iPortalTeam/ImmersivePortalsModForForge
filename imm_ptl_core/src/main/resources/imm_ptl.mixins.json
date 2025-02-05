@@ -9,6 +9,7 @@
     "common.MixinCommands",
     "common.MixinConnection_Debug",
     "common.MixinDedicatedServer",
+    "common.MixinEntityAccess",
     "common.MixinLevel",
     "common.MixinLivingEntity",
     "common.MixinMinecraftServer",

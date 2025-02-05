@@ -267,7 +267,7 @@ public class ClientDebugCommand {
                 Minecraft client = Minecraft.getInstance();
                 client.execute(() -> {
                     client.level.getChunkSource().getLightEngine().updateSectionStatus(
-                        SectionPos.of(new BlockPos(client.player.position())),
+                        SectionPos.of(BlockPos.containing(client.player.position())),
                         false
                     );
                 });
@@ -306,7 +306,7 @@ public class ClientDebugCommand {
                         player.blockPosition().offset(-2, -2, -2),
                         player.blockPosition().offset(2, 2, 2)
                     ).forEach(blockPos -> {
-                        player.level.getLightEngine().checkBlock(blockPos);
+                        player.level().getLightEngine().checkBlock(blockPos);
                     });
                 });
                 return 0;
@@ -318,9 +318,9 @@ public class ClientDebugCommand {
                     MiscHelper.getServer().execute(() -> {
                         ServerPlayer player = McHelper.getRawPlayerList().get(0);
                         
-                        ThreadedLevelLightEngine lightingProvider = (ThreadedLevelLightEngine) player.level.getLightEngine();
+                        ThreadedLevelLightEngine lightingProvider = (ThreadedLevelLightEngine) player.level().getLightEngine();
                         lightingProvider.lightChunk(
-                            player.level.getChunk(player.blockPosition()),
+                            player.level().getChunk(player.blockPosition()),
                             false
                         );
 //                    lightingProvider.light(
@@ -380,7 +380,7 @@ public class ClientDebugCommand {
             .executes(context -> {
                 Minecraft.getInstance().execute(() -> {
                     LocalPlayer player = Minecraft.getInstance().player;
-                    DataLayer lightSection = player.level.getLightEngine().getLayerListener(LightLayer.BLOCK).getDataLayerData(
+                    DataLayer lightSection = player.level().getLightEngine().getLayerListener(LightLayer.BLOCK).getDataLayerData(
                         SectionPos.of(player.blockPosition())
                     );
                     if (lightSection != null) {
@@ -394,11 +394,12 @@ public class ClientDebugCommand {
                                 break;
                             }
                         }
-                        
+
+                        boolean finalAllZero = allZero;
                         context.getSource().sendSuccess(
-                            Component.literal(
+                                () -> Component.literal(
                                 "has light section " +
-                                    (allZero ? "all zero" : "not all zero") +
+                                    (finalAllZero ? "all zero" : "not all zero") +
                                     (uninitialized ? " uninitialized" : " fine")
                             ), true
                         );
@@ -441,7 +442,7 @@ public class ClientDebugCommand {
             .literal("disable_warning")
             .executes(context -> {
                 disableWarning();
-                context.getSource().sendSuccess(Component.translatable("imm_ptl.warning_disabled"), true);
+                context.getSource().sendSuccess(() -> Component.translatable("imm_ptl.warning_disabled"), true);
                 return 0;
             })
         );
@@ -450,7 +451,7 @@ public class ClientDebugCommand {
             .literal("disable_update_check")
             .executes(context -> {
                 disableUpdateCheck();
-                context.getSource().sendSuccess(Component.translatable("imm_ptl.update_check_disabled"), true);
+                context.getSource().sendSuccess(() -> Component.translatable("imm_ptl.update_check_disabled"), true);
                 return 0;
             })
         );
@@ -466,7 +467,7 @@ public class ClientDebugCommand {
                     Portal portal = pair.getFirst();
                     PortalCommand.sendPortalInfo(
                         c -> {
-                            context.getSource().sendSuccess(c, true);
+                            context.getSource().sendSuccess(() -> c, true);
                             Helper.log(c.getString());
                             // if the data is too long, the in-game message will be chopped
                             // so also print that in log
@@ -681,10 +682,10 @@ public class ClientDebugCommand {
             CHelper.printChat(
                 String.format(
                     "On Client %s %s removal:%s added:%s age:%s",
-                    playerSP.level.dimension().location(),
+                    playerSP.level().dimension().location(),
                     playerSP.blockPosition(),
                     playerSP.getRemovalReason(),
-                    playerSP.level.getEntity(playerSP.getId()) != null,
+                    playerSP.level().getEntity(playerSP.getId()) != null,
                     playerSP.tickCount
                 )
             );

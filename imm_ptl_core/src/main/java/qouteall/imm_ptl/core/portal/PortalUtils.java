@@ -27,7 +27,7 @@ public class PortalUtils {
         Entity entity, double maxDistance
     ) {
         return portalAwareRayTrace(
-            entity.level,
+            entity.level(),
             entity.getEyePosition(),
             entity.getViewVector(1),
             maxDistance,

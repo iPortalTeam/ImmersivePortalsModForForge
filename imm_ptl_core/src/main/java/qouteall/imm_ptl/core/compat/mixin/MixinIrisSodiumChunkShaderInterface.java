@@ -1,6 +1,6 @@
 package qouteall.imm_ptl.core.compat.mixin;
 
-import net.coderbot.iris.compat.sodium.impl.shader_overrides.IrisChunkShaderInterface;
+import net.irisshaders.iris.compat.sodium.impl.shader_overrides.IrisChunkShaderInterface;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21;
 import org.spongepowered.asm.mixin.Mixin;
@@ -36,7 +36,7 @@ public class MixinIrisSodiumChunkShaderInterface {
 //    }
     
     @Inject(
-        method = "setup",
+        method = "setupState", // was setup before, not sure if same method
         at = @At("RETURN")
     )
     private void onSetup(CallbackInfo ci) {

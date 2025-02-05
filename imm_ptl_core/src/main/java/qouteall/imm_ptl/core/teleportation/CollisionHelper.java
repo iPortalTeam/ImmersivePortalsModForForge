@@ -173,11 +173,11 @@ public class CollisionHelper {
     // only for reference
     private static Vec3 refHandleCollisionWithShapeProcessor(Entity entity, Vec3 attemptedMove, Function<VoxelShape, VoxelShape> filter) {
         AABB boundingBox = entity.getBoundingBox();
-        List<VoxelShape> entityCollisions = entity.level.getEntityCollisions(entity, boundingBox.expandTowards(attemptedMove));
+        List<VoxelShape> entityCollisions = entity.level().getEntityCollisions(entity, boundingBox.expandTowards(attemptedMove));
         
         // introduce a helper func to reduce argument count
         BiFunction<Vec3, AABB, Vec3> collisionFunc = (attempt, bb) ->
-            collideBoundingBox(entity, attempt, bb, entity.level, entityCollisions, filter);
+            collideBoundingBox(entity, attempt, bb, entity.level(), entityCollisions, filter);
         
         // firstly do a normal collision regardless of stepping
         Vec3 collidedMovement = attemptedMove.lengthSqr() == 0.0D ? attemptedMove :
@@ -186,21 +186,21 @@ public class CollisionHelper {
         boolean collideY = attemptedMove.y != collidedMovement.y;
         boolean collideZ = attemptedMove.z != collidedMovement.z;
         boolean collidesWithFloor = collideY && attemptedMove.y < 0.0D;
-        boolean touchGround = entity.isOnGround() || collidesWithFloor;
+        boolean touchGround = entity.onGround() || collidesWithFloor;
         boolean collidesHorizontally = collideX || collideZ;
-        if (entity.maxUpStep > 0.0F && touchGround && collidesHorizontally) {
+        if (entity.maxUpStep() > 0.0F && touchGround && collidesHorizontally) {
             // the entity is touching ground and has horizontal collision now
             // try to directly move to stepped position, make it approach the stair
             Vec3 stepping = collisionFunc.apply(
-                new Vec3(attemptedMove.x, (double) entity.maxUpStep, attemptedMove.z),
+                new Vec3(attemptedMove.x, (double) entity.maxUpStep(), attemptedMove.z),
                 boundingBox
             );
             // try to move up in step height with expanded box
             Vec3 verticalStep = collisionFunc.apply(
-                new Vec3(0.0D, (double) entity.maxUpStep, 0.0D),
+                new Vec3(0.0D, (double) entity.maxUpStep(), 0.0D),
                 boundingBox.expandTowards(attemptedMove.x, 0.0D, attemptedMove.z)
             );
-            if (verticalStep.y < (double) entity.maxUpStep) {
+            if (verticalStep.y < (double) entity.maxUpStep()) {
                 // try to move horizontally after moving up
                 Vec3 horizontalMoveAfterVerticalStepping = collisionFunc.apply(
                     new Vec3(attemptedMove.x, 0.0D, attemptedMove.z),
@@ -238,11 +238,11 @@ public class CollisionHelper {
         Direction.Axis gravityAxis = gravity.getAxis();
         
         AABB boundingBox = entity.getBoundingBox();
-        List<VoxelShape> entityCollisions = entity.level.getEntityCollisions(entity, boundingBox.expandTowards(attemptedMove));
+        List<VoxelShape> entityCollisions = entity.level().getEntityCollisions(entity, boundingBox.expandTowards(attemptedMove));
         
         // introduce a helper func to reduce argument count
         BiFunction<Vec3, AABB, Vec3> collisionFunc = (attempt, bb) ->
-            collideBoundingBox(entity, attempt, bb, entity.level, entityCollisions, filter);
+            collideBoundingBox(entity, attempt, bb, entity.level(), entityCollisions, filter);
         
         // firstly do a normal collision regardless of stepping
         Vec3 collidedMovement = attemptedMove.lengthSqr() == 0.0D ? attemptedMove :
@@ -251,9 +251,9 @@ public class CollisionHelper {
         boolean collidesOnGravityAxis = Helper.getCoordinate(collisionDelta, gravityAxis) != 0;
         boolean attemptToMoveAlongGravity = Helper.getSignedCoordinate(attemptedMove, gravity) > 0;
         boolean collidesWithFloor = collidesOnGravityAxis && attemptToMoveAlongGravity;
-        boolean touchGround = entity.isOnGround() || collidesWithFloor;
+        boolean touchGround = entity.onGround() || collidesWithFloor;
         boolean collidesHorizontally = movesOnNonGravityAxis(collisionDelta, gravityAxis);
-        float maxUpStep = entity.maxUpStep * PehkuiInterface.invoker.getBaseScale(entity);
+        float maxUpStep = entity.maxUpStep() * PehkuiInterface.invoker.getBaseScale(entity);
         if (maxUpStep > 0.0F && touchGround && collidesHorizontally) {
             // the entity is touching ground and has horizontal collision now
             // try to directly move to stepped position, make it approach the stair
@@ -459,7 +459,7 @@ public class CollisionHelper {
         AABB portalBoundingBox = portal.getBoundingBox();
         
         McHelper.foreachEntitiesByBoxApproximateRegions(
-            Entity.class, portal.level,
+            Entity.class, portal.level(),
             portalBoundingBox, 8,
             entity -> {
                 if (entity instanceof Portal) {
@@ -531,7 +531,7 @@ public class CollisionHelper {
         if (portal.getIsGlobal()) {
             return portal;
         }
-        if (portal.level.isClientSide()) {
+        if (portal.level().isClientSide()) {
             return getCollisionHandlingUnitClient(portal);
         }
         else {
@@ -565,7 +565,7 @@ public class CollisionHelper {
     
     @Nullable
     public static AABB getTotalBlockCollisionBox(Entity entity, AABB box, Function<VoxelShape, VoxelShape> shapeFilter) {
-        Iterable<VoxelShape> collisions = entity.level.getBlockCollisions(entity, box);
+        Iterable<VoxelShape> collisions = entity.level().getBlockCollisions(entity, box);
         
         AABB collisionUnion = null;
         for (VoxelShape c : collisions) {

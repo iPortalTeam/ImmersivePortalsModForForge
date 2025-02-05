@@ -152,7 +152,7 @@ public class PortalDebugCommands {
                     long n = Runtime.getRuntime().freeMemory();
                     long o = m - n;
                     
-                    context.getSource().sendSuccess(
+                    context.getSource().sendSuccess(() ->
                         Component.literal(
                             String.format("Memory: % 2d%% %03d/%03dMB", o * 100L / l, toMiB(o), toMiB(l))
                         ),
@@ -208,12 +208,12 @@ public class PortalDebugCommands {
                 .executes(context -> {
                     ServerPlayer player = context.getSource().getPlayerOrException();
                     
-                    ChunkPos center = new ChunkPos(new BlockPos(player.position()));
+                    ChunkPos center = new ChunkPos(BlockPos.containing(player.position()));
                     
                     invokeEraseChunk(
-                        player.level, center,
+                        player.level(), center,
                         IntegerArgumentType.getInteger(context, "rChunks"),
-                        McHelper.getMinY(player.level), McHelper.getMaxYExclusive(player.level)
+                        McHelper.getMinY(player.level()), McHelper.getMaxYExclusive(player.level())
                     );
                     
                     return 0;
@@ -224,10 +224,10 @@ public class PortalDebugCommands {
                             
                             ServerPlayer player = context.getSource().getPlayerOrException();
                             
-                            ChunkPos center = new ChunkPos(new BlockPos(player.position()));
+                            ChunkPos center = new ChunkPos(BlockPos.containing(player.position()));
                             
                             invokeEraseChunk(
-                                player.level, center,
+                                player.level(), center,
                                 IntegerArgumentType.getInteger(context, "rChunks"),
                                 IntegerArgumentType.getInteger(context, "downY"),
                                 IntegerArgumentType.getInteger(context, "upY")
@@ -260,7 +260,7 @@ public class PortalDebugCommands {
             .requires(serverCommandSource -> serverCommandSource.hasPermission(3))
             .executes(context -> {
                 ServerPlayer player = context.getSource().getPlayerOrException();
-                List<Entity> entities = player.level.getEntitiesOfClass(
+                List<Entity> entities = player.level().getEntitiesOfClass(
                     Entity.class,
                     new AABB(player.position(), player.position()).inflate(32),
                     e -> true
@@ -341,10 +341,10 @@ public class PortalDebugCommands {
                 CHelper.printChat(
                     String.format(
                         "On Server %s %s removal:%s added:%s age:%s",
-                        player.level.dimension().location(),
+                        player.level().dimension().location(),
                         player.blockPosition(),
                         player.getRemovalReason(),
-                        player.level.getEntity(player.getId()) != null,
+                        player.level().getEntity(player.getId()) != null,
                         player.tickCount
                     )
                 );
@@ -480,9 +480,9 @@ public class PortalDebugCommands {
             .literal("report_air")
             .executes(context -> {
                 ServerPlayer player = context.getSource().getPlayerOrException();
-                BlockState blockState = player.level.getBlockState(player.blockPosition());
+                BlockState blockState = player.level().getBlockState(player.blockPosition());
                 
-                context.getSource().sendSuccess(
+                context.getSource().sendSuccess(() ->
                     blockState.getBlock().getName(),
                     false
                 );

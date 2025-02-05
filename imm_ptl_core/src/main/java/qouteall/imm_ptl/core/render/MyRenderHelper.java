@@ -205,8 +205,9 @@ public class MyRenderHelper {
         shader.PROJECTION_MATRIX.set(identityMatrix);
         
         shader.apply();
-        
-        RenderSystem.disableTexture();
+
+        // Removed by Mojang
+        //RenderSystem.disableTexture();
         
         Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder bufferBuilder = tessellator.getBuilder();
@@ -238,8 +239,9 @@ public class MyRenderHelper {
         BufferUploader.draw(bufferBuilder.end());
         
         shader.clear();
-        
-        RenderSystem.enableTexture();
+
+        // Removed by Mojang
+        //RenderSystem.enableTexture();
     }
     
     /**
@@ -257,8 +259,9 @@ public class MyRenderHelper {
         shader.PROJECTION_MATRIX.set(identityMatrix);
         
         shader.apply();
-        
-        RenderSystem.disableTexture();
+
+        // Removed by Mojang
+        //RenderSystem.disableTexture();
         
         Tesselator tessellator = RenderSystem.renderThreadTesselator();
         BufferBuilder bufferBuilder = tessellator.getBuilder();
@@ -281,8 +284,9 @@ public class MyRenderHelper {
         BufferUploader.draw(bufferBuilder.end());
         
         shader.clear();
-        
-        RenderSystem.enableTexture();
+
+        // Removed by Mojang
+        //RenderSystem.enableTexture();
     }
     
     /**
@@ -407,8 +411,8 @@ public class MyRenderHelper {
         
         ClientWorldLoader.getClientWorlds().forEach(world -> {
             if (!RenderStates.isDimensionRendered(world.dimension())) {
-                int updateNum = world.getChunkSource().getLightEngine().runUpdates(
-                    1000, true, true
+                int updateNum = world.getChunkSource().getLightEngine().runLightUpdates(
+                    //1000, true, true
                 );
             }
         });

@@ -52,7 +52,7 @@ public class IPMcHelper {
     public static List<Portal> getNearbyPortalList(
         Entity center, double range, Predicate<Portal> predicate
     ) {
-        return getNearbyPortalList(center.level, center.position(), range, predicate);
+        return getNearbyPortalList(center.level(), center.position(), range, predicate);
     }
     
     // include global portals
@@ -70,7 +70,7 @@ public class IPMcHelper {
     
     // includes global portals
     public static Stream<Portal> getNearbyPortals(Entity center, double range) {
-        return getNearbyPortals(center.level, center.position(), range);
+        return getNearbyPortals(center.level(), center.position(), range);
     }
     
     // includes global portals
@@ -203,7 +203,7 @@ public class IPMcHelper {
                 BlockHitResult.miss(
                     end,
                     Direction.getNearest(diff.x, diff.y, diff.z),
-                    new BlockPos(end)
+                    BlockPos.containing(end)
                 ),
                 portals
             );

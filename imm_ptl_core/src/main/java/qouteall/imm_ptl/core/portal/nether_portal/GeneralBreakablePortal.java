@@ -20,10 +20,10 @@ public class GeneralBreakablePortal extends BreakablePortalEntity {
     protected boolean isPortalIntactOnThisSide() {
         boolean areaIntact = blockPortalShape.area.stream()
             .allMatch(blockPos ->
-                level.getBlockState(blockPos).getBlock() == IPRegistry.NETHER_PORTAL_BLOCK.get()
+                level().getBlockState(blockPos).getBlock() == IPRegistry.NETHER_PORTAL_BLOCK.get()
             );
         boolean frameIntact = blockPortalShape.frameAreaWithoutCorner.stream()
-            .allMatch(blockPos -> !level.isEmptyBlock(blockPos));
+            .allMatch(blockPos -> !level().isEmptyBlock(blockPos));
         return areaIntact && frameIntact;
     }
     

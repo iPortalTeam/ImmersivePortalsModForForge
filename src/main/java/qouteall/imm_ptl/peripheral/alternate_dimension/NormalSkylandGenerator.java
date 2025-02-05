@@ -16,9 +16,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.util.thread.BlockableEventLoop;
 import net.minecraft.world.level.StructureManager;
-import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.BiomeSource;
-import net.minecraft.world.level.biome.MultiNoiseBiomeSource;
+import net.minecraft.world.level.biome.*;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.LightChunkGetter;
@@ -55,6 +53,7 @@ public class NormalSkylandGenerator extends NoiseBasedChunkGenerator {
                 RegistryOps.retrieveGetter(Registries.DENSITY_FUNCTION),
                 RegistryOps.retrieveGetter(Registries.NOISE),
                 RegistryOps.retrieveGetter(Registries.NOISE_SETTINGS),
+                RegistryOps.retrieveGetter(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST),
                 Codec.LONG.optionalFieldOf("seed", 0L).forGetter(g -> g.seed)
             )
             .apply(instance, NormalSkylandGenerator::create)
@@ -98,9 +97,11 @@ public class NormalSkylandGenerator extends NoiseBasedChunkGenerator {
         HolderGetter<DensityFunction> densityFunctionHolderGetter,
         HolderGetter<NormalNoise.NoiseParameters> noiseParametersHolderGetter,
         HolderGetter<NoiseGeneratorSettings> noiseGeneratorSettingsHolderGetter,
+        HolderGetter<MultiNoiseBiomeSourceParameterList> multiNoiseBiomeSourceParameterListHolderGetter,
         long seed
     ) {
-        MultiNoiseBiomeSource overworldBiomeSource = MultiNoiseBiomeSource.Preset.OVERWORLD.biomeSource(biomeHolderGetter);
+
+        MultiNoiseBiomeSource overworldBiomeSource = MultiNoiseBiomeSource.createFromPreset(multiNoiseBiomeSourceParameterListHolderGetter.getOrThrow(MultiNoiseBiomeSourceParameterLists.OVERWORLD));
         Set<Holder<Biome>> overworldBiomes = overworldBiomeSource.possibleBiomes();
         
         NoiseGeneratorSettings overworldNGS = noiseGeneratorSettingsHolderGetter

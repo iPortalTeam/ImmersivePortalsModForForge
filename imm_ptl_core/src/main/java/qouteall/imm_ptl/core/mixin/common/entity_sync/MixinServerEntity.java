@@ -30,7 +30,7 @@ public abstract class MixinServerEntity implements IEEntityTrackerEntry {
     private Entity entity;
     
     @Shadow
-    public abstract void sendPairingData(Consumer<Packet<?>> consumer_1);
+    public abstract void sendPairingData(ServerPlayer pPlayer, Consumer<Packet<?>> consumer_1);
     
     @Shadow @Final private VecDeltaCodec positionCodec;
     
@@ -50,7 +50,7 @@ public abstract class MixinServerEntity implements IEEntityTrackerEntry {
     @Overwrite
     public void removePairing(ServerPlayer player) {
         PacketRedirection.withForceRedirect(
-            ((ServerLevel) entity.level), () -> {
+            ((ServerLevel) entity.level()), () -> {
                 entity.stopSeenByPlayer(player);
                 player.connection.send(new ClientboundRemoveEntitiesPacket(entity.getId()));
             }
@@ -65,10 +65,10 @@ public abstract class MixinServerEntity implements IEEntityTrackerEntry {
     @Overwrite
     public void addPairing(ServerPlayer player) {
         PacketRedirection.withForceRedirect(
-            ((ServerLevel) entity.level), () -> {
+            ((ServerLevel) entity.level()), () -> {
                 ServerGamePacketListenerImpl networkHandler = player.connection;
                 Objects.requireNonNull(networkHandler);
-                this.sendPairingData(networkHandler::send);
+                this.sendPairingData(player, networkHandler::send);
                 this.entity.startSeenByPlayer(player);
             }
         );
@@ -101,7 +101,7 @@ public abstract class MixinServerEntity implements IEEntityTrackerEntry {
         ServerGamePacketListenerImpl serverPlayNetworkHandler,
         Packet packet_1
     ) {
-        PacketRedirection.sendRedirectedPacket(serverPlayNetworkHandler, packet_1, entity.level.dimension());
+        PacketRedirection.sendRedirectedPacket(serverPlayNetworkHandler, packet_1, entity.level().dimension());
     }
     
     // It encodes position into 1/4096 units. That precision is not enough for portals.

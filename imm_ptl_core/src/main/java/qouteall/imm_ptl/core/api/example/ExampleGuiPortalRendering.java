@@ -3,6 +3,7 @@ package qouteall.imm_ptl.core.api.example;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
@@ -81,7 +82,7 @@ public class ExampleGuiPortalRendering {
         
         ChunkLoader chunkLoader = new ChunkLoader(
             new DimensionalChunkPos(
-                world.dimension(), new ChunkPos(new BlockPos(pos))
+                world.dimension(), new ChunkPos(BlockPos.containing(pos))
             ),
             8
         );
@@ -141,8 +142,8 @@ public class ExampleGuiPortalRendering {
         }
         
         @Override
-        public void render(PoseStack matrices, int mouseX, int mouseY, float delta) {
-            super.render(matrices, mouseX, mouseY, delta);
+        public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
+            super.render(guiGraphics, mouseX, mouseY, delta);
             
             double t1 = CHelper.getSmoothCycles(503);
             double t2 = CHelper.getSmoothCycles(197);
@@ -186,9 +187,8 @@ public class ExampleGuiPortalRendering {
                 w * 0.2f, w * 0.8f,
                 h * 0.2f, h * 0.8f
             );
-            
-            drawCenteredString(
-                matrices, this.font, this.title, this.width / 2, 70, 16777215
+
+            guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 70, 16777215
             );
         }
         

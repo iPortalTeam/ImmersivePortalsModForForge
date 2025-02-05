@@ -21,6 +21,7 @@ import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.compat.iris_compatibility.IrisInterface;
 import qouteall.imm_ptl.core.ducks.IEEntity;
 import qouteall.imm_ptl.core.ducks.IEWorldRenderer;
+import qouteall.imm_ptl.core.mixin.common.MixinEntityAccess;
 import qouteall.imm_ptl.core.portal.Mirror;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.PortalLike;
@@ -213,7 +214,7 @@ public class CrossPortalEntityRenderer {
         
         Vec3 oldEyePos = McHelper.getEyePos(entity);
         Vec3 oldLastTickEyePos = McHelper.getLastTickEyePos(entity);
-        Level oldWorld = entity.level;
+        Level oldWorld = entity.level();
         
         Vec3 newEyePos = transformingPortal.transformPoint(oldEyePos);
         
@@ -264,7 +265,7 @@ public class CrossPortalEntityRenderer {
             transformingPortal.transformPoint(oldLastTickEyePos)
         );
         
-        entity.level = newWorld;
+        ((MixinEntityAccess)entity).immersive_portals$callSetLevel(newWorld);
         
         isRenderingEntityProjection = true;
         matrixStack.pushPose();
@@ -288,7 +289,7 @@ public class CrossPortalEntityRenderer {
         McHelper.setEyePos(
             entity, oldEyePos, oldLastTickEyePos
         );
-        entity.level = oldWorld;
+        ((MixinEntityAccess)entity).immersive_portals$callSetLevel(oldWorld);
     }
     
     private static void setupEntityProjectionRenderingTransformation(
@@ -337,7 +338,7 @@ public class CrossPortalEntityRenderer {
             }
         }
         
-        if (client.level == player.level) {
+        if (client.level == player.level()) {
             return true;
         }
         

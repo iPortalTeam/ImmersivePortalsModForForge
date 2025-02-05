@@ -1,7 +1,7 @@
 package qouteall.imm_ptl.core.compat.mixin;
 
 import com.mojang.blaze3d.shaders.Program;
-import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
+import net.irisshaders.iris.pipeline.SodiumTerrainPipeline;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,7 +14,7 @@ import java.util.Optional;
 @Pseudo
 @Mixin(value = SodiumTerrainPipeline.class, remap = false)
 public class MixinIrisSodiumSodiumTerrainPipeline {
-    @Inject(method = "getTerrainVertexShaderSource", at = @At("RETURN"), cancellable = true)
+    @Inject(method = {"getTerrainCutoutVertexShaderSource", "getTerrainSolidVertexShaderSource"}, at = @At("RETURN"), cancellable = true)
     private void onGetTerrainVertexShaderSource(CallbackInfoReturnable<Optional<String>> cir) {
         Optional<String> original = cir.getReturnValue();
         cir.setReturnValue(original.map(code ->

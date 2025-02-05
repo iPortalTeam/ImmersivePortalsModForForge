@@ -14,6 +14,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterList;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -37,16 +38,18 @@ public class ErrorTerrainGenerator extends DelegatedChunkGenerator {
     public static final Codec<ErrorTerrainGenerator> codec = RecordCodecBuilder.create(
         instance -> instance.group(
                 RegistryOps.retrieveGetter(Registries.BIOME),
-                RegistryOps.retrieveGetter(Registries.NOISE_SETTINGS)
+                RegistryOps.retrieveGetter(Registries.NOISE_SETTINGS),
+                RegistryOps.retrieveGetter(Registries.MULTI_NOISE_BIOME_SOURCE_PARAMETER_LIST)
             )
             .apply(instance, ErrorTerrainGenerator::create)
     );
     
     public static ErrorTerrainGenerator create(
         HolderGetter<Biome> biomeHolderGetter,
-        HolderGetter<NoiseGeneratorSettings> noiseGeneratorSettingsHolderGetter
+        HolderGetter<NoiseGeneratorSettings> noiseGeneratorSettingsHolderGetter,
+        HolderGetter<MultiNoiseBiomeSourceParameterList> multiNoiseBiomeSourceParameterListHolderGetter
     ) {
-        ChaosBiomeSource chaosBiomeSource = ChaosBiomeSource.createChaosBiomeSource(biomeHolderGetter);
+        ChaosBiomeSource chaosBiomeSource = ChaosBiomeSource.createChaosBiomeSource(biomeHolderGetter, multiNoiseBiomeSourceParameterListHolderGetter);
         
         NoiseGeneratorSettings skylandSetting = noiseGeneratorSettingsHolderGetter
             .getOrThrow(NoiseGeneratorSettings.FLOATING_ISLANDS).value();

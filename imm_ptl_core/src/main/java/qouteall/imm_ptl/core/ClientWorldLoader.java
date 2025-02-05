@@ -226,7 +226,7 @@ public class ClientWorldLoader {
     
     private static void disposeDimensionDynamically(ResourceKey<Level> dimension) {
         Validate.isTrue(client.level.dimension() != dimension);
-        Validate.isTrue(client.player.level.dimension() != dimension);
+        Validate.isTrue(client.player.level().dimension() != dimension);
         Validate.isTrue(client.isSameThread());
         
         LevelRenderer worldRenderer = worldRendererMap.get(dimension);
@@ -323,7 +323,7 @@ public class ClientWorldLoader {
             Validate.isTrue(client.levelRenderer != null, "levelRenderer is null");
             
             Validate.notNull(client.player, "player is null");
-            Validate.isTrue(client.player.level == client.level, "The player level is not the same as client level");
+            Validate.isTrue(client.player.level() == client.level, "The player level is not the same as client level");
             
             ResourceKey<Level> playerDimension = client.level.dimension();
             clientWorldMap.put(playerDimension, client.level);
@@ -417,7 +417,7 @@ public class ClientWorldLoader {
         
         return newWorld;
     }
-    
+
     public static Set<ResourceKey<Level>> getServerDimensions() {
         return client.player.connection.levels();
     }

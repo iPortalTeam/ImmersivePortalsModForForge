@@ -7,7 +7,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.MappedRegistry;
-import net.minecraft.core.NonNullList;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -19,13 +18,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.event.CreativeModeTabEvent;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.IForgeRegistry;
@@ -33,7 +31,6 @@ import net.minecraftforge.registries.RegistryBuilder;
 import net.minecraftforge.registries.RegistryObject;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.commands.PortalCommand;
-import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.peripheral.platform_specific.PeripheralModEntry;
 import qouteall.q_misc_util.MiscHelper;
 
@@ -184,7 +181,7 @@ public class CommandStickItem extends Item {
     }
     
     private void doUse(Player player, ItemStack stack) {
-        if (player.level.isClientSide()) {
+        if (player.level().isClientSide()) {
             return;
         }
         
@@ -262,9 +259,9 @@ public class CommandStickItem extends Item {
     }
 
     @SubscribeEvent
-    public static void buildContents(CreativeModeTabEvent.BuildContents event) {
+    public static void buildContents(BuildCreativeModeTabContentsEvent event) {
         // Add to ingredients tab
-        if (event.getTab() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
+        if (event.getTabKey().equals(CreativeModeTabs.TOOLS_AND_UTILITIES)) {
             commandStickTypeRegistry.stream().forEach(data -> {
                 ItemStack stack = new ItemStack(PeripheralModEntry.COMMAND_STICK_ITEM.get());
                 data.serialize(stack.getOrCreateTag());

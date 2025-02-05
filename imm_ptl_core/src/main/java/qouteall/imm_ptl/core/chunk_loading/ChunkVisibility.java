@@ -28,7 +28,7 @@ public class ChunkVisibility {
     public static ChunkLoader playerDirectLoader(ServerPlayer player) {
         return new ChunkLoader(
             new DimensionalChunkPos(
-                player.level.dimension(),
+                player.level().dimension(),
                 player.chunkPosition()
             ),
             McHelper.getRenderDistanceOnServer(),
@@ -115,7 +115,7 @@ public class ChunkVisibility {
             return new ChunkLoader(
                 new DimensionalChunkPos(
                     portal.dimensionTo,
-                    new ChunkPos(new BlockPos(
+                    new ChunkPos(BlockPos.containing(
                         portal.transformPoint(player.position())
                     ))
                 ),
@@ -134,7 +134,7 @@ public class ChunkVisibility {
             return new ChunkLoader(
                 new DimensionalChunkPos(
                     portal.dimensionTo,
-                    new ChunkPos(new BlockPos(portal.getDestPos()))
+                    new ChunkPos(BlockPos.containing(portal.getDestPos()))
                 ),
                 getCappedLoadingDistance(
                     portal, player,
@@ -159,7 +159,7 @@ public class ChunkVisibility {
             return new ChunkLoader(
                 new DimensionalChunkPos(
                     portal.dimensionTo,
-                    new ChunkPos(new BlockPos(transformedPos))
+                    new ChunkPos(BlockPos.containing(transformedPos))
                 ),
                 renderDistance
             );
@@ -168,7 +168,7 @@ public class ChunkVisibility {
             return new ChunkLoader(
                 new DimensionalChunkPos(
                     portal.dimensionTo,
-                    new ChunkPos(new BlockPos(portal.getDestPos()))
+                    new ChunkPos(BlockPos.containing(portal.getDestPos()))
                 ),
                 getCappedLoadingDistance(
                     portal, player, serverLoadingDistance / 4
@@ -194,7 +194,7 @@ public class ChunkVisibility {
             Stream.of(playerDirectLoader),
             
             getNearbyPortals(
-                ((ServerLevel) player.level),
+                ((ServerLevel) player.level()),
                 player.position(),
                 portal -> portal.broadcastToPlayer(player),
                 visiblePortalRangeChunks, 256

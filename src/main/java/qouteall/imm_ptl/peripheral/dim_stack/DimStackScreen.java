@@ -1,6 +1,7 @@
 package qouteall.imm_ptl.peripheral.dim_stack;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
@@ -322,20 +323,19 @@ public class DimStackScreen extends Screen {
     }
     
     @Override
-    public void render(PoseStack matrixStack, int mouseY, int i, float f) {
-        this.renderBackground(matrixStack);
+    public void render(GuiGraphics guiGraphics, int mouseY, int i, float f) {
+        this.renderBackground(guiGraphics);
         
         
         if (isEnabled) {
-            dimListWidget.render(matrixStack, mouseY, i, f);
+            dimListWidget.render(guiGraphics, mouseY, i, f);
         }
         
-        super.render(matrixStack, mouseY, i, f);
+        super.render(guiGraphics, mouseY, i, f);
         
         Font textRenderer = Minecraft.getInstance().font;
-        textRenderer.drawShadow(
-            matrixStack, this.title,
-            20, 10, -1
+        guiGraphics.drawString(textRenderer, this.title,
+            20, 10, -1, true
         );
         
     }

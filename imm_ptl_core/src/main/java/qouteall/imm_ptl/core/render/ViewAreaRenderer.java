@@ -70,7 +70,8 @@ public class ViewAreaRenderer {
         }
         
         GlStateManager._enableDepthTest();
-        GlStateManager._disableTexture();
+        // Removed by Mojang
+        //GlStateManager._disableTexture();
         
         CHelper.enableDepthClamp();
         
@@ -92,8 +93,9 @@ public class ViewAreaRenderer {
         );
         
         shader.clear();
-        
-        GlStateManager._enableTexture();
+
+        // Removed by Mojang
+        //GlStateManager._enableTexture();
         GlStateManager._enableCull();
         CHelper.disableDepthClamp();
         

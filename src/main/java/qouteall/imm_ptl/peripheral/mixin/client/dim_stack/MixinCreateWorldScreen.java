@@ -1,31 +1,21 @@
 package qouteall.imm_ptl.peripheral.mixin.client.dim_stack;
 
-import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Lifecycle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.gui.screens.worldselection.WorldCreationContext;
-import net.minecraft.client.gui.screens.worldselection.WorldGenSettingsComponent;
+import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.core.LayeredRegistryAccess;
 import net.minecraft.core.MappedRegistry;
-import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.RegistryLayer;
-import net.minecraft.server.packs.repository.PackRepository;
-import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.world.level.DataPackConfig;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelSettings;
-import net.minecraft.world.level.WorldDataConfiguration;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.WorldDimensions;
-import net.minecraft.world.level.levelgen.WorldGenSettings;
-import net.minecraft.world.level.storage.PrimaryLevelData;
 import net.minecraftforge.common.MinecraftForge;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
@@ -33,46 +23,28 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.peripheral.guide.IPOuterClientMisc;
-import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.dimension.DimId;
 import qouteall.imm_ptl.peripheral.dim_stack.DimStackInfo;
 import qouteall.imm_ptl.peripheral.dim_stack.DimStackManagement;
 import qouteall.imm_ptl.peripheral.dim_stack.DimStackScreen;
 import qouteall.imm_ptl.peripheral.ducks.IECreateWorldScreen;
 import qouteall.q_misc_util.Helper;
-import qouteall.q_misc_util.api.DimensionAPI;
 import qouteall.q_misc_util.forge.events.ServerDimensionsLoadEvent;
 import qouteall.q_misc_util.mixin.dimension.IELayeredRegistryAccess;
 
 import javax.annotation.Nullable;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 @Mixin(CreateWorldScreen.class)
 public abstract class MixinCreateWorldScreen extends Screen implements IECreateWorldScreen {
     
-    @Shadow
-    @org.jetbrains.annotations.Nullable
-    protected abstract Pair<File, PackRepository> getDataPackSelectionSettings();
-    
-    @Shadow
-    @Final
-    public WorldGenSettingsComponent worldGenSettingsComponent;
-    
-    @Shadow
-    protected abstract void tryApplyNewDataPacks(PackRepository repository);
-    
     @Shadow @Final private static Logger LOGGER;
+    @Shadow @Final private WorldCreationUiState uiState;
     private Button dimStackButton;
-    
+
     @Nullable
     private DimStackScreen ip_dimStackScreen;
 
@@ -87,28 +59,31 @@ public abstract class MixinCreateWorldScreen extends Screen implements IECreateW
         throw new RuntimeException();
     }
 
+    @Override
+    public Button immersive_portals$getDimStackButton() {
+        return this.dimStackButton;
+    }
+
     @Inject(
         method = "Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;init()V",
         at = @At("HEAD")
     )
     private void onInitEnded(CallbackInfo ci) {
         
-        dimStackButton = (Button) this.addRenderableWidget(
-            Button
+        dimStackButton = Button
                 .builder(
-                    Component.translatable("imm_ptl.altius_screen_button"),
-                    (buttonWidget) -> {
-                        openDimStackScreen();
-                    }
+                        Component.translatable("imm_ptl.altius_screen_button"),
+                        (buttonWidget) -> {
+                            openDimStackScreen();
+                        }
                 )
                 .pos(width / 2 + 5, 151)
                 .size(150, 20)
-                .build()
-        );
-        dimStackButton.visible = false;
-        
+                .build();
+        //dimStackButton.visible = false;
     }
-    
+
+    /*
     @Inject(
         method = "Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;setWorldGenSettingsVisible(Z)V",
         at = @At("RETURN")
@@ -121,6 +96,7 @@ public abstract class MixinCreateWorldScreen extends Screen implements IECreateW
             dimStackButton.visible = false;
         }
     }
+     */
     
     @Inject(
         method = "createNewWorld",
@@ -135,7 +111,7 @@ public abstract class MixinCreateWorldScreen extends Screen implements IECreateW
             Helper.log("Generating dimension stack world");
         }
     }
-    
+
     @Nullable
     private DimStackInfo ip_getEffectiveDimStackInfoForWorldCreation() {
         if (ip_dimStackScreen != null) {
@@ -147,7 +123,7 @@ public abstract class MixinCreateWorldScreen extends Screen implements IECreateW
             return IPOuterClientMisc.getDimStackPreset();
         }
     }
-    
+
     // Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;method_40209(Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/world/level/DataPackConfig;)Lcom/mojang/datafixers/util/Pair
 //    @Inject(
 //        method = {"lambda$tryApplyNewDataPacks$18", "m_232885_"},
@@ -162,7 +138,7 @@ public abstract class MixinCreateWorldScreen extends Screen implements IECreateW
 //
 //        ip_lastRegistryAccess = cir.getReturnValue().getSecond();
 //    }
-    
+
     private void openDimStackScreen() {
         if (ip_dimStackScreen == null) {
             ip_dimStackScreen = new DimStackScreen(
@@ -173,15 +149,15 @@ public abstract class MixinCreateWorldScreen extends Screen implements IECreateW
                 }
             );
         }
-        
+
         Minecraft.getInstance().setScreen(ip_dimStackScreen);
     }
-    
+
     private List<ResourceKey<Level>> portal_getDimensionList(Screen addDimensionScreen) {
         Helper.log("Getting the dimension list");
 
         try {
-            WorldCreationContext settings = worldGenSettingsComponent.settings();
+            WorldCreationContext settings = this.uiState.getSettings();
             RegistryAccess.Frozen registryAccess = settings.worldgenLoadContext();
 
             WorldDimensions selectedDimensions = settings.selectedDimensions();

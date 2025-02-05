@@ -96,7 +96,7 @@ public class O_O {
     }
     
     public static void postClientChunkLoadEvent(LevelChunk chunk) {
-        MinecraftForge.EVENT_BUS.post(new ChunkEvent.Load(chunk));
+        MinecraftForge.EVENT_BUS.post(new ChunkEvent.Load(chunk, false));
     }
     
     public static void postClientChunkUnloadEvent(LevelChunk chunk) {

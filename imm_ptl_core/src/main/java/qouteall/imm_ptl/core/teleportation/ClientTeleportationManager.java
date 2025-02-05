@@ -22,6 +22,7 @@ import qouteall.imm_ptl.core.ducks.IEEntity;
 import qouteall.imm_ptl.core.ducks.IEGameRenderer;
 import qouteall.imm_ptl.core.ducks.IEMinecraftClient;
 import qouteall.imm_ptl.core.ducks.IEParticleManager;
+import qouteall.imm_ptl.core.mixin.common.MixinEntityAccess;
 import qouteall.imm_ptl.core.network.PacketRedirectionClient;
 import qouteall.imm_ptl.core.network.IPNetworkingClient;
 import qouteall.imm_ptl.core.platform_specific.O_O;
@@ -96,7 +97,7 @@ public class ClientTeleportationManager {
                 return;
             }
         }
-        if (client.player.level.dimension() != dimension) {
+        if (client.player.level().dimension() != dimension) {
             forceTeleportPlayer(dimension, pos);
         }
     }
@@ -193,7 +194,7 @@ public class ClientTeleportationManager {
 
         ArrayList<TeleportationUtil.Teleportation> teleportationCandidates = new ArrayList<>();
         IPMcHelper.traverseNearbyPortals(
-            player.level,
+            player.level(),
             thisFrameEyePos,
             IPGlobal.maxNormalPortalRadius,
             portal -> {
@@ -416,7 +417,7 @@ public class ClientTeleportationManager {
         
         fromWorld.removeEntity(player.getId(), Entity.RemovalReason.CHANGED_DIMENSION);
         
-        player.level = toWorld;
+        ((MixinEntityAccess)player).immersive_portals$callSetLevel(toWorld);
         
         McHelper.setEyePos(player, newEyePos, newEyePos);
         McHelper.updateBoundingBox(player);
@@ -497,9 +498,9 @@ public class ClientTeleportationManager {
         ClientLevel newWorld,
         Vec3 newPos
     ) {
-        ClientLevel oldWorld = (ClientLevel) entity.level;
+        ClientLevel oldWorld = (ClientLevel) entity.level();
         oldWorld.removeEntity(entity.getId(), Entity.RemovalReason.CHANGED_DIMENSION);
-        entity.level = newWorld;
+        ((MixinEntityAccess)entity).immersive_portals$callSetLevel(newWorld);
         entity.setPos(newPos.x, newPos.y, newPos.z);
         newWorld.putNonPlayerEntity(entity.getId(), entity);
     }

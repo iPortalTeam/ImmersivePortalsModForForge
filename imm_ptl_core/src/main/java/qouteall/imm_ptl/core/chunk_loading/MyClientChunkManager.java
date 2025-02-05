@@ -37,7 +37,6 @@ public class MyClientChunkManager extends ClientChunkCache {
     private static final Logger LOGGER = LogManager.getLogger();
     protected final LevelChunk emptyChunk;
     protected final LevelLightEngine lightingProvider;
-    protected final ClientLevel world;
     
     protected final Long2ObjectLinkedOpenHashMap<LevelChunk> chunkMap =
         new Long2ObjectLinkedOpenHashMap<>();
@@ -47,7 +46,6 @@ public class MyClientChunkManager extends ClientChunkCache {
     
     public MyClientChunkManager(ClientLevel clientWorld, int loadDistance) {
         super(clientWorld, loadDistance);
-        this.world = clientWorld;
         this.emptyChunk = new EmptyLevelChunk(
             clientWorld, new ChunkPos(0, 0),
             clientWorld.registryAccess()
@@ -76,7 +74,7 @@ public class MyClientChunkManager extends ClientChunkCache {
             if (isValidChunk(chunk, x, z)) {
                 chunkMap.remove(chunkPos.toLong());
                 O_O.postClientChunkUnloadEvent(chunk);
-                world.unload(chunk);
+                ((ClientLevel)this.getLevel()).unload(chunk);
                 clientChunkUnloadSignal.emit(chunk);
             }
         }
@@ -102,11 +100,6 @@ public class MyClientChunkManager extends ClientChunkCache {
     }
     
     @Override
-    public BlockGetter getLevel() {
-        return this.world;
-    }
-    
-    @Override
     public LevelChunk replaceWithPacketData(
         int x, int z,
         FriendlyByteBuf buf, CompoundTag nbt,
@@ -120,7 +113,7 @@ public class MyClientChunkManager extends ClientChunkCache {
             worldChunk = chunkMap.get(chunkPosLong);
             ChunkPos chunkPos = new ChunkPos(x, z);
             if (!isValidChunk(worldChunk, x, z)) {
-                worldChunk = new LevelChunk(this.world, chunkPos);
+                worldChunk = new LevelChunk(((ClientLevel)this.getLevel()), chunkPos);
                 worldChunk.replaceWithPacketData(buf, nbt, consumer);
                 chunkMap.put(chunkPosLong, worldChunk);
             }
@@ -128,8 +121,8 @@ public class MyClientChunkManager extends ClientChunkCache {
                 worldChunk.replaceWithPacketData(buf, nbt, consumer);
             }
         }
-        
-        this.world.onChunkLoaded(new ChunkPos(x, z));
+
+        ((ClientLevel)this.getLevel()).onChunkLoaded(new ChunkPos(x, z));
         
         O_O.postClientChunkLoadEvent(worldChunk);
         clientChunkLoadSignal.emit(worldChunk);
@@ -168,7 +161,7 @@ public class MyClientChunkManager extends ClientChunkCache {
     @Override
     public void onLightUpdate(LightLayer lightType, SectionPos chunkSectionPos) {
         ClientWorldLoader.getWorldRenderer(
-            world.dimension()
+                ((ClientLevel)this.getLevel()).dimension()
         ).setSectionDirty(
             chunkSectionPos.x(),
             chunkSectionPos.y(),

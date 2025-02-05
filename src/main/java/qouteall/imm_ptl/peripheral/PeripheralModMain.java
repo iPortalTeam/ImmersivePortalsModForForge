@@ -81,7 +81,7 @@ public class PeripheralModMain {
             if (world == null) {
                 return;
             }
-            EndDragonFight dragonFight = world.dragonFight();
+            EndDragonFight dragonFight = world.getDragonFight();
             if (dragonFight == null) {
                 return;
             }

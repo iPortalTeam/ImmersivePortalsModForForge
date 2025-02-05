@@ -19,7 +19,7 @@ public class MixinPlayer_Pose {
     )
     private void onUpdatePlayerPose(CallbackInfo ci) {
         Player this_ = (Player) (Object) this;
-        if (!this_.level.isClientSide()) {
+        if (!this_.level().isClientSide()) {
             ci.cancel();
         }
     }

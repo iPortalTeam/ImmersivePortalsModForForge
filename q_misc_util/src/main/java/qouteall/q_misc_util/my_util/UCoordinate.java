@@ -20,7 +20,7 @@ public class UCoordinate {
     }
     
     public UCoordinate(Entity entity) {
-        this(entity.level.dimension(), entity.position());
+        this(entity.level().dimension(), entity.position());
     }
     
     @Override
