@@ -33,13 +33,13 @@ public class Message {
         INSTANCE.messageBuilder(Dim_Sync.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(Dim_Sync::new)
                 .encoder(Dim_Sync::toBytes)
-                .consumerMainThread(Dim_Sync::handle)
+                .consumerNetworkThread(Dim_Sync::handle)
                 .add();
 
         INSTANCE.messageBuilder(Remote_StC.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(Remote_StC::new)
                 .encoder(Remote_StC::toBytes)
-                .consumerMainThread(Remote_StC::handle)
+                .consumerNetworkThread(Remote_StC::handle)
                 .add();
     }
 
