@@ -1,6 +1,12 @@
 package qouteall.imm_ptl.core.compat.mixin;
 
+import me.jellysquid.mods.sodium.client.gl.GlObject;
+import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderOptions;
 import net.irisshaders.iris.compat.sodium.impl.shader_overrides.IrisChunkShaderInterface;
+import net.irisshaders.iris.compat.sodium.impl.shader_overrides.ShaderBindingContextExt;
+import net.irisshaders.iris.gl.blending.BlendModeOverride;
+import net.irisshaders.iris.pipeline.SodiumTerrainPipeline;
+import net.irisshaders.iris.uniforms.custom.CustomUniforms;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL21;
 import org.spongepowered.asm.mixin.Mixin;
@@ -10,9 +16,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import qouteall.imm_ptl.core.render.FrontClipping;
 import qouteall.q_misc_util.Helper;
 
+import java.util.List;
+
 @Mixin(value = IrisChunkShaderInterface.class, remap = false)
 public class MixinIrisSodiumChunkShaderInterface {
-    private int uIPClippingEquation;
+    private int uIPClippingEquation = -1;
     
     private void ip_init(int shaderId) {
         uIPClippingEquation = GL20C.glGetUniformLocation(shaderId, "imm_ptl_ClippingEquation");
@@ -21,22 +29,24 @@ public class MixinIrisSodiumChunkShaderInterface {
             uIPClippingEquation = -1;
         }
     }
-    
-//    @Inject( // TODO @Nick1st Why is this identifier wrong?
-//        method = "<init>",
-//        at = @At("RETURN"),
-//        require = 0
-//    )
-//    private void onInit(
-//        int handle,
-//        ShaderBindingContextExt par2, SodiumTerrainPipeline par3, boolean par4,
-//        BlendModeOverride par5, List par6, float par7, CustomUniforms par8, CallbackInfo ci
-//    ) {
-//        ip_init(handle);
-//    }
+
+    @Inject(
+            method = {"<init>"},
+            at = {@At("RETURN")},
+            require = 0,
+            remap = false
+    )
+    private void onInit(int handle, ShaderBindingContextExt contextExt, SodiumTerrainPipeline pipeline, ChunkShaderOptions options, boolean isTess, boolean isShadowPass, BlendModeOverride blendModeOverride, List bufferOverrides, float alpha, CustomUniforms customUniforms, CallbackInfo ci) {
+        if (contextExt instanceof GlObject glObject) {
+            this.ip_init(glObject.handle());
+        } else {
+            Helper.log("Skipping sodium shader init injection");
+        }
+
+    }
     
     @Inject(
-        method = "setupState", // was setup before, not sure if same method
+        method = "setupState",
         at = @At("RETURN")
     )
     private void onSetup(CallbackInfo ci) {

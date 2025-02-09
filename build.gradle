@@ -72,7 +72,8 @@ allprojects {
         // Flywheel
         compileOnly fg.deobf("com.jozufozu.flywheel:flywheel-forge-1.19.3:${project.flywheel_version}") // TODO @Nick1st there's no flywheel yet
         // Rubidium
-        api fg.deobf("curse.maven:rubidium-574856:${project.rubidium_fileid}")
+        //api fg.deobf("curse.maven:rubidium-574856:${project.rubidium_fileid}")
+        api fg.deobf("curse.maven:sodium-908741:${project.embeddium_fileid}")
         // Oculus
         compileOnly fg.deobf("curse.maven:oculus-581495:${project.oculus_fileid}") // TODO @Nick1st Oculus support currently non functioning, no Oculus for 1.19 yet
         // Curios

@@ -16,10 +16,12 @@
     "MixinIrisShadowRenderTargets",
     "MixinIrisSodiumChunkShaderInterface",
     "MixinIrisSodiumSodiumTerrainPipeline",
-    "MixinSodiumChunkGraphInfo",
     "MixinSodiumChunkShaderInterface",
+    "MixinSodiumOcclusionCuller",
+    "MixinSodiumRenderRegion",
     "MixinSodiumRenderSectionManager",
     "MixinSodiumShaderLoader",
+    "MixinSodiumViewport",
     "MixinSodiumWorldRenderer"
   ],
   "injectors": {
