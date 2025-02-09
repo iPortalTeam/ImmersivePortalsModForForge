@@ -75,7 +75,7 @@ allprojects {
         //api fg.deobf("curse.maven:rubidium-574856:${project.rubidium_fileid}")
         api fg.deobf("curse.maven:sodium-908741:${project.embeddium_fileid}")
         // Oculus
-        compileOnly fg.deobf("curse.maven:oculus-581495:${project.oculus_fileid}") // TODO @Nick1st Oculus support currently non functioning, no Oculus for 1.19 yet
+        api fg.deobf("curse.maven:oculus-581495:${project.oculus_fileid}") // TODO @Nick1st Oculus support currently non functioning, no Oculus for 1.19 yet
         // Curios
         runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${project.curios_version}")
         compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${project.curios_version}:api")
