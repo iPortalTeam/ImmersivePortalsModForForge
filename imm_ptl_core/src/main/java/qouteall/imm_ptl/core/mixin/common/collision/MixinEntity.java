@@ -41,7 +41,12 @@ public abstract class MixinEntity implements IEEntity {
     public abstract AABB getBoundingBox();
     
     @Shadow
-    public Level level;
+    private Level level;
+
+
+    public Level ip_getLevel() {
+        return level;
+    }
     
     @Shadow
     public abstract void setBoundingBox(AABB box_1);
