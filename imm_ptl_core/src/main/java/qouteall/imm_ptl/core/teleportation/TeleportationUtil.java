@@ -1,12 +1,14 @@
 package qouteall.imm_ptl.core.teleportation;
 
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.Validate;
+import org.jetbrains.annotations.Nullable;
+import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.PortalState;
 import qouteall.q_misc_util.Helper;
 
-import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.List;
 
@@ -38,6 +40,16 @@ public class TeleportationUtil {
         return new PortalPointVelocity(thisSideVelocity, otherSideVelocity);
     }
     
+    public static void transformEntityVelocity(
+        Portal portal, Entity entity,
+        PortalPointVelocity portalPointVelocity
+    ) {
+        Vec3 oldVelocityRelativeToPortal = McHelper.getWorldVelocity(entity).subtract(portalPointVelocity.thisSidePointVelocity());
+        Vec3 transformedVelocityRelativeToPortal = portal.transformVelocityRelativeToPortal(oldVelocityRelativeToPortal, entity);
+        Vec3 newVelocity = transformedVelocityRelativeToPortal.add(portalPointVelocity.otherSidePointVelocity());
+        McHelper.setWorldVelocity(entity, newVelocity);
+    }
+
     public static record Teleportation(
         boolean isDynamic,
         Portal portal,
@@ -56,7 +68,7 @@ public class TeleportationUtil {
         Vec3 thisSidePointVelocity,
         Vec3 otherSidePointVelocity
     ) {
-    
+        public static final PortalPointVelocity zero = new PortalPointVelocity(Vec3.ZERO, Vec3.ZERO);
     }
     
     public static record PortalPointOffset(
@@ -99,7 +111,7 @@ public class TeleportationUtil {
             portalState,
             portalState, portalState,
             portalState, portalState,
-            new PortalPointVelocity(Vec3.ZERO, Vec3.ZERO),
+            PortalPointVelocity.zero,
             portal.transformPoint(collisionInfo.collisionPos),
             newLastTickEyePos, newThisTickEyePos
         );
@@ -167,11 +179,11 @@ public class TeleportationUtil {
             double dot = newOtherSideThisTickPos
                 .subtract(thisTickState.toPos)
                 .dot(thisTickState.getContentDirection());
-            if (dot < 0) {
+            if (dot < 0.00001) {
                 Helper.log("Teleported to behind the end-tick portal destination. Corrected.");
-                newOtherSideThisTickPos = newOtherSideThisTickPos.add(
-                    thisTickState.getContentDirection().scale(-dot + 0.001)
-                );
+                Vec3 offset1 = thisTickState.getContentDirection().scale(Math.max(-dot, 0) + 0.00001);
+                newOtherSideThisTickPos = newOtherSideThisTickPos.add(offset1);
+                newOtherSideLastTickPos = newOtherSideLastTickPos.add(offset1);
             }
         }
         
@@ -182,9 +194,9 @@ public class TeleportationUtil {
             double dot = newImmediateCameraPos
                 .subtract(currentFrameState.toPos)
                 .dot(currentFrameState.getContentDirection());
-            if (dot < 0) {
+            if (dot < 0.00001) {
                 Helper.log("Teleported to behind the end-frame portal destination. Corrected.");
-                Vec3 offset1 = currentFrameState.getContentDirection().scale(-dot + 0.001);
+                Vec3 offset1 = currentFrameState.getContentDirection().scale(Math.max(-dot, 0) + 0.00001);
                 newOtherSideThisTickPos = newOtherSideThisTickPos.add(offset1);
                 newOtherSideLastTickPos = newOtherSideLastTickPos.add(offset1);
             }
@@ -198,9 +210,9 @@ public class TeleportationUtil {
             double dot = newImmediateCameraPos
                 .subtract(lastFrameState.toPos)
                 .dot(lastFrameState.getContentDirection());
-            if (dot < 0) {
+            if (dot < 0.00001) {
                 Helper.log("Teleported to behind the last-frame portal destination. Corrected.");
-                Vec3 offset1 = lastFrameState.getContentDirection().scale(-dot + 0.001);
+                Vec3 offset1 = lastFrameState.getContentDirection().scale(Math.max(-dot, 0) + 0.001);
                 newOtherSideThisTickPos = newOtherSideThisTickPos.add(offset1);
                 newOtherSideLastTickPos = newOtherSideLastTickPos.add(offset1);
             }

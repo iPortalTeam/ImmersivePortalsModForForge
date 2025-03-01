@@ -4,6 +4,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.client.multiplayer.ClientChunkCache;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -40,31 +41,6 @@ public class O_O {
     ) {
         RequiemCompat.onPlayerTeleportedClient();
     }
-
-//    @OnlyIn(Dist.CLIENT)
-//    public static void segregateClientEntity(
-//        ClientWorld fromWorld,
-//        Entity entity
-//    ) {
-//        ((IEClientWorld_MA) fromWorld).segregateEntity(entity);
-//        entity.removed = false;
-//    }
-//
-//    public static void segregateServerEntity(
-//        ServerWorld fromWorld,
-//        Entity entity
-//    ) {
-//        fromWorld.removeEntity(entity);
-//        entity.removed = false;
-//    }
-//
-//    public static void segregateServerPlayer(
-//        ServerWorld fromWorld,
-//        ServerPlayerEntity player
-//    ) {
-//        fromWorld.removePlayer(player);
-//        player.removed = false;
-//    }
     
     public static void onPlayerTravelOnServer(
         ServerPlayer player,
@@ -128,6 +104,8 @@ public class O_O {
             return "https://qouteall.fun/immptl_info/forge-%s.json".formatted(gameVersion);
         }
         else {
+            // it's in github pages
+            // https://github.com/qouteall/immptl_info
             return "https://qouteall.fun/immptl_info/%s.json".formatted(gameVersion);
         }
     }
@@ -168,6 +146,41 @@ public class O_O {
         }
 
         return false;
+    }
+
+    @org.jetbrains.annotations.Nullable
+    public static ResourceLocation getModIconLocation(String modid) {
+        String path = ModList.get().getModContainerById(modid)
+                .flatMap(c -> c.getModInfo().getLogoFile())
+                .orElse(null);
+        if (path == null) {
+            return null;
+        }
+
+        // for example, if the icon path is "assets/modid/icon.png"
+        // then the result should be modid:icon.png
+
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        if (path.startsWith("assets")) {
+            path = path.substring("assets".length());
+        }
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        String[] parts = path.split("/");
+        if (parts.length != 2) {
+            return null;
+        }
+        return new ResourceLocation(parts[0], parts[1]);
+    }
+
+    @org.jetbrains.annotations.Nullable
+    public static String getModName(String modid) {
+        return ModList.get().getModContainerById(modid)
+                .map(c -> c.getModInfo().getDisplayName())
+                .orElse(null);
     }
     
     public static String getModDownloadLink() {

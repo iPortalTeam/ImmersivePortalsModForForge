@@ -9,6 +9,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -32,28 +33,24 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.network.NetworkDirection;
 import org.apache.commons.lang3.Validate;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4d;
 import org.joml.Matrix4f;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.ClientWorldLoader;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
+import qouteall.imm_ptl.core.api.ImmPtlEntityExtension;
 import qouteall.imm_ptl.core.compat.PehkuiInterface;
 import qouteall.imm_ptl.core.compat.iris_compatibility.IrisInterface;
 import qouteall.imm_ptl.core.mc_utils.IPEntityEventListenableEntity;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.Spawn_Entity;
-import qouteall.imm_ptl.core.portal.animation.AnimationView;
-import qouteall.imm_ptl.core.portal.animation.DefaultPortalAnimation;
-import qouteall.imm_ptl.core.portal.animation.PortalAnimation;
-import qouteall.imm_ptl.core.portal.animation.PortalAnimationDriver;
+import qouteall.imm_ptl.core.portal.animation.*;
+import qouteall.imm_ptl.core.render.*;
 import qouteall.q_misc_util.dimension.DimId;
 import qouteall.imm_ptl.core.mc_utils.IPEntityEventListenableEntity;
 import qouteall.imm_ptl.core.network.IPNetworking;
-import qouteall.imm_ptl.core.render.FrustumCuller;
-import qouteall.imm_ptl.core.render.PortalGroup;
-import qouteall.imm_ptl.core.render.PortalRenderer;
-import qouteall.imm_ptl.core.render.ViewAreaRenderer;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.api.McRemoteProcedureCall;
@@ -70,8 +67,7 @@ import java.util.stream.Collectors;
 /**
  * Portal entity. Global portals are also entities but not added into world.
  */
-public class Portal extends Entity implements PortalLike, IPEntityEventListenableEntity {
-    public static EntityType<Portal> entityType;
+public class Portal extends Entity implements PortalLike, IPEntityEventListenableEntity, PortalRenderable {
     
     public static final UUID nullUUID = Util.NIL_UUID;
     private static final AABB nullBox = new AABB(0, 0, 0, 0, 0, 0);
@@ -132,11 +128,16 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     private Vec3 contentDirection;
     
     /**
-     * For outer frustum culling
+     * These values are unused
+     * TODO remove in 1.20.2
      */
+    @Deprecated
     public double cullableXStart = 0;
+    @Deprecated
     public double cullableXEnd = 0;
+    @Deprecated
     public double cullableYStart = 0;
+    @Deprecated
     public double cullableYEnd = 0;
     
     /**
@@ -251,6 +252,13 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
                 compoundTag.getList("specialShape", 6)
             );
 
+            // upgrade from old portal data where shape coord is not normalized
+            if (!specialShape.normalized) {
+                boolean shapeNormalized = compoundTag.getBoolean("shapeNormalized");
+                specialShape.normalized = shapeNormalized;
+            }
+            specialShape.normalize(width, height);
+
             if (specialShape.triangles.isEmpty()) {
                 specialShape = null;
             }
@@ -267,28 +275,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         if (compoundTag.contains("teleportable")) {
             teleportable = compoundTag.getBoolean("teleportable");
         }
-        if (compoundTag.contains("cullableXStart")) {
-            cullableXStart = compoundTag.getDouble("cullableXStart");
-            cullableXEnd = compoundTag.getDouble("cullableXEnd");
-            cullableYStart = compoundTag.getDouble("cullableYStart");
-            cullableYEnd = compoundTag.getDouble("cullableYEnd");
 
-            cullableXEnd = Math.min(cullableXEnd, width / 2);
-            cullableXStart = Math.max(cullableXStart, -width / 2);
-            cullableYEnd = Math.min(cullableYEnd, height / 2);
-            cullableYStart = Math.max(cullableYStart, -height / 2);
-        }
-        else {
-            if (specialShape != null) {
-                cullableXStart = 0;
-                cullableXEnd = 0;
-                cullableYStart = 0;
-                cullableYEnd = 0;
-            }
-            else {
-                initDefaultCullableRange();
-            }
-        }
         if (compoundTag.contains("rotationA")) {
             setRotationTransformationD(new DQuaternion(
                 compoundTag.getFloat("rotationB"),
@@ -372,7 +359,9 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         }
 
         if (specialShape != null) {
+            specialShape.normalize(width, height);
             compoundTag.put("specialShape", specialShape.writeToTag());
+            compoundTag.putBoolean("shapeNormalized", true);
         }
 
         compoundTag.putBoolean("teleportable", teleportable);
@@ -380,10 +369,6 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         if (specialShape == null) {
             initDefaultCullableRange();
         }
-        compoundTag.putDouble("cullableXStart", cullableXStart);
-        compoundTag.putDouble("cullableXEnd", cullableXEnd);
-        compoundTag.putDouble("cullableYStart", cullableYStart);
-        compoundTag.putDouble("cullableYEnd", cullableYEnd);
         if (rotation != null) {
             compoundTag.putDouble("rotationA", rotation.w);
             compoundTag.putDouble("rotationB", rotation.x);
@@ -487,8 +472,13 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     }
     
     /**
-     * Update the portal's cache and send the portal data to client
-     * Call this when you changed the portal after spawning the portal
+     * Update the portal's cache and send the portal data to client.
+     * Call this when you changed the portal after spawning the portal.
+     * Note portal position is not updated via vanilla packet because vanilla packet
+     * encodes position in 1/4096 unit which is not precise enough (for portal animation).
+     * This is the only place of syncing portal position.
+     * The /tp command won't work for portals.
+     * {@link qouteall.imm_ptl.core.mixin.common.entity_sync.MixinServerEntity}
      */
     public void reloadAndSyncToClient() {
         reloadAndSyncNextTick = false;
@@ -611,6 +601,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
      *                                  Every 3 vertices correspond to a triangle.
      *                                  In camera-centered coordinate.
      */
+    // TODO refactor to turn it into tri-double consumer
     @OnlyIn(Dist.CLIENT)
     @Override
     public void renderViewAreaMesh(Vec3 portalPosRelativeToCamera, Consumer<Vec3> vertexOutput) {
@@ -637,7 +628,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     
     /**
      * Determines whether the player should be able to reach through the portal or not.
-     * Can be overridden by a subclass.
+     * Update: Should use {@link Portal#isInteractableBy(Player)}.
      *
      * @return the interactability of the portal
      */
@@ -727,7 +718,31 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
             }
         }
         
-        return entity.canChangeDimensions();
+        // cannot use entity.canChangeDimensions() because that disables riding entity to go through portal
+        return ((ImmPtlEntityExtension) entity).imm_ptl_canTeleportThroughPortal(this);
+    }
+
+    /**
+     * @return Can the entity collide with the portal.
+     * Note: {@link Portal#hasCrossPortalCollision} determined other-side collision.
+     * This limits both this-side and other-side collision.
+     */
+    public boolean canCollideWithEntity(Entity entity) {
+        // by default, a non-teleportable portal disallows collision
+        return canTeleportEntity(entity);
+    }
+
+    /**
+     * Can the player interact with blocks through portal
+     */
+    public boolean isInteractableBy(Player player) {
+        if (!isInteractable()) {
+            return false;
+        }
+        if (!isVisible()) {
+            return false;
+        }
+        return canTeleportEntity(player);
     }
     
     /**
@@ -742,7 +757,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     /**
      * @return the portal's rotation transformation. will not be null.
      */
-    @Nonnull
+    @NotNull
     public DQuaternion getRotationD() {
         return DQuaternion.fromNullable(getRotation());
     }
@@ -832,23 +847,21 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         scaling = newScale;
     }
 
+    // TODO remove in 1.20.2
+    @Deprecated
     private void initDefaultCullableRange() {
-        cullableXStart = -(width / 2);
-        cullableXEnd = (width / 2);
-        cullableYStart = -(height / 2);
-        cullableYEnd = (height / 2);
+
     }
     
+    // TODO remove in 1.20.2
+    @Deprecated
     public void initCullableRange(
         double cullableXStart,
         double cullableXEnd,
         double cullableYStart,
         double cullableYEnd
     ) {
-        this.cullableXStart = Math.min(cullableXStart, cullableXEnd);
-        this.cullableXEnd = Math.max(cullableXStart, cullableXEnd);
-        this.cullableYStart = Math.min(cullableYStart, cullableYEnd);
-        this.cullableYEnd = Math.max(cullableYStart, cullableYEnd);
+
     }
     
     @Override
@@ -870,6 +883,11 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
             Helper.err("Abnormal bounding box " + this);
         }
         
+        // TODO refactor and avoid this in 1.20.2
+        if (specialShape != null) {
+            specialShape.normalize(width, height);
+        }
+
         if (thisTickPortalState == null) {
             thisTickPortalState = getPortalState();
         }
@@ -1031,35 +1049,32 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         );
     }
 
-    // TODO in 1.20 change this method to: Vec3 transformVelocity(Entity, Vec3)
-    //  to handle animated portal teleportation more elegantly
-    public void transformVelocity(Entity entity) {
-        Vec3 oldVelocity = McHelper.getWorldVelocity(entity);
+    public Vec3 transformVelocityRelativeToPortal(Vec3 originalVelocityRelativeToPortal, Entity entity) {
+        Vec3 result;
         if (PehkuiInterface.invoker.isPehkuiPresent()) {
             if (teleportChangesScale) {
-                McHelper.setWorldVelocity(entity, transformLocalVecNonScale(oldVelocity));
+                result = transformLocalVecNonScale(originalVelocityRelativeToPortal);
             }
             else {
-                McHelper.setWorldVelocity(entity, transformLocalVec(oldVelocity));
+                result = transformLocalVec(originalVelocityRelativeToPortal);
             }
         }
         else {
-            McHelper.setWorldVelocity(entity, transformLocalVec(oldVelocity));
+            result = transformLocalVec(originalVelocityRelativeToPortal);
         }
         
         final int maxVelocity = 15;
-        if (oldVelocity.length() > maxVelocity) {
+        if (originalVelocityRelativeToPortal.length() > maxVelocity) {
             // cannot be too fast
-            McHelper.setWorldVelocity(
-                entity,
-                McHelper.getWorldVelocity(entity).normalize().scale(maxVelocity)
-            );
+            result = result.normalize().scale(maxVelocity);
         }
         
         // avoid cannot push minecart out of nether portal
-        if (entity instanceof AbstractMinecart && oldVelocity.lengthSqr() < 0.5) {
-            McHelper.setWorldVelocity(entity, McHelper.getWorldVelocity(entity).scale(2));
+        if (entity instanceof AbstractMinecart && result.lengthSqr() < 0.5) {
+            result = result.scale(2);
         }
+
+        return result;
     }
     
     /**
@@ -1140,23 +1155,28 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     
     //3  2
     //1  0
-    private Vec3[] getFourVerticesLocalCullable(double shrinkFactor) {
+    private Vec3[] getFourVerticesLocalCullable(double shrink) {
+        double xStart = -width / 2;
+        double xEnd = width / 2;
+        double yStart = -height / 2;
+        double yEnd = height / 2;
+
         Vec3[] vertices = new Vec3[4];
         vertices[0] = getPointInPlaneLocal(
-            cullableXEnd - shrinkFactor,
-            cullableYStart + shrinkFactor
+            xEnd - shrink,
+            yStart + shrink
         );
         vertices[1] = getPointInPlaneLocal(
-            cullableXStart + shrinkFactor,
-            cullableYStart + shrinkFactor
+            xStart + shrink,
+            yStart + shrink
         );
         vertices[2] = getPointInPlaneLocal(
-            cullableXEnd - shrinkFactor,
-            cullableYEnd - shrinkFactor
+            xEnd - shrink,
+            yEnd - shrink
         );
         vertices[3] = getPointInPlaneLocal(
-            cullableXStart + shrinkFactor,
-            cullableYEnd - shrinkFactor
+            xStart + shrink,
+            yEnd - shrink
         );
         
         return vertices;
@@ -1212,22 +1232,36 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
      * Project the point into the portal plane, is it in the portal area
      */
     public boolean isPointInPortalProjection(Vec3 pos) {
+        return lenientIsPointInPortalProjection(pos, 0.001);
+    }
+
+    public boolean lenientIsPointInPortalProjection(Vec3 pos, double leniency) {
         Vec3 offset = pos.subtract(getOriginPos());
         
         double yInPlane = offset.dot(axisH);
         double xInPlane = offset.dot(axisW);
         
-        return isLocalXYOnPortal(xInPlane, yInPlane);
+        return lenientIsLocalXYOnPortal(xInPlane, yInPlane, leniency);
     }
     
     public boolean isLocalXYOnPortal(double xInPlane, double yInPlane) {
-        boolean roughResult = Math.abs(xInPlane) < (width / 2 + 0.001) &&
-            Math.abs(yInPlane) < (height / 2 + 0.001);
+        return lenientIsLocalXYOnPortal(xInPlane, yInPlane, 0.001);
+    }
+
+    public boolean lenientIsLocalXYOnPortal(double xInPlane, double yInPlane, double leniency) {
+        double halfWidth = width / 2;
+        double halfHeight = height / 2;
+        boolean roughResult = Math.abs(xInPlane) < (halfWidth + leniency) &&
+            Math.abs(yInPlane) < (halfHeight + leniency);
+
+        if (halfWidth == 0 || halfHeight == 0) {
+            return false;
+        }
         
         if (roughResult && specialShape != null) {
             return specialShape.triangles.stream()
                 .anyMatch(triangle ->
-                    triangle.isPointInTriangle(xInPlane, yInPlane)
+                    triangle.lenientIsPointInTriangle(xInPlane / halfWidth, yInPlane / halfHeight, leniency)
                 );
         }
         
@@ -1246,9 +1280,13 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     
     @Nullable
     public Vec3 rayTrace(
-        Vec3 from,
-        Vec3 to
+        Vec3 from, Vec3 to
     ) {
+        return lenientRayTrace(from, to, 0.001);
+    }
+
+    @Nullable
+    public Vec3 lenientRayTrace(Vec3 from, Vec3 to, double leniency) {
         double lastDistance = getDistanceToPlane(from);
         double nowDistance = getDistanceToPlane(to);
         
@@ -1262,7 +1300,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         double collidingT = Helper.getCollidingT(getOriginPos(), normal, lineOrigin, lineDirection);
         Vec3 collidingPoint = lineOrigin.add(lineDirection.scale(collidingT));
         
-        if (isPointInPortalProjection(collidingPoint)) {
+        if (lenientIsPointInPortalProjection(collidingPoint, leniency)) {
             return collidingPoint;
         }
         else {
@@ -1330,17 +1368,24 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         }
     }
     
-    public static boolean isParallelPortal(Portal currPortal, Portal outerPortal) {
-        return currPortal.level().dimension() == outerPortal.dimensionTo &&
-            currPortal.dimensionTo == outerPortal.level().dimension() &&
-            !(currPortal.getNormal().dot(outerPortal.getContentDirection()) > -0.9) &&
-            !outerPortal.isInside(currPortal.getOriginPos(), 0.1);
+    public static boolean isParallelPortal(Portal a, Portal b) {
+        if (a == b) {
+            return false;
+        }
+        return a.dimensionTo == b.level().dimension() &&
+            a.level().dimension() == b.dimensionTo &&
+            a.getOriginPos().distanceTo(b.getDestPos()) < 0.1 &&
+            a.getDestPos().distanceTo(b.getOriginPos()) < 0.1 &&
+            a.getNormal().dot(b.getContentDirection()) < -0.9;
     }
     
     public static boolean isParallelOrientedPortal(Portal currPortal, Portal outerPortal) {
+        double dot = currPortal.getOriginPos().subtract(outerPortal.getDestPos())
+            .dot(outerPortal.getContentDirection());
+
         return currPortal.level().dimension() == outerPortal.dimensionTo &&
             currPortal.getNormal().dot(outerPortal.getContentDirection()) < -0.9 &&
-            !outerPortal.isInside(currPortal.getOriginPos(), 0.1);
+            Math.abs(dot) < 0.001;
     }
     
     public static boolean isReversePortal(Portal a, Portal b) {
@@ -1483,7 +1528,12 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     
     @Override
     public boolean cannotRenderInMe(Portal portal) {
-        return isParallelOrientedPortal(portal, this);
+        if (respectParallelOrientedPortal()) {
+            return isParallelPortal(portal, this);
+        }
+        else {
+            return isParallelOrientedPortal(portal, this);
+        }
     }
     
     public void myUnsetRemoved() {
@@ -1539,10 +1589,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         if (!isVisible()) {
             return false;
         }
-        if (specialShape == null) {
-            initDefaultCullableRange();
-        }
-        return cullableXStart != cullableXEnd;
+        return specialShape == null;
     }
     
     // it's recommended to use canTeleportEntity
@@ -1569,7 +1616,25 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         return !viewBlockingPortals.isEmpty();
     }
     
+    /**
+     * If true, the parallel-oriented portal of the current portal will be rendered,
+     * and checked in teleportation.
+     * This is false by default, because that, if the parallel portal is rendered inside current portal,
+     * it will "occlude" the other side view, and if the parallel portal is checked in teleportation,
+     * the entity will teleport back by the parallel portal.
+     * The same issue also exists in "connected room" case.
+     * <p>
+     * This only need to enable for cases like MiniScaled portal.
+     * In MiniScaled, if two scale boxes are places together,
+     * the player in one scale box should be able to see the other scale box and teleport to that.
+     * That requires not ignoring the parallel-oriented portal.
+     */
+    public boolean respectParallelOrientedPortal() {
+        return allowOverlappedTeleport();
+    }
+
     // It's overridden by MiniScaled
+    @Deprecated // TODO remove in 1.20.2
     public boolean allowOverlappedTeleport() {
         return false;
     }
@@ -1657,7 +1722,26 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         setScaleTransformation(state.scaling);
     }
     
-    
+    public UnilateralPortalState getThisSideState() {
+        return new UnilateralPortalState(
+            getOriginDim(), getOriginPos(),
+            getOrientationRotation(), width, height
+        );
+    }
+
+    public void setThisSideState(UnilateralPortalState ups) {
+        setThisSideState(ups, false);
+    }
+
+    public void setThisSideState(UnilateralPortalState ups, boolean lockScale) {
+        Validate.notNull(ups);
+        PortalState portalState = getPortalState();
+        assert portalState != null;
+
+        PortalState newPortalState = portalState.withThisSideUpdated(ups, lockScale);
+        setPortalState(newPortalState);
+    }
+
     @OnlyIn(Dist.CLIENT)
     private void acceptDataSync(Vec3 pos, CompoundTag customData) {
         PortalState oldState = getPortalState();
@@ -1676,7 +1760,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         return nbtCompound;
     }
     
-    private void readPortalDataFromNbt(CompoundTag compound) {
+    public void readPortalDataFromNbt(CompoundTag compound) {
         readAdditionalSaveData(compound);
     }
     
@@ -1699,6 +1783,21 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         PortalExtension.get(this).rectifyClusterPortals(this, sync);
     }
     
+    /**
+     * Use this after modifying the portal on server side.
+     * This will:
+     * 1. invalidate caches
+     * 2. rectify cluster portals
+     * (make flipped portal, reverse portal and parallel portal to update accordingly)
+     * 3. send update packet(s) to client
+     */
+    public void reloadPortal() {
+        Validate.isTrue(!level().isClientSide());
+        updateCache();
+        rectifyClusterPortals(true);
+        reloadAndSyncToClientNextTick();
+    }
+
     public DefaultPortalAnimation getDefaultAnimation() {
         return animation.defaultAnimation;
     }
@@ -1725,6 +1824,10 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         animation.setPaused(this, false);
     }
     
+    public void resetAnimationReferenceState(boolean resetThisSide, boolean resetOtherSide) {
+        this.animation.resetReferenceState(this, resetThisSide, resetOtherSide);
+    }
+
     public AnimationView getAnimationView() {
         PortalExtension extension = PortalExtension.get(this);
         if (extension.flippedPortal != null) {
@@ -1861,6 +1964,51 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         return thisSideCollisionExclusion;
     }
 
+    public boolean isBoundingBoxInPortalProjection(AABB boundingBox) {
+        Vec3[] vertexes = Helper.eightVerticesOf(boundingBox);
+
+        Vec3 originPos = getOriginPos();
+
+        double minX = vertexes[0].subtract(originPos).dot(axisW);
+        double maxX = minX;
+        double minY = vertexes[0].subtract(originPos).dot(axisH);
+        double maxY = minY;
+
+        for (int i = 1; i < 8; i++) {
+            Vec3 vertex = vertexes[i];
+            double x = vertex.subtract(originPos).dot(axisW);
+            double y = vertex.subtract(originPos).dot(axisH);
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+        }
+
+        return isLocalBoxInShape(minX, minY, maxX, maxY);
+    }
+
+    private boolean isLocalBoxInShape(double minX, double minY, double maxX, double maxY) {
+        double halfWidth = width / 2;
+        double halfHeight = height / 2;
+
+        if (!Range.rangeIntersects(minX, maxX, -halfWidth, halfWidth)) {
+            return false;
+        }
+
+        if (!Range.rangeIntersects(minY, maxY, -halfHeight, halfHeight)) {
+            return false;
+        }
+
+        if (specialShape == null) {
+            return true;
+        }
+
+        return specialShape.boxIntersects(
+            minX / halfWidth, minY / halfHeight,
+            maxX / halfWidth, maxY / halfHeight
+        );
+    }
+
     public static class RemoteCallables {
         public static void acceptPortalDataSync(
             ResourceKey<Level> dim,
@@ -1879,4 +2027,9 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         }
     }
     
+    // for PortalRenderable
+    @Override
+    public PortalLike getPortalLike() {
+        return this;
+    }
 }

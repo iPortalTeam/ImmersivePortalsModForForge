@@ -1,6 +1,5 @@
 package qouteall.imm_ptl.core.render;
 
-import it.unimi.dsi.fastutil.objects.ObjectList;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.resources.ResourceKey;
@@ -9,6 +8,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.Validate;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.PortalLike;
@@ -19,7 +19,6 @@ import qouteall.q_misc_util.my_util.DQuaternion;
 import qouteall.q_misc_util.my_util.LimitedLogger;
 import qouteall.q_misc_util.my_util.Plane;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -116,6 +115,11 @@ public class PortalGroup implements PortalLike {
     }
     
     @Override
+    public Vec3 transformLocalVecNonScale(Vec3 localVec) {
+        return getFirstPortal().transformLocalVecNonScale(localVec);
+    }
+
+    @Override
     public Vec3 inverseTransformLocalVec(Vec3 localVec) {
         return getFirstPortal().inverseTransformLocalVec(localVec);
     }
@@ -182,7 +186,7 @@ public class PortalGroup implements PortalLike {
     }
     
     @Override
-    public boolean isInside(Vec3 entityPos, double valve) {
+    public boolean isOnDestinationSide(Vec3 entityPos, double valve) {
         if (isEnclosed()) {
             return getDestAreaBox().contains(entityPos);
         }
@@ -218,6 +222,7 @@ public class PortalGroup implements PortalLike {
     
     @OnlyIn(Dist.CLIENT)
     @Override
+    @Deprecated
     public void renderViewAreaMesh(Vec3 portalPosRelativeToCamera, Consumer<Vec3> vertexOutput) {
         for (Portal portal : portals) {
             Vec3 relativeToGroup = portal.getOriginPos().subtract(getOriginPos());
@@ -254,7 +259,7 @@ public class PortalGroup implements PortalLike {
             }
         }
         
-        return portals.stream().filter(p -> p.cannotRenderInMe(portal)).count() >= 2;
+        return portals.stream().anyMatch(p -> p.cannotRenderInMe(portal));
     }
     
     @OnlyIn(Dist.CLIENT)
@@ -299,7 +304,10 @@ public class PortalGroup implements PortalLike {
     
     @Override
     public String toString() {
-        return String.format("PortalRenderingGroup(%s)%s", portals.size(), getFirstPortal().portalTag);
+        return String.format(
+            "PortalRenderingGroup(%s)(first:%s)",
+            portals.size(), getFirstPortal()
+        );
     }
     
     public boolean isEnclosed() {

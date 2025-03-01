@@ -7,13 +7,12 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.JsonOps;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.ClickEvent;
@@ -29,7 +28,6 @@ import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.AbortableIterationConsumer;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -44,6 +42,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Validate;
+import org.jetbrains.annotations.Nullable;
 import qouteall.imm_ptl.core.compat.GravityChangerInterface;
 import qouteall.imm_ptl.core.ducks.IEEntity;
 import qouteall.imm_ptl.core.ducks.IEEntityTrackingSection;
@@ -52,13 +51,13 @@ import qouteall.imm_ptl.core.ducks.IEThreadedAnvilChunkStorage;
 import qouteall.imm_ptl.core.ducks.IEWorld;
 import qouteall.imm_ptl.core.mc_utils.MyNbtTextFormatter;
 import qouteall.imm_ptl.core.mixin.common.mc_util.IELevelEntityGetterAdapter;
+import qouteall.imm_ptl.core.platform_specific.O_O;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.my_util.DQuaternion;
 import qouteall.q_misc_util.my_util.IntBox;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -66,6 +65,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -265,15 +265,24 @@ public class McHelper {
             eyePos.subtract(eyeOffset),
             lastTickEyePos.subtract(eyeOffset)
         );
+    }
 
-//        float eyeHeight = entity.getStandingEyeHeight();
-//        setPosAndLastTickPos(
-//            entity,
-//            eyePos.add(0, -eyeHeight, 0),
-//            lastTickEyePos.add(0, -eyeHeight, 0)
-//        );
+    /**
+     * {@link Entity#positionRider(Entity)}
+     */
+    public static double getRidingOffset(Entity vehicle, Entity passenger) {
+        return passenger.getMyRidingOffset() + vehicle.getPassengersRidingOffset();
     }
     
+    public static Vec3 getVehicleOffsetFromPassenger(Entity vehicle, Entity passenger) {
+        double ridingOffset = McHelper.getRidingOffset(vehicle, passenger);
+        Direction gravity = GravityChangerInterface.invoker.getGravityDirection(passenger);
+        Vec3 gravityVec = Vec3.atLowerCornerOf(gravity.getNormal());
+        Vec3 vehicleOffset = gravityVec.scale(ridingOffset);
+        return vehicleOffset;
+    }
+
+    @Deprecated
     public static double getVehicleY(Entity vehicle, Entity passenger) {
         return passenger.getY() - vehicle.getPassengersRidingOffset() - passenger.getMyRidingOffset();
     }
@@ -284,24 +293,25 @@ public class McHelper {
             return;
         }
         
+        Vec3 vehicleOffset = getVehicleOffsetFromPassenger(vehicle, entity);
+
         Vec3 currVelocity = vehicle.getDeltaMovement();
         
-        double newX = entity.getX();
-        double newY = getVehicleY(vehicle, entity);
-        double newZ = entity.getZ();
-        vehicle.setPos(newX, newY, newZ);
-        Vec3 newPos = new Vec3(newX, newY, newZ);
-        McHelper.setPosAndLastTickPos(
-            vehicle, newPos, newPos
-        );
+        Vec3 newVehiclePos = entity.position().add(vehicleOffset);
+        Vec3 newVehicleLastTickPos = McHelper.lastTickPosOf(entity).add(vehicleOffset);
         
-        // MinecartEntity or LivingEntity use position interpolation
-        // disable the interpolation or it may interpolate into unloaded chunks
+        // MinecartEntity and LivingEntity use position interpolation
+        // disable the interpolation, or it may interpolate into unloaded chunks
         vehicle.lerpTo(
-            newX, newY, newZ, vehicle.getYRot(), vehicle.getXRot(),
+            newVehiclePos.x(), newVehiclePos.y(), newVehiclePos.z(),
+            vehicle.getYRot(), vehicle.getXRot(),
             0, false
         );
         
+        McHelper.setPosAndLastTickPos(
+            vehicle, newVehiclePos, newVehicleLastTickPos
+        );
+
         vehicle.setDeltaMovement(currVelocity);
         
     }
@@ -394,9 +404,7 @@ public class McHelper {
         
         return regionFilePath.toFile().exists();
     }
-    
-    // because withUnderline is client only
-    @OnlyIn(Dist.CLIENT)
+
     public static MutableComponent getLinkText(String link) {
         return Component.literal(link).withStyle(
             style -> style.withClickEvent(new ClickEvent(
@@ -898,14 +906,46 @@ public class McHelper {
     }
     
     public static Vec3 getAxisWFromOrientation(DQuaternion quaternion) {
-        return quaternion.rotate(new Vec3(1, 0, 0));
+        return quaternion.getAxisW();
     }
     
     public static Vec3 getAxisHFromOrientation(DQuaternion quaternion) {
-        return quaternion.rotate(new Vec3(0, 1, 0));
+        return quaternion.getAxisH();
     }
     
     public static Vec3 getNormalFromOrientation(DQuaternion quaternion) {
-        return quaternion.rotate(new Vec3(0, 0, 1));
+        return quaternion.getNormal();
+    }
+
+    @Nullable
+    public static Entity getEntityByUUID(Level world, UUID portalId) {
+        return ((IEWorld) world).portal_getEntityLookup().get(portalId);
+    }
+
+    /**
+     * Firstly try to use translatable `dimension.modid.dimension_id`.
+     * If missing, try to get the mod name and use "a dimension of mod_name" or "a dimension of modid"
+     */
+    public static Component getDimensionName(ResourceKey<Level> dimension) {
+        String namespace = dimension.location().getNamespace();
+        String path = dimension.location().getPath();
+        String translationkey = "dimension." + namespace + "." + path;
+        MutableComponent component = Component.translatable(translationkey);
+
+        if (component.getString().equals(translationkey)) {
+            // no translation
+            // try to get the mod name
+            String modName = O_O.getModName(namespace);
+            if (modName != null) {
+                return Component.translatable("imm_ptl.a_dimension_of", modName)
+                    .append(" (" + dimension.location() + ")");
+            }
+            else {
+                return Component.translatable("imm_ptl.a_dimension_of", namespace)
+                    .append(" (" + dimension.location() + ")");
+            }
+        }
+
+        return component;
     }
 }

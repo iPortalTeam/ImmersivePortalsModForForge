@@ -9,6 +9,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import qouteall.imm_ptl.core.collision.CollisionHelper;
 import qouteall.imm_ptl.core.commands.ClientDebugCommand;
 import qouteall.imm_ptl.core.compat.IPFlywheelCompat;
 import qouteall.imm_ptl.core.compat.sodium_compatibility.SodiumInterface;
@@ -29,7 +30,6 @@ import qouteall.imm_ptl.core.render.context_management.CloudContext;
 import qouteall.imm_ptl.core.render.optimization.GLResourceCache;
 import qouteall.imm_ptl.core.render.optimization.SharedBlockMeshBuffers;
 import qouteall.imm_ptl.core.teleportation.ClientTeleportationManager;
-import qouteall.imm_ptl.core.teleportation.CollisionHelper;
 import qouteall.q_misc_util.my_util.MyTaskList;
 
 public class IPModMainClient {

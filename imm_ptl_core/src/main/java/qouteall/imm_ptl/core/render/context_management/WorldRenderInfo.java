@@ -1,17 +1,16 @@
 package qouteall.imm_ptl.core.render.context_management;
 
-import org.apache.commons.lang3.Validate;
-import org.joml.Matrix3f;
-import org.joml.Matrix4f;
-import qouteall.imm_ptl.core.ducks.IECamera;
-
-import javax.annotation.Nullable;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.phys.Vec3;
-import com.mojang.blaze3d.vertex.PoseStack;
+import org.apache.commons.lang3.Validate;
+import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
+import qouteall.imm_ptl.core.IPGlobal;
+import qouteall.imm_ptl.core.ducks.IECamera;
 
 import java.util.List;
 import java.util.Stack;
@@ -23,6 +22,10 @@ import java.util.stream.Collectors;
  */
 public class WorldRenderInfo {
     
+    public static record IsometricParameters(
+    // TODO
+    ) {}
+
     /**
      * The dimension that it's going to render
      */
@@ -60,9 +63,19 @@ public class WorldRenderInfo {
     
     public final boolean enableViewBobbing;
     
+    public final boolean doRenderSky;
+
+    public final boolean hasFog;
+
+    // NOTE not yet implemented
+    public final @Nullable IsometricParameters isometricParameters;
+
     private static final Stack<WorldRenderInfo> renderInfoStack = new Stack<>();
     
+    private static @Nullable List<UUID> renderingDescCache = null;
+
     // should use the builder or the full constructor
+    // TODO remove in 1.20.2
     @Deprecated
     public WorldRenderInfo(
         ClientLevel world, Vec3 cameraPos,
@@ -77,7 +90,8 @@ public class WorldRenderInfo {
         );
     }
     
-    // should use the builder or the full constructor
+    // should use the builder
+    // TODO remove in 1.20.2
     @Deprecated
     public WorldRenderInfo(
         ClientLevel world, Vec3 cameraPos,
@@ -95,8 +109,13 @@ public class WorldRenderInfo {
         this.overwriteCameraTransformation = overwriteCameraTransformation;
         this.doRenderHand = doRenderHand;
         this.enableViewBobbing = true;
+        this.doRenderSky = true;
+        this.isometricParameters = null;
+        this.hasFog = true;
     }
     
+    // TODO change to private in 1.20.2
+    @Deprecated
     public WorldRenderInfo(
         ClientLevel world, Vec3 cameraPos,
         @Nullable Matrix4f cameraTransformation,
@@ -114,19 +133,49 @@ public class WorldRenderInfo {
         this.overwriteCameraTransformation = overwriteCameraTransformation;
         this.doRenderHand = doRenderHand;
         this.enableViewBobbing = enableViewBobbing;
+        this.doRenderSky = true;
+        this.isometricParameters = null;
+        this.hasFog = true;
+    }
+
+    private WorldRenderInfo(
+        ClientLevel world, Vec3 cameraPos,
+        @Nullable Matrix4f cameraTransformation,
+        boolean overwriteCameraTransformation,
+        @Nullable UUID description,
+        int renderDistance,
+        boolean doRenderHand,
+        boolean enableViewBobbing,
+        boolean doRenderSky,
+        boolean hasFog,
+        @Nullable IsometricParameters isometricParameters
+    ) {
+        this.world = world;
+        this.cameraPos = cameraPos;
+        this.cameraTransformation = cameraTransformation;
+        this.description = description;
+        this.renderDistance = renderDistance;
+        this.overwriteCameraTransformation = overwriteCameraTransformation;
+        this.doRenderHand = doRenderHand;
+        this.enableViewBobbing = enableViewBobbing;
+        this.doRenderSky = doRenderSky;
+        this.hasFog = hasFog;
+        this.isometricParameters = isometricParameters;
     }
     
     public static void pushRenderInfo(WorldRenderInfo worldRenderInfo) {
         renderInfoStack.push(worldRenderInfo);
+        renderingDescCache = null;
     }
     
     public static void popRenderInfo() {
         renderInfoStack.pop();
+        renderingDescCache = null;
     }
     
     public static void adjustCameraPos(Camera camera) {
         if (!renderInfoStack.isEmpty()) {
-            WorldRenderInfo currWorldRenderInfo = renderInfoStack.peek();
+            WorldRenderInfo currWorldRenderInfo = getTopRenderInfo();
             ((IECamera) camera).portal_setPos(currWorldRenderInfo.cameraPos);
         }
     }
@@ -167,8 +216,12 @@ public class WorldRenderInfo {
     
     // for example rendering portal B inside portal A will always have the same rendering description
     public static List<UUID> getRenderingDescription() {
-        return renderInfoStack.stream()
-            .map(renderInfo -> renderInfo.description).collect(Collectors.toList());
+        if (renderingDescCache == null) {
+            renderingDescCache = renderInfoStack.stream()
+                .map(renderInfo -> renderInfo.description).collect(Collectors.toList());
+        }
+
+        return renderingDescCache;
     }
     
     public static int getRenderDistance() {
@@ -176,35 +229,48 @@ public class WorldRenderInfo {
             return Minecraft.getInstance().options.getEffectiveRenderDistance();
         }
         
-        return renderInfoStack.peek().renderDistance;
+        return getTopRenderInfo().renderDistance;
+    }
+
+    public static WorldRenderInfo getTopRenderInfo() {
+        return renderInfoStack.peek();
     }
     
     public static Vec3 getCameraPos() {
         Validate.isTrue(!renderInfoStack.isEmpty());
-        return renderInfoStack.peek().cameraPos;
+        return getTopRenderInfo().cameraPos;
     }
     
     public static boolean isViewBobbingEnabled() {
         return renderInfoStack.stream().allMatch(info -> info.enableViewBobbing);
     }
     
+    public static boolean isFogEnabled() {
+        if (IPGlobal.debugDisableFog) {
+            return false;
+        }
+
+        if (isRendering()) {
+            return getTopRenderInfo().hasFog;
+        }
+
+        return true;
+    }
+
     public static class Builder {
         private ClientLevel world;
         private Vec3 cameraPos;
-        private Matrix4f cameraTransformation;
-        private boolean overwriteCameraTransformation;
-        private UUID description;
-        private int renderDistance;
-        private boolean doRenderHand;
-        private boolean enableViewBobbing;
+        private Matrix4f cameraTransformation = null;
+        private boolean overwriteCameraTransformation = true;
+        private UUID description = null;
+        private int renderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
+        private boolean doRenderHand = false;
+        private boolean enableViewBobbing = true;
+        private boolean doRenderSky = true;
+        private boolean hasFog = true;
+        private @Nullable IsometricParameters isometricParameters = null;
         
         public Builder() {
-            this.cameraTransformation = null;
-            this.overwriteCameraTransformation = false;
-            this.description = null;
-            this.renderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance();
-            this.doRenderHand = false;
-            this.enableViewBobbing = true;
         }
         
         public Builder setWorld(ClientLevel world) {
@@ -247,12 +313,29 @@ public class WorldRenderInfo {
             return this;
         }
         
+        public Builder setDoRenderSky(boolean doRenderSky) {
+            this.doRenderSky = doRenderSky;
+            return this;
+        }
+
+        public Builder setHasFog(boolean hasFog) {
+            this.hasFog = hasFog;
+            return this;
+        }
+
+        // Note not yet implemented
+        public Builder setIsometricParameters(@Nullable IsometricParameters isometricParameters) {
+            this.isometricParameters = isometricParameters;
+            return this;
+        }
+
         public WorldRenderInfo build() {
             Validate.notNull(world);
             Validate.notNull(cameraPos);
             return new WorldRenderInfo(
                 world, cameraPos, cameraTransformation, overwriteCameraTransformation,
-                description, renderDistance, doRenderHand, enableViewBobbing
+                description, renderDistance, doRenderHand, enableViewBobbing,
+                doRenderSky, hasFog, isometricParameters
             );
         }
     }

@@ -13,11 +13,10 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.apache.commons.lang3.Validate;
+import org.jetbrains.annotations.Nullable;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.q_misc_util.my_util.DQuaternion;
-
-import javax.annotation.Nullable;
 
 public class GravityChangerInterface {
     public static Invoker invoker = new Invoker();
@@ -34,12 +33,16 @@ public class GravityChangerInterface {
         public Direction getGravityDirection(Entity entity) {
             return Direction.DOWN;
         }
-        
+
+        public Direction getBaseGravityDirection(Entity entity) {
+            return Direction.DOWN;
+        }
+
         public void setClientPlayerGravityDirection(Player player, Direction direction) {
             warnGravityChangerNotPresent();
         }
         
-        public void setGravityDirectionServer(Entity entity, Direction direction) {
+        public void setBaseGravityDirectionServer(Entity entity, Direction direction) {
             // nothing
         }
         
@@ -86,11 +89,6 @@ public class GravityChangerInterface {
     }
     
     public static class OnGravityChangerPresent extends Invoker {
-        
-        
-        public OnGravityChangerPresent() {
-        }
-        
         @Override
         public boolean isGravityChangerPresent() {
             return true;
@@ -98,28 +96,22 @@ public class GravityChangerInterface {
         
         @Override
         public Vec3 getEyeOffset(Entity entity) {
-//            if (entity instanceof Player player) {
-//                return GravityChangerAPI.getEyeOffset(player);
-//            }
-//            else {
-//                return super.getEyeOffset(entity);
-//            }
             return super.getEyeOffset(entity); // TODO @Nick1st this line is not upstream
         }
         
         @Override
         public Direction getGravityDirection(Entity entity) {
-//            return GravityChangerAPI.getGravityDirection(entity);
+            return Direction.DOWN;
+        }
+
+        @Override
+        public Direction getBaseGravityDirection(Entity entity) {
             return Direction.DOWN;
         }
         
         @Override
-        public void setGravityDirectionServer(Entity entity, Direction direction) {
-//            GravityChangerAPI.setDefaultGravityDirection(
-//                entity,
-//                direction,
-//                (new RotationParameters()).rotationTime(0)
-//            );
+        public void setBaseGravityDirectionServer(Entity entity, Direction direction) {
+            //GravityChangerAPI.setBaseGravityDirection(entity, direction);
         }
         
         @Override
@@ -132,17 +124,8 @@ public class GravityChangerInterface {
             Player player, Direction direction
         ) {
             Validate.isTrue(Minecraft.getInstance().isSameThread());
-//
-//            GravityComponent gravityComponent = GravityChangerAPI.getGravityComponent(player);
-//            gravityComponent.setDefaultGravityDirection(
-//                direction,
-//                (new RotationParameters()).rotationTime(0),
-//                false // not initial gravity
-//            );
 
-            // it does not use GravityChangerAPI.setDefaultGravityDirectionClient
-            // because immptl has its own verification logic
-            // see ServerTeleportationManager
+            //GravityChangerAPI.instantlySetClientBaseGravityDirection(player, direction);
         }
         
         @Nullable

@@ -3,7 +3,6 @@ package qouteall.imm_ptl.core.render;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexSorting;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -11,26 +10,23 @@ import net.minecraft.Util;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.client.renderer.culling.Frustum;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.ClientWorldLoader;
 import qouteall.imm_ptl.core.IPGlobal;
-import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.block_manipulation.BlockManipulationClient;
 import qouteall.imm_ptl.core.compat.iris_compatibility.IrisInterface;
 import qouteall.imm_ptl.core.compat.sodium_compatibility.SodiumInterface;
@@ -39,10 +35,13 @@ import qouteall.imm_ptl.core.ducks.IEMinecraftClient;
 import qouteall.imm_ptl.core.ducks.IEParticleManager;
 import qouteall.imm_ptl.core.ducks.IEWorldRenderer;
 import qouteall.imm_ptl.core.miscellaneous.IPVanillaCopy;
-import qouteall.imm_ptl.core.render.context_management.*;
+import qouteall.imm_ptl.core.render.context_management.DimensionRenderHelper;
+import qouteall.imm_ptl.core.render.context_management.FogRendererContext;
+import qouteall.imm_ptl.core.render.context_management.PortalRendering;
+import qouteall.imm_ptl.core.render.context_management.RenderStates;
+import qouteall.imm_ptl.core.render.context_management.WorldRenderInfo;
 import qouteall.q_misc_util.my_util.LimitedLogger;
 
-import javax.annotation.Nullable;
 import java.util.Stack;
 import java.util.function.Consumer;
 
@@ -129,7 +128,7 @@ public class MyGameRenderer {
         
         CHelper.checkGlError();
         
-        float tickDelta = RenderStates.tickDelta;
+        float tickDelta = RenderStates.getPartialTick();
         
         IEGameRenderer ieGameRenderer = (IEGameRenderer) client.gameRenderer;
         DimensionRenderHelper helper =
@@ -154,7 +153,6 @@ public class MyGameRenderer {
         // the projection matrix contains view bobbing.
         // the view bobbing is related with scale
         Matrix4f oldProjectionMatrix = RenderSystem.getProjectionMatrix();
-        VertexSorting oldVertexSorting = RenderSystem.getVertexSorting();
         
         ObjectArrayList<LevelRenderer.RenderChunkInfo> newChunkInfoList = VisibleSectionDiscovery.takeList();
         ((IEWorldRenderer) oldWorldRenderer).portal_setChunkInfoList(newChunkInfoList);
@@ -240,7 +238,7 @@ public class MyGameRenderer {
         
         ((IEWorldRenderer) worldRenderer).portal_setFrustum(oldFrustum);
         
-        RenderSystem.setProjectionMatrix(oldProjectionMatrix, oldVertexSorting);
+        client.gameRenderer.resetProjectionMatrix(oldProjectionMatrix);
         
         IrisInterface.invoker.setPipeline(worldRenderer, irisPipeline);
         
@@ -256,23 +254,24 @@ public class MyGameRenderer {
         client.smartCull = true;
     }
     
+    /**
+     * {@link LevelRenderer#renderLevel(PoseStack, float, long, boolean, Camera, GameRenderer, LightTexture, Matrix4f)}
+     */
     @IPVanillaCopy
     public static void resetFogState() {
         Camera camera = client.gameRenderer.getMainCamera();
         float g = client.gameRenderer.getRenderDistance();
         
         Vec3 cameraPos = camera.getPosition();
-        double d = cameraPos.x();
-        double e = cameraPos.y();
-        double f = cameraPos.z();
+        double x = cameraPos.x();
+        double y = cameraPos.y();
+        double z = cameraPos.z();
         
-        boolean bl2 = client.level.effects().isFoggyAt(Mth.floor(d), Mth.floor(e)) ||
+        boolean isFoggy = client.level.effects().isFoggyAt(Mth.floor(x), Mth.floor(y)) ||
             client.gui.getBossOverlay().shouldCreateWorldFog();
-        
-        boolean bl3 = client.level.effects().isFoggyAt(Mth.floor(d), Mth.floor(e)) || client.gui.getBossOverlay().shouldCreateWorldFog();
-        
+
         FogRenderer.setupFog(
-            camera, FogRenderer.FogMode.FOG_TERRAIN, Math.max(g, 32.0F), bl3, RenderStates.tickDelta
+            camera, FogRenderer.FogMode.FOG_TERRAIN, Math.max(g, 32.0F), isFoggy, RenderStates.getPartialTick()
         );
         FogRenderer.levelFogColor();
     }
@@ -280,13 +279,17 @@ public class MyGameRenderer {
     public static void updateFogColor() {
         FogRenderer.setupColor(
             client.gameRenderer.getMainCamera(),
-            RenderStates.tickDelta,
+            RenderStates.getPartialTick(),
             client.level,
             client.options.getEffectiveRenderDistance(),
-            client.gameRenderer.getDarkenWorldAmount(RenderStates.tickDelta)
+            client.gameRenderer.getDarkenWorldAmount(RenderStates.getPartialTick())
         );
     }
     
+    /**
+     * {@link LevelRenderer#renderLevel(PoseStack, float, long, boolean, Camera, GameRenderer, LightTexture, Matrix4f)}
+     */
+    @IPVanillaCopy
     public static void resetDiffuseLighting(PoseStack matrixStack) {
         if (client.level.effects().constantAmbientLight()) {
             Lighting.setupNetherLevel(matrixStack.last().pose());

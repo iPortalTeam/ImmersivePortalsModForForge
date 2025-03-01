@@ -170,8 +170,7 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
         
         MyGameRenderer.updateFogColor();
         MyGameRenderer.resetFogState();
-        
-        //is it necessary?
+
         MyGameRenderer.resetDiffuseLighting(matrices);
         
         FrontClipping.disableClipping();
@@ -181,7 +180,9 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
         method = "renderLevel",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;endBatch()V"
+            target = "Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;endLastBatch()V",
+            ordinal = 1,
+            shift = At.Shift.AFTER
         )
     )
     private void onEndRenderingEntities(PoseStack poseStack, float partialTick, long finishNanoTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f projectionMatrix, CallbackInfo ci) {
@@ -225,9 +226,10 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
     ) {
         if (PortalRendering.isRendering()) {
             FrontClipping.setupInnerClipping(
-                PortalRendering.getRenderingPortal(),
-                true,
-                matrices
+                PortalRendering.getActiveClippingPlane(),
+                matrices.last().pose(),
+                -FrontClipping.ADJUSTMENT
+                // move the clipping plane a little back, to make world wrapping portal not z-fight
             );
             
             if (PortalRendering.isRenderingOddNumberOfMirrors()) {
@@ -342,7 +344,8 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
         method = "renderLevel",
         at = @At(
             value = "INVOKE",
-            target = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V"
+            target = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V",
+            remap = false
         )
     )
     private void redirectClearing(int int_1, boolean boolean_1) {
@@ -425,7 +428,8 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
     ) {
         if (PortalRendering.isRendering()) {
             FrontClipping.setupInnerClipping(
-                PortalRendering.getRenderingPortal(), true, matrices
+                PortalRendering.getActiveClippingPlane(),
+                matrices.last().pose(), 0
             );
             RenderStates.isRenderingPortalWeather = true;
         }
@@ -495,12 +499,14 @@ public abstract class MixinLevelRenderer implements IEWorldRenderer {
     }
     
     @Inject(
-        method = "renderSky",
-        at = @At("HEAD"), cancellable = true
+        method = "renderSky", at = @At("HEAD"), cancellable = true
     )
-    private void onRenderSkyBegin(PoseStack poseStack, Matrix4f matrix4f, float f, Camera camera, boolean bl, Runnable runnable, CallbackInfo ci) {
-        if (PortalRendering.isRendering()) {
-            if (PortalRendering.getRenderingPortal().isFuseView()) {
+    private void onRenderSkyBegin(
+        PoseStack poseStack, Matrix4f matrix4f, float partialTick, Camera camera,
+        boolean isFoggy, Runnable runnable, CallbackInfo ci
+    ) {
+        if (WorldRenderInfo.isRendering()) {
+            if (!WorldRenderInfo.getTopRenderInfo().doRenderSky) {
                 if (!IrisInterface.invoker.isShaders()) {
                     ci.cancel();
                 }

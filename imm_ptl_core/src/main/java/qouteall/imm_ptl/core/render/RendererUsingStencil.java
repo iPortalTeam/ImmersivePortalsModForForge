@@ -13,6 +13,7 @@ import qouteall.imm_ptl.core.portal.PortalLike;
 import qouteall.imm_ptl.core.portal.PortalRenderInfo;
 import qouteall.imm_ptl.core.render.context_management.FogRendererContext;
 import qouteall.imm_ptl.core.render.context_management.PortalRendering;
+import qouteall.imm_ptl.core.render.context_management.WorldRenderInfo;
 
 import java.util.List;
 
@@ -32,11 +33,9 @@ public class RendererUsingStencil extends PortalRenderer {
     
     @Override
     public boolean replaceFrameBufferClearing() {
-        boolean skipClearing = PortalRendering.isRendering();
+        boolean skipClearing = WorldRenderInfo.isRendering();
         if (skipClearing) {
-            boolean isSkyTransparent = PortalRendering.getRenderingPortal().isFuseView();
-            
-            if (!isSkyTransparent) {
+            if (WorldRenderInfo.getTopRenderInfo().doRenderSky) {
                 RenderSystem.depthMask(false);
                 MyRenderHelper.renderScreenTriangle(FogRendererContext.getCurrentFogColor.get());
                 RenderSystem.depthMask(true);
@@ -67,9 +66,9 @@ public class RendererUsingStencil extends PortalRenderer {
     }
     
     protected void renderPortals(PoseStack matrixStack) {
-        List<PortalLike> portalsToRender = getPortalsToRender(matrixStack);
+        List<PortalRenderable> portalsToRender = getPortalsToRender(matrixStack);
         
-        for (PortalLike portal : portalsToRender) {
+        for (PortalRenderable portal : portalsToRender) {
             doRenderPortal(portal, matrixStack);
         }
     }
@@ -118,9 +117,11 @@ public class RendererUsingStencil extends PortalRenderer {
     }
     
     protected void doRenderPortal(
-        PortalLike portal,
+        PortalRenderable portal,
         PoseStack matrixStack
     ) {
+        PortalLike portalLike = portal.getPortalLike();
+
         if (shouldSkipRenderingInsideFuseViewPortal(portal)) {
             return;
         }
@@ -129,7 +130,7 @@ public class RendererUsingStencil extends PortalRenderer {
         
         client.getProfiler().push("render_view_area");
         
-        boolean anySamplePassed = PortalRenderInfo.renderAndDecideVisibility(portal, () -> {
+        boolean anySamplePassed = PortalRenderInfo.renderAndDecideVisibility(portalLike, () -> {
             renderPortalViewAreaToStencil(portal, matrixStack);
         });
         
@@ -140,11 +141,11 @@ public class RendererUsingStencil extends PortalRenderer {
             return;
         }
         
-        PortalRendering.pushPortalLayer(portal);
+        PortalRendering.pushPortalLayer(portalLike);
         
         int thisPortalStencilValue = outerPortalStencilValue + 1;
         
-        if (!portal.isFuseView()) {
+        if (!portalLike.isFuseView()) {
             client.getProfiler().push("clear_depth_of_view_area");
             clearDepthOfThePortalViewArea(portal);
             client.getProfiler().pop();
@@ -154,13 +155,14 @@ public class RendererUsingStencil extends PortalRenderer {
         
         renderPortalContent(portal);
         
-        if (!portal.isFuseView()) {
-            restoreDepthOfPortalViewArea(portal, matrixStack);
+        PortalRendering.popPortalLayer();
+        // pop portal layer before restoring depth, for clipping, see ViewAreaRenderer
+
+        if (!portalLike.isFuseView()) {
+            restoreDepthOfPortalViewArea(portal, matrixStack, thisPortalStencilValue);
         }
         
         clampStencilValue(outerPortalStencilValue);
-        
-        PortalRendering.popPortalLayer();
     }
     
     @Override
@@ -169,7 +171,7 @@ public class RendererUsingStencil extends PortalRenderer {
     }
     
     private void renderPortalViewAreaToStencil(
-        PortalLike portal, PoseStack matrixStack
+        PortalRenderable portal, PoseStack matrixStack
     ) {
         int outerPortalStencilValue = PortalRendering.getPortalLayer();
         
@@ -192,11 +194,12 @@ public class RendererUsingStencil extends PortalRenderer {
             matrixStack.last().pose(),
             RenderSystem.getProjectionMatrix(),
             true, true,
-            true);
+            true, true
+        );
     }
     
     private void clearDepthOfThePortalViewArea(
-        PortalLike portal
+        PortalRenderable portal
     ) {
         GlStateManager._enableDepthTest();
         GlStateManager._depthMask(true);
@@ -224,23 +227,22 @@ public class RendererUsingStencil extends PortalRenderer {
     }
     
     protected void restoreDepthOfPortalViewArea(
-        PortalLike portal, PoseStack matrixStack
+        PortalRenderable portal, PoseStack matrixStack,
+        int portalStencilValue
     ) {
-        setStencilStateForWorldRendering();
+        setStencilLimitation(portalStencilValue);
         
         int originalDepthFunc = GL11.glGetInteger(GL_DEPTH_FUNC);
         
         GL11.glDepthFunc(GL_ALWAYS);
-        
-        FrontClipping.disableClipping();
-        
+
         ViewAreaRenderer.renderPortalArea(
             portal, Vec3.ZERO,
             matrixStack.last().pose(),
             RenderSystem.getProjectionMatrix(),
-            false,
-            false,
-            true
+            false, false,
+            true,
+            true // important: should clip, otherwise depth will be abnormal when viewing scale box from inside in portal
         );
         
         GL11.glDepthFunc(originalDepthFunc);
@@ -280,14 +282,18 @@ public class RendererUsingStencil extends PortalRenderer {
     private void setStencilStateForWorldRendering() {
         int thisPortalStencilValue = PortalRendering.getPortalLayer();
         
+        setStencilLimitation(thisPortalStencilValue);
+    }
+
+    public static void setStencilLimitation(int stencilValue) {
         //draw content in the mask
-        GL11.glStencilFunc(GL_EQUAL, thisPortalStencilValue, 0xFF);
+        GL11.glStencilFunc(GL_EQUAL, stencilValue, 0xFF);
         
         //do not manipulate stencil buffer now
         GL11.glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
     }
     
-    public static boolean shouldSkipRenderingInsideFuseViewPortal(PortalLike portal) {
+    public static boolean shouldSkipRenderingInsideFuseViewPortal(PortalRenderable portal) {
         if (!PortalRendering.isRendering()) {
             return false;
         }
@@ -300,7 +306,8 @@ public class RendererUsingStencil extends PortalRenderer {
         
         Vec3 cameraPos = CHelper.getCurrentCameraPos();
         
-        Vec3 transformedCameraPos = portal.transformPoint(renderingPortal.transformPoint(cameraPos));
+        Vec3 transformedCameraPos = portal.getPortalLike()
+            .transformPoint(renderingPortal.transformPoint(cameraPos));
         
         // roughly test whether they are reverse portals
         return cameraPos.distanceToSqr(transformedCameraPos) < 0.1;

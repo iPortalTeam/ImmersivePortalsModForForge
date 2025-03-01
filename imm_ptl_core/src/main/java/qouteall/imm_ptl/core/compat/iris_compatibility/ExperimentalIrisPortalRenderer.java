@@ -16,6 +16,7 @@ import qouteall.imm_ptl.core.portal.PortalLike;
 import qouteall.imm_ptl.core.portal.PortalRenderInfo;
 import qouteall.imm_ptl.core.render.FrontClipping;
 import qouteall.imm_ptl.core.render.MyRenderHelper;
+import qouteall.imm_ptl.core.render.PortalRenderable;
 import qouteall.imm_ptl.core.render.PortalRenderer;
 import qouteall.imm_ptl.core.render.RendererUsingStencil;
 import qouteall.imm_ptl.core.render.ViewAreaRenderer;
@@ -47,9 +48,7 @@ public class ExperimentalIrisPortalRenderer extends PortalRenderer {
     @Override
     public boolean replaceFrameBufferClearing() {
         boolean skipClearing = PortalRendering.isRendering();
-        if (skipClearing) {
-            // TODO check whether clearing is necessary as sky may override it
-        }
+        // no need to clear the portal area. normally the sky will override it
         return skipClearing;
     }
     
@@ -102,7 +101,7 @@ public class ExperimentalIrisPortalRenderer extends PortalRenderer {
         myFinishRendering();
     }
     
-    protected void restoreDepthOfPortalViewArea(PortalLike portal, PoseStack matrixStack) {
+    protected void restoreDepthOfPortalViewArea(PortalRenderable portal, PoseStack matrixStack) {
         client.getMainRenderTarget().bindWrite(false);
         
         setStencilStateForWorldRendering();
@@ -110,16 +109,15 @@ public class ExperimentalIrisPortalRenderer extends PortalRenderer {
         int originalDepthFunc = GL11.glGetInteger(GL_DEPTH_FUNC);
         
         GL11.glDepthFunc(GL_ALWAYS);
-        
-        FrontClipping.disableClipping();
-        
+
         ViewAreaRenderer.renderPortalArea(
             portal, Vec3.ZERO,
             matrixStack.last().pose(),
             RenderSystem.getProjectionMatrix(),
             false,
             false,
-            true
+            true,
+            true // important: should clip, otherwise depth will be abnormal when viewing scale box from inside in portal
         );
         
         GL11.glDepthFunc(originalDepthFunc);
@@ -186,10 +184,10 @@ public class ExperimentalIrisPortalRenderer extends PortalRenderer {
         // However, portals can occlude portals. So we need another framebuffer to hold the
         //  world depth + portal depth
         
-        List<PortalLike> portalsToRender = getPortalsToRender(matrixStack);
-        List<PortalLike> reallyRenderedPortals = new ArrayList<>();
+        List<PortalRenderable> portalsToRender = getPortalsToRender(matrixStack);
+        List<PortalRenderable> reallyRenderedPortals = new ArrayList<>();
         
-        for (PortalLike portal : portalsToRender) {
+        for (PortalRenderable portal : portalsToRender) {
             boolean reallyRendered = doRenderPortal(portal, matrixStack);
             
             if (reallyRendered) {
@@ -201,8 +199,8 @@ public class ExperimentalIrisPortalRenderer extends PortalRenderer {
         
         // draw the portal areas again to increase stencil
         // to limit the area of Iris deferred composite rendering
-        for (PortalLike reallyRenderedPortal : reallyRenderedPortals) {
-            if (!reallyRenderedPortal.isFuseView()) {
+        for (PortalRenderable reallyRenderedPortal : reallyRenderedPortals) {
+            if (!reallyRenderedPortal.getPortalLike().isFuseView()) {
                 renderPortalViewAreaToStencil(reallyRenderedPortal, matrixStack);
             }
         }
@@ -212,9 +210,10 @@ public class ExperimentalIrisPortalRenderer extends PortalRenderer {
     
     // return true if it really rendered the portal
     private boolean doRenderPortal(
-        PortalLike portal,
+        PortalRenderable portal,
         PoseStack matrixStack
     ) {
+        PortalLike portalLike = portal.getPortalLike();
         if (RendererUsingStencil.shouldSkipRenderingInsideFuseViewPortal(portal)) {
             return false;
         }
@@ -223,7 +222,7 @@ public class ExperimentalIrisPortalRenderer extends PortalRenderer {
         
         client.getProfiler().push("render_view_area");
         
-        boolean anySamplePassed = PortalRenderInfo.renderAndDecideVisibility(portal, () -> {
+        boolean anySamplePassed = PortalRenderInfo.renderAndDecideVisibility(portalLike, () -> {
             renderPortalViewAreaToStencil(portal, matrixStack);
         });
         
@@ -234,11 +233,11 @@ public class ExperimentalIrisPortalRenderer extends PortalRenderer {
             return false;
         }
         
-        PortalRendering.pushPortalLayer(portal);
+        PortalRendering.pushPortalLayer(portalLike);
         
         int thisPortalStencilValue = outerPortalStencilValue + 1;
         
-        if (!portal.isFuseView()) {
+        if (!portalLike.isFuseView()) {
             client.getProfiler().push("clear_depth_of_view_area");
             clearDepthOfThePortalViewArea(portal);
             client.getProfiler().pop();
@@ -248,7 +247,8 @@ public class ExperimentalIrisPortalRenderer extends PortalRenderer {
         
         renderPortalContent(portal);
         
-        if (!portal.isFuseView()) {
+        if (!portalLike.isFuseView()) {
+            // TODO sync from RendererUsingStencil
             restoreDepthOfPortalViewArea(portal, matrixStack);
         }
         
@@ -272,7 +272,7 @@ public class ExperimentalIrisPortalRenderer extends PortalRenderer {
     }
     
     private void renderPortalViewAreaToStencil(
-        PortalLike portal, PoseStack matrixStack
+        PortalRenderable portal, PoseStack matrixStack
     ) {
         int outerPortalStencilValue = PortalRendering.getPortalLayer();
         
@@ -296,12 +296,13 @@ public class ExperimentalIrisPortalRenderer extends PortalRenderer {
             RenderSystem.getProjectionMatrix(),
             true,
             false, // don't modify color
+            true,
             true
         );
     }
     
     private void clearDepthOfThePortalViewArea(
-        PortalLike portal
+        PortalRenderable portal
     ) {
         GlStateManager._enableDepthTest();
         GlStateManager._depthMask(true);

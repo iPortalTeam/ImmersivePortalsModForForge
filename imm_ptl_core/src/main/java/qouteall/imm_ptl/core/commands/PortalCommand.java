@@ -54,10 +54,7 @@ import qouteall.imm_ptl.core.teleportation.ServerTeleportationManager;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.api.McRemoteProcedureCall;
-import qouteall.q_misc_util.my_util.DQuaternion;
-import qouteall.q_misc_util.my_util.IntBox;
-import qouteall.q_misc_util.my_util.MyTaskList;
-import qouteall.q_misc_util.my_util.SignalBiArged;
+import qouteall.q_misc_util.my_util.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -1328,14 +1325,14 @@ public class PortalCommand {
         builder.then(Commands.literal("goback")
             .executes(context -> {
                 ServerPlayer player = context.getSource().getPlayerOrException();
-                net.minecraft.util.Tuple<ResourceKey<Level>, Vec3> lastPos =
+                WithDim<Vec3> lastPos =
                     IPGlobal.serverTeleportationManager.lastPosition.get(player);
                 if (lastPos == null) {
                     sendMessage(context, "You haven't teleported");
                 }
                 else {
                     IPGlobal.serverTeleportationManager.forceTeleportPlayer(
-                        player, lastPos.getA(), lastPos.getB()
+                        player, lastPos.dimension(), lastPos.value()
                     );
                 }
                 return 0;
@@ -1636,7 +1633,7 @@ public class PortalCommand {
 
                             Vec3 center = fromPos.add(toPos).scale(0.5);
 
-                            Portal portal = Portal.entityType.create(context.getSource().getLevel());
+                            Portal portal = IPRegistry.PORTAL.get().create(context.getSource().getLevel());
                             assert portal != null;
                             portal.setOriginPos(center);
                             portal.setOrientation(vecAlongAxis.normalize(), vecNotAlongAxis.normalize());
@@ -1652,7 +1649,7 @@ public class PortalCommand {
 
                             McHelper.spawnServerEntity(portal);
 
-                            Portal flippedPortal = PortalManipulation.createFlippedPortal(portal, Portal.entityType);
+                            Portal flippedPortal = PortalManipulation.createFlippedPortal(portal, IPRegistry.PORTAL.get());
                             McHelper.spawnServerEntity(flippedPortal);
 
                             return 0;
@@ -2338,7 +2335,7 @@ public class PortalCommand {
                                         
                                         ServerLevel world = context.getSource().getLevel();
                                         
-                                        Portal portal = Portal.entityType.create(world);
+                                        Portal portal = IPRegistry.PORTAL.get().create(world);
                                         Validate.notNull(portal);
                                         portal.setOriginPos(origin);
                                         
@@ -2512,7 +2509,7 @@ public class PortalCommand {
         McHelper.spawnServerEntity(otherSideMirror);
 
         // create the invisible portal
-        Portal invisiblePortal = Portal.entityType.create(fromWorld);
+        Portal invisiblePortal = IPRegistry.PORTAL.get().create(fromWorld);
         assert invisiblePortal != null;
         invisiblePortal.dimensionTo = toWorld.dimension();
         invisiblePortal.setPortalState(UnilateralPortalState.combine(thisSideState, otherSideState));
@@ -2521,7 +2518,7 @@ public class PortalCommand {
         invisiblePortal.setOriginPos(invisiblePortal.getOriginPos().add(portal.getNormal().scale(0.001)));
         invisiblePortal.setDestination(invisiblePortal.getDestPos().add(portal.getContentDirection().scale(0.001)));
 
-        Portal reverseInvisiblePortal = PortalManipulation.createReversePortal(invisiblePortal, Portal.entityType);
+        Portal reverseInvisiblePortal = PortalManipulation.createReversePortal(invisiblePortal, IPRegistry.PORTAL.get());
 
         McHelper.spawnServerEntity(invisiblePortal);
         McHelper.spawnServerEntity(reverseInvisiblePortal);

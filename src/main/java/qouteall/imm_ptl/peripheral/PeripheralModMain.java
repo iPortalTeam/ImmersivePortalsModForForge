@@ -76,19 +76,19 @@ public class PeripheralModMain {
 //            ChaosBiomeSource.CODEC
 //        );
 
-        EndPortalEntity.updateDragonFightStatusFunc = () -> {
-            ServerLevel world = MiscHelper.getServer().getLevel(Level.END);
-            if (world == null) {
-                return;
-            }
-            EndDragonFight dragonFight = world.getDragonFight();
-            if (dragonFight == null) {
-                return;
-            }
-            if (((IEEndDragonFight) dragonFight).ip_getNeedsStateScanning()) {
-                ((IEEndDragonFight) dragonFight).ip_scanState();
-            }
-        };
+//        EndPortalEntity.updateDragonFightStatusFunc = () -> {
+//            ServerLevel world = MiscHelper.getServer().getLevel(Level.END);
+//            if (world == null) {
+//                return;
+//            }
+//            EndDragonFight dragonFight = world.getDragonFight();
+//            if (dragonFight == null) {
+//                return;
+//            }
+//            if (((IEEndDragonFight) dragonFight).ip_getNeedsStateScanning()) {
+//                ((IEEndDragonFight) dragonFight).ip_scanState();
+//            }
+//        };
     }
     
     public static void registerCommandStickTypes() {

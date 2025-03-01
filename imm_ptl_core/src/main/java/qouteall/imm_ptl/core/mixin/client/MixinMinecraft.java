@@ -1,5 +1,7 @@
 package qouteall.imm_ptl.core.mixin.client;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -7,7 +9,8 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.world.entity.Entity;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -17,7 +20,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import qouteall.imm_ptl.core.ClientWorldLoader;
-import qouteall.imm_ptl.core.IPCGlobal;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.ducks.IEMinecraftClient;
 import qouteall.imm_ptl.core.miscellaneous.ClientPerformanceMonitor;
@@ -25,8 +27,7 @@ import qouteall.imm_ptl.core.portal.animation.ClientPortalAnimationManagement;
 import qouteall.imm_ptl.core.portal.animation.StableClientTimer;
 import qouteall.imm_ptl.core.render.context_management.RenderStates;
 import qouteall.imm_ptl.core.render.context_management.WorldRenderInfo;
-
-import javax.annotation.Nullable;
+import qouteall.imm_ptl.core.teleportation.ClientTeleportationManager;
 
 @Mixin(Minecraft.class)
 public abstract class MixinMinecraft implements IEMinecraftClient {
@@ -58,6 +59,24 @@ public abstract class MixinMinecraft implements IEMinecraftClient {
     @Final
     private RenderBuffers renderBuffers;
     
+    @Shadow
+    @Final
+    private static Logger LOGGER;
+
+    @Shadow private Thread gameThread;
+
+    @WrapOperation(
+        method = "Lnet/minecraft/client/Minecraft;run()V",
+        at = @At(
+            value = "INVOKE",
+            target = "Ljava/lang/Thread;currentThread()Ljava/lang/Thread;"
+        )
+    )
+    private Thread testMixinExtra(Operation<Thread> original) {
+        LOGGER.info("[ImmPtl] MixinExtra is working!");
+        return original.call();
+    }
+
     /**
      * The whole process involving portal animation and teleportation:
      * - begin ticking
@@ -105,11 +124,11 @@ public abstract class MixinMinecraft implements IEMinecraftClient {
         // including ticking remote worlds
         ClientWorldLoader.tick();
         
-        RenderStates.tickDelta = 0;
+        RenderStates.setPartialTick(0);
         StableClientTimer.tick();
-        StableClientTimer.update(level.getGameTime(), RenderStates.tickDelta);
+        StableClientTimer.update(level.getGameTime(), RenderStates.getPartialTick());
         ClientPortalAnimationManagement.tick(); // must be after remote world ticking
-        IPCGlobal.clientTeleportationManager.manageTeleportation(true);
+        ClientTeleportationManager.manageTeleportation(true);
         
         IPGlobal.postClientTickSignal.emit();
         
@@ -162,5 +181,10 @@ public abstract class MixinMinecraft implements IEMinecraftClient {
     @Override
     public void ip_setRenderBuffers(RenderBuffers arg) {
         renderBuffers = arg;
+    }
+
+    @Override
+    public Thread ip_getRunningThread() {
+        return gameThread;
     }
 }

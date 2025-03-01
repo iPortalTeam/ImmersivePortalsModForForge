@@ -1,22 +1,20 @@
 package qouteall.imm_ptl.core.portal.animation;
 
-import com.demonwav.mcdev.annotations.CheckEnv;
-import com.demonwav.mcdev.annotations.Env;
-import net.minecraft.ChatFormatting;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.PortalExtension;
 import qouteall.imm_ptl.core.portal.PortalState;
 import qouteall.q_misc_util.Helper;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,15 +56,11 @@ public class PortalAnimation {
     public long updateCounter;
 
     // for client player teleportation
-    @OnlyIn(Dist.CLIENT)
     @Nullable
     public PortalState clientLastFramePortalState;
-    @CheckEnv(Env.CLIENT)
     public long clientLastFramePortalStateCounter = -1;
-    @OnlyIn(Dist.CLIENT)
     @Nullable
     public PortalState clientCurrentFramePortalState;
-    @CheckEnv(Env.CLIENT)
     public long clientCurrentFramePortalStateCounter = -1;
     
     public void readFromTag(CompoundTag tag) {
@@ -276,7 +270,7 @@ public class PortalAnimation {
         }
         else {
             // handled on client
-            if (hasAnimationDriver()) {
+            if (hasAnimationDriver() && !isPaused()) {
                 markRequiresClientAnimationUpdate(portal);
             }
         }
@@ -324,7 +318,11 @@ public class PortalAnimation {
         if (!hasAnimationDriver()) {
             return;
         }
-        
+
+        if (isPaused()) {
+            return;
+        }
+
         PortalState portalState = portal.getPortalState();
         if (portalState == null) {
             return;
@@ -333,10 +331,6 @@ public class PortalAnimation {
         initializeReferenceStates(portalState);
         assert thisSideReferenceState != null;
         assert otherSideReferenceState != null;
-
-//        if (isPaused()) {
-//            return;
-//        }
         
         long effectiveGameTime = animation.getEffectiveTime(gameTime);
         float effectivePartialTicks = animation.isPaused() ? 0 : partialTicks;
@@ -395,7 +389,9 @@ public class PortalAnimation {
         
         if (thisSideState.dimension != portalState.fromWorld || otherSideState.dimension != portalState.toWorld) {
             Helper.err("Portal animation driver cannot change dimension");
-            portal.clearAnimationDrivers(true, true);
+            if (!portal.level().isClientSide()) {
+                portal.clearAnimationDrivers(true, true);
+            }
             return;
         }
         
@@ -418,8 +414,8 @@ public class PortalAnimation {
         }
         
         if (!portal.level().isClientSide()) {
-            if (thisSideAnimations.size() != originalThisSideAnimationCount ||
-                otherSideAnimations.size() != originalOtherSideAnimationCount
+            if ((thisSideAnimations.size() != originalThisSideAnimationCount ||
+                otherSideAnimations.size() != originalOtherSideAnimationCount)
             ) {
                 // delay a little to make client animation to stop smoother
                 PortalExtension.forClusterPortals(portal, p -> p.reloadAndSyncToClientWithTickDelay(1));
@@ -427,7 +423,7 @@ public class PortalAnimation {
         }
     }
     
-    private void initializeReferenceStates(PortalState portalState) {
+    public void initializeReferenceStates(PortalState portalState) {
         if (thisSideReferenceState == null) {
             thisSideReferenceState = UnilateralPortalState.extractThisSide(portalState);
         }
@@ -435,7 +431,18 @@ public class PortalAnimation {
             otherSideReferenceState = UnilateralPortalState.extractOtherSide(portalState);
         }
     }
-    
+
+    public void resetReferenceState(Portal portal, boolean thisSide, boolean otherSide) {
+        PortalState portalState = portal.getPortalState();
+        assert portalState != null;
+        if (thisSide && thisSideReferenceState != null) {
+            thisSideReferenceState = UnilateralPortalState.extractThisSide(portalState);
+        }
+        if (otherSide && otherSideReferenceState != null) {
+            otherSideReferenceState = UnilateralPortalState.extractOtherSide(portalState);
+        }
+    }
+
     public void clearAnimationDrivers(Portal portal, boolean clearThisSide, boolean clearOtherSide) {
         Validate.isTrue(!portal.level().isClientSide());
         
@@ -458,12 +465,13 @@ public class PortalAnimation {
         
         if (clearThisSide) {
             thisSideReferenceState = null;
+            thisSideAnimations.clear();
         }
         if (clearOtherSide) {
             otherSideReferenceState = null;
+            otherSideAnimations.clear();
         }
-        
-        
+
         PortalState newState = UnilateralPortalState.combine(from.build(), to.build());
         portal.setPortalState(newState);
         
@@ -484,7 +492,6 @@ public class PortalAnimation {
                     from.apply(endingResult);
                 }
             }
-            thisSideAnimations.clear();
         }
         
         if (includeOtherSide) {
@@ -494,7 +501,6 @@ public class PortalAnimation {
                     to.apply(endingResult);
                 }
             }
-            otherSideAnimations.clear();
         }
     }
     

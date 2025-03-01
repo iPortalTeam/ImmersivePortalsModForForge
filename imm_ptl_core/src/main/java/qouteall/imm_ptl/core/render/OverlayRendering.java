@@ -70,7 +70,7 @@ public class OverlayRendering {
         if (portal instanceof BreakablePortalEntity) {
             renderBreakablePortalOverlay(
                 ((BreakablePortalEntity) portal),
-                RenderStates.tickDelta,
+                RenderStates.getPartialTick(),
                 matrixStack,
                 vertexConsumerProvider
             );

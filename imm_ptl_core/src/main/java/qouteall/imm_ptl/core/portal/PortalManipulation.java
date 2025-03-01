@@ -12,17 +12,17 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.IPMcHelper;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.api.PortalAPI;
-import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.commands.PortalCommand;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.my_util.DQuaternion;
 
-import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -101,14 +101,15 @@ public class PortalManipulation {
         newPortal.axisH = portal.axisH;
         
         if (portal.specialShape != null) {
-            newPortal.specialShape = portal.specialShape.getFlippedWithScaling(portal.scaling);
+            portal.specialShape.normalize(newPortal.width, newPortal.height);
+            newPortal.specialShape = portal.specialShape.getFlippedWithScaling(1);
         }
         
         newPortal.initCullableRange(
-            portal.cullableXStart * portal.scaling,
-            portal.cullableXEnd * portal.scaling,
-            -portal.cullableYStart * portal.scaling,
-            -portal.cullableYEnd * portal.scaling
+            -portal.cullableXStart * portal.scaling,
+            -portal.cullableXEnd * portal.scaling,
+            portal.cullableYStart * portal.scaling,
+            portal.cullableYEnd * portal.scaling
         );
         
         if (portal.rotation != null) {
@@ -155,10 +156,10 @@ public class PortalManipulation {
         }
         
         newPortal.initCullableRange(
-            portal.cullableXStart,
-            portal.cullableXEnd,
-            -portal.cullableYStart,
-            -portal.cullableYEnd
+            -portal.cullableXStart,
+            -portal.cullableXEnd,
+            portal.cullableYStart,
+            portal.cullableYEnd
         );
         
         newPortal.rotation = portal.rotation;
@@ -448,7 +449,7 @@ public class PortalManipulation {
     
     public static boolean isOtherSideBoxInside(AABB transformedBoundingBox, PortalLike renderingPortal) {
         boolean intersects = Arrays.stream(Helper.eightVerticesOf(transformedBoundingBox))
-            .anyMatch(p -> renderingPortal.isInside(p, 0));
+            .anyMatch(p -> renderingPortal.isOnDestinationSide(p, 0));
         return intersects;
     }
     
@@ -462,7 +463,9 @@ public class PortalManipulation {
             p1 -> p1.getOriginPos().subtract(portal.getDestPos()).lengthSqr() < 0.01 &&
                 p1.getDestPos().subtract(portal.getOriginPos()).lengthSqr() < 0.01 &&
                 p1.getNormal().dot(portal.getContentDirection()) < -0.9 &&
-                !(p1 instanceof Mirror)
+                p1.getContentDirection().dot(portal.getNormal()) < -0.9 &&
+                !(p1 instanceof Mirror) &&
+                p1 != portal
         ));
     }
     
@@ -473,10 +476,7 @@ public class PortalManipulation {
             portal.getDestinationWorld(),
             portal.getDestPos(),
             0,
-            p1 -> p1.getOriginPos().subtract(portal.getDestPos()).lengthSqr() < 0.01 &&
-                p1.getDestPos().subtract(portal.getOriginPos()).lengthSqr() < 0.01 &&
-                p1.getNormal().dot(portal.getContentDirection()) > 0.9 &&
-                !(p1 instanceof Mirror)
+            p1 -> Portal.isReversePortal(portal, p1)
         ));
     }
     
@@ -490,10 +490,15 @@ public class PortalManipulation {
             p1 -> p1.getOriginPos().subtract(portal.getOriginPos()).lengthSqr() < 0.01 &&
                 p1.getNormal().dot(portal.getNormal()) < -0.9 &&
                 p1.getDestPos().distanceToSqr(portal.getDestPos()) < 0.01 &&
-                !(p1 instanceof Mirror)
+                !(p1 instanceof Mirror) &&
+                p1 != portal
         ));
     }
     
+    /**
+     * Use {@link PortalUtils#raytracePortals(Level, Vec3, Vec3, boolean, Predicate)}
+     */
+    @Deprecated
     public static Optional<Pair<Portal, Vec3>> raytracePortals(
         Level world, Vec3 from, Vec3 to, boolean includeGlobalPortal
     ) {
@@ -523,9 +528,5 @@ public class PortalManipulation {
                 portal.height * 0.5 * Math.sin(twoPi * ((double) i + 1) / triangleNum)
             )).collect(Collectors.toList());
         portal.specialShape = shape;
-        portal.cullableXStart = 0;
-        portal.cullableXEnd = 0;
-        portal.cullableYStart = 0;
-        portal.cullableYEnd = 0;
     }
 }

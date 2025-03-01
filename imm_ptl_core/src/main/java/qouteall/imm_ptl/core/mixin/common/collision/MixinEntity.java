@@ -17,24 +17,27 @@ import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.IPMcHelper;
+import qouteall.imm_ptl.core.api.ImmPtlEntityExtension;
+import qouteall.imm_ptl.core.collision.PortalCollisionHandler;
 import qouteall.imm_ptl.core.ducks.IEEntity;
 import qouteall.imm_ptl.core.miscellaneous.IPVanillaCopy;
 import qouteall.imm_ptl.core.portal.EndPortalEntity;
 import qouteall.imm_ptl.core.portal.Portal;
-import qouteall.imm_ptl.core.teleportation.PortalCollisionHandler;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.my_util.LimitedLogger;
 
 @Mixin(Entity.class)
-public abstract class MixinEntity implements IEEntity {
-    
+public abstract class MixinEntity implements IEEntity, ImmPtlEntityExtension {
+
     @Nullable
+    @Unique
     private PortalCollisionHandler ip_portalCollisionHandler;
     
     @Shadow
@@ -337,7 +340,7 @@ public abstract class MixinEntity implements IEEntity {
     }
     
     @Override
-    public void portal_unsetRemoved() {
+    public void ip_unsetRemoved() {
         unsetRemoved();
     }
     
@@ -407,6 +410,11 @@ public abstract class MixinEntity implements IEEntity {
         ip_portalCollisionHandler = handler;
     }
     
+    @Override
+    public void ip_setWorld(Level world) {
+        this.level = world;
+    }
+
     // don't use game time because client game time may jump due to time synchronization
     private long ip_getStableTiming() {
         return tickCount;

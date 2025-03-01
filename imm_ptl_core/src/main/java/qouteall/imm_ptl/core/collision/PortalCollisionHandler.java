@@ -1,4 +1,4 @@
-package qouteall.imm_ptl.core.teleportation;
+package qouteall.imm_ptl.core.collision;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -14,12 +14,11 @@ import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.compat.GravityChangerInterface;
 import qouteall.imm_ptl.core.ducks.IEEntity;
-import qouteall.imm_ptl.core.mixin.common.MixinEntityAccess;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.PortalLike;
 import qouteall.q_misc_util.Helper;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -143,86 +142,60 @@ public class PortalCollisionHandler {
             );
         }
         
-        //switch world and check collision
-        Level oldWorld = entity.level();
-        Vec3 oldPos = entity.position();
-        Vec3 oldLastTickPos = McHelper.lastTickPosOf(entity);
-        float oldStepHeight = entity.maxUpStep();
-
-        ((MixinEntityAccess)entity).immersive_portals$callSetLevel(destinationWorld);
-        McHelper.setPosAndLastTickPosWithoutTriggeringCallback(
-            entity,
-            collidingPortal.transformPoint(oldPos),
-            collidingPortal.transformPoint(oldLastTickPos)
+        List<Portal> indirectCollidingPortals = McHelper.findEntitiesByBox(
+            Portal.class,
+            collidingPortal.getDestinationWorld(),
+            boxOtherSide.expandTowards(transformedAttemptedMove),
+            IPGlobal.maxNormalPortalRadius,
+            p -> CollisionHelper.canCollideWithPortal(entity, p, 0)
+                && collidingPortal.isOnDestinationSide(p.getOriginPos(), 0.1)
         );
-        entity.setBoundingBox(boxOtherSide);
-        
-        if (collidingPortal.getScale() > 1) {
-            entity.setMaxUpStep((float) (oldStepHeight * collidingPortal.getScale() * 1.01));
-        }
-        
-        try {
-            List<Portal> indirectCollidingPortals = McHelper.findEntitiesByBox(
-                Portal.class,
-                collidingPortal.getDestinationWorld(),
-                boxOtherSide.expandTowards(transformedAttemptedMove),
-                IPGlobal.maxNormalPortalRadius,
-                p -> CollisionHelper.canCollideWithPortal(entity, p, 0)
-                    && collidingPortal.isInside(p.getOriginPos(), 0.1)
-            );
-            
-            PortalLike collisionHandlingUnit = CollisionHelper.getCollisionHandlingUnit(collidingPortal);
-            Direction transformedGravityDirection = collidingPortal.getTransformedGravityDirection(GravityChangerInterface.invoker.getGravityDirection(entity));
-            
-            Vec3 collided = transformedAttemptedMove;
-            collided = CollisionHelper.handleCollisionWithShapeProcessor(
-                entity, collided,
-                shape -> {
-                    VoxelShape current = CollisionHelper.clipVoxelShape(
-                        shape, collidingPortal.getDestPos(), collidingPortal.getContentDirection()
-                    );
-                    
-                    if (current == null) {
-                        return null;
-                    }
-                    
-                    if (!indirectCollidingPortals.isEmpty()) {
-                        current = processThisSideCollisionShape(
-                            current, indirectCollidingPortals
-                        );
-                    }
-                    
-                    return current;
-                },
-                transformedGravityDirection
-            );
-            
-            if (!indirectCollidingPortals.isEmpty()) {
-                for (Portal indirectCollidingPortal : indirectCollidingPortals) {
-                    collided = handleOtherSideMove(
-                        entity, collided,
-                        indirectCollidingPortal, boxOtherSide,
-                        portalLayer + 1
+
+        PortalLike collisionHandlingUnit = CollisionHelper.getCollisionHandlingUnit(collidingPortal);
+        Direction transformedGravityDirection = collidingPortal.getTransformedGravityDirection(GravityChangerInterface.invoker.getGravityDirection(entity));
+
+        Vec3 collided = transformedAttemptedMove;
+        collided = CollisionHelper.handleCollisionWithShapeProcessor(
+            entity, boxOtherSide, destinationWorld,
+            collided,
+            shape -> {
+                VoxelShape current = CollisionHelper.clipVoxelShape(
+                    shape, collidingPortal.getDestPos(), collidingPortal.getContentDirection()
+                );
+
+                if (current == null) {
+                    return null;
+                }
+
+                if (!indirectCollidingPortals.isEmpty()) {
+                    current = processThisSideCollisionShape(
+                        current, indirectCollidingPortals
                     );
                 }
+
+                return current;
+            },
+            transformedGravityDirection, collidingPortal.getScale());
+
+        if (!indirectCollidingPortals.isEmpty()) {
+            for (Portal indirectCollidingPortal : indirectCollidingPortals) {
+                collided = handleOtherSideMove(
+                    entity, collided,
+                    indirectCollidingPortal, boxOtherSide,
+                    portalLayer + 1
+                );
             }
-            
-            collided = new Vec3(
-                CollisionHelper.fixCoordinateFloatingPointError(transformedAttemptedMove.x, collided.x),
-                CollisionHelper.fixCoordinateFloatingPointError(transformedAttemptedMove.y, collided.y),
-                CollisionHelper.fixCoordinateFloatingPointError(transformedAttemptedMove.z, collided.z)
-            );
-            
-            Vec3 result = collidingPortal.inverseTransformLocalVec(collided);
-            
-            return result;
         }
-        finally {
-            ((MixinEntityAccess)entity).immersive_portals$callSetLevel(oldWorld);
-            McHelper.setPosAndLastTickPosWithoutTriggeringCallback(entity, oldPos, oldLastTickPos);
-            entity.setBoundingBox(originalBoundingBox);
-            entity.setMaxUpStep(oldStepHeight);
-        }
+
+        collided = new Vec3(
+            CollisionHelper.fixCoordinateFloatingPointError(transformedAttemptedMove.x, collided.x),
+            CollisionHelper.fixCoordinateFloatingPointError(transformedAttemptedMove.y, collided.y),
+            CollisionHelper.fixCoordinateFloatingPointError(transformedAttemptedMove.z, collided.z)
+        );
+
+        Vec3 result = collidingPortal.inverseTransformLocalVec(collided);
+
+        return result;
     }
     
     private static Vec3 handleOtherSideChunkNotLoaded(Entity entity, Vec3 attemptedMove, Portal collidingPortal, AABB originalBoundingBox) {
@@ -268,12 +241,12 @@ public class PortalCollisionHandler {
         Direction gravity = GravityChangerInterface.invoker.getGravityDirection(entity);
         
         return CollisionHelper.handleCollisionWithShapeProcessor(
-            entity, attemptedMove,
+            entity, entity.getBoundingBox(), entity.level(),
+            attemptedMove,
             shape -> processThisSideCollisionShape(
                 shape, Helper.mappedListView(portalCollisions, e -> e.portal)
             ),
-            gravity
-        );
+            gravity, 1);
     }
     
     @Nullable
@@ -281,7 +254,12 @@ public class PortalCollisionHandler {
         VoxelShape originalShape, List<Portal> portalCollisions
     ) {
         VoxelShape shape = originalShape;
-        AABB shapeBounds = originalShape.bounds();
+
+        if (shape.isEmpty()) {
+            return shape;
+        }
+
+        AABB shapeBounds = shape.bounds();
         
         for (int i = 0; i < portalCollisions.size(); i++) {
             Portal portal = portalCollisions.get(i);
@@ -309,7 +287,12 @@ public class PortalCollisionHandler {
                 exclusion,
                 BooleanOp.ONLY_FIRST
             );
-            shapeBounds = originalShape.bounds();
+
+            if (shape.isEmpty()) {
+                return shape;
+            }
+
+            shapeBounds = shape.bounds();
         }
         
         return shape;
@@ -349,7 +332,7 @@ public class PortalCollisionHandler {
             p -> true
         ).forEach(p -> CollisionHelper.notifyCollidingPortals(p, partialTicks));
         
-        // don't ip_tickCollidingPortal() as it only removes collisions
+        // don't tickCollidingPortal() as it only removes collisions
         
         McHelper.setEyePos(entity, newEyePos, newLastTickEyePos);
         McHelper.updateBoundingBox(entity);
@@ -379,4 +362,7 @@ public class PortalCollisionHandler {
         lastActiveTime = timing;
     }
     
+    public List<Portal> getCollidingPortals() {
+        return Helper.mappedListView(portalCollisions, p -> p.portal);
+    }
 }

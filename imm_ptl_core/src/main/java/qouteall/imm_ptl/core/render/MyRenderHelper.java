@@ -15,20 +15,17 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
-import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceProvider;
-import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.Validate;
 import org.joml.Matrix4f;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.ClientWorldLoader;
-import qouteall.imm_ptl.core.IPGlobal;
-import qouteall.imm_ptl.core.compat.sodium_compatibility.SodiumInterface;
 import qouteall.imm_ptl.core.miscellaneous.IPVanillaCopy;
 import qouteall.imm_ptl.core.portal.PortalLike;
 import qouteall.imm_ptl.core.render.context_management.PortalRendering;
 import qouteall.imm_ptl.core.render.context_management.RenderStates;
+import qouteall.imm_ptl.core.render.context_management.WorldRenderInfo;
 import qouteall.q_misc_util.my_util.SignalBiArged;
 
 import java.awt.*;
@@ -145,7 +142,7 @@ public class MyRenderHelper {
     public static ShaderInstance blitScreenNoBlendShader;
     
     public static void drawPortalAreaWithFramebuffer(
-        PortalLike portal,
+        PortalRenderable portal,
         RenderTarget textureProvider,
         Matrix4f modelViewMatrix,
         Matrix4f projectionMatrix
@@ -174,9 +171,9 @@ public class MyRenderHelper {
             Vec3.ZERO,//fog
             portal,
             CHelper.getCurrentCameraPos(),
-            RenderStates.tickDelta
+            RenderStates.getPartialTick()
         );
-    
+
         
         shader.clear();
     }
@@ -205,14 +202,11 @@ public class MyRenderHelper {
         shader.PROJECTION_MATRIX.set(identityMatrix);
         
         shader.apply();
-
-        // Removed by Mojang
-        //RenderSystem.disableTexture();
         
         Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder bufferBuilder = tessellator.getBuilder();
         bufferBuilder.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
-    
+
         // upper triangle
 //        bufferBuilder.vertex(1, -1, 0).color(r, g, b, a)
 //            .endVertex();
@@ -220,7 +214,7 @@ public class MyRenderHelper {
 //            .endVertex();
 //        bufferBuilder.vertex(-1, 1, 0).color(r, g, b, a)
 //            .endVertex();
-    
+
         // down triangle
         bufferBuilder.vertex(-1, 1, 0).color(r, g, b, a)
             .endVertex();
@@ -228,7 +222,7 @@ public class MyRenderHelper {
             .endVertex();
         bufferBuilder.vertex(1, -1, 0).color(r, g, b, a)
             .endVertex();
-    
+
         bufferBuilder.vertex(1, 0, 0).color(r, g, b, a)
             .endVertex();
         bufferBuilder.vertex(0, 1, 0).color(r, g, b, a)
@@ -239,9 +233,6 @@ public class MyRenderHelper {
         BufferUploader.draw(bufferBuilder.end());
         
         shader.clear();
-
-        // Removed by Mojang
-        //RenderSystem.enableTexture();
     }
     
     /**
@@ -259,9 +250,6 @@ public class MyRenderHelper {
         shader.PROJECTION_MATRIX.set(identityMatrix);
         
         shader.apply();
-
-        // Removed by Mojang
-        //RenderSystem.disableTexture();
         
         Tesselator tessellator = RenderSystem.renderThreadTesselator();
         BufferBuilder bufferBuilder = tessellator.getBuilder();
@@ -284,9 +272,6 @@ public class MyRenderHelper {
         BufferUploader.draw(bufferBuilder.end());
         
         shader.clear();
-
-        // Removed by Mojang
-        //RenderSystem.enableTexture();
     }
     
     /**
@@ -314,12 +299,12 @@ public class MyRenderHelper {
     
     public static void drawFramebuffer(
         RenderTarget textureProvider, boolean doUseAlphaBlend, boolean doEnableModifyAlpha,
-        float left, double right, float bottom, double up
+        float xMin, double xMax, float yMin, double yMax
     ) {
         drawFramebufferWithViewport(
             textureProvider,
             doUseAlphaBlend, doEnableModifyAlpha,
-            left, right, bottom, up,
+            xMin, xMax, yMin, yMax,
             client.getWindow().getWidth(),
             client.getWindow().getHeight()
         );
@@ -342,6 +327,20 @@ public class MyRenderHelper {
         
         if (doUseAlphaBlend) {
             RenderSystem.enableBlend();
+
+            // this is used for rendering a FB onto screen when the FB contains translucent things
+            // the FB should initialize with zero color and zero alpha
+            // MC's default blend func is: color = srcColor * srcAlpha + dstColor * (1-srcAlpha)
+            // then the FB's rendered content would be fbColor = contentColor * contentAlpha
+            // we want the roughtly same effect of rendering the translucent thing directly onto current FB, so we want:
+            // color = contentColor * contentAlpha + dstColor * (1-contentAlpha)
+            // color = fbColor * 1 + dstColor * (1-contentAlpha)
+            RenderSystem.blendFuncSeparate(
+                GlStateManager.SourceFactor.ONE,
+                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+                GlStateManager.SourceFactor.ZERO,
+                GlStateManager.DestFactor.ONE
+            );
         }
         else {
             RenderSystem.disableBlend();
@@ -358,8 +357,8 @@ public class MyRenderHelper {
         
         shader.setSampler("DiffuseSampler", textureProvider.getColorTextureId());
         
-        Matrix4f projectionMatrix = (new Matrix4f()).setOrtho(0.0F, (float)viewportWidth, (float)viewportHeight, 0.0F, 1000.0F, 3000.0F);
-    
+        Matrix4f projectionMatrix = (new Matrix4f()).setOrtho(0.0F, (float) viewportWidth, (float) viewportHeight, 0.0F, 1000.0F, 3000.0F);
+
         shader.MODEL_VIEW_MATRIX.set(new Matrix4f().translation(0.0F, 0.0F, -2000.0F));
         
         shader.PROJECTION_MATRIX.set(projectionMatrix);
@@ -388,15 +387,15 @@ public class MyRenderHelper {
             .color(255, 255, 255, 255).endVertex();
         
         BufferUploader.draw(bufferBuilder.end());
-        
-        // unbind
+
         shader.clear();
         
         GlStateManager._depthMask(true);
         GlStateManager._colorMask(true, true, true, true);
         
         RenderSystem.enableBlend();
-        
+        RenderSystem.defaultBlendFunc();
+
         CHelper.checkGlError();
     }
     
@@ -411,9 +410,7 @@ public class MyRenderHelper {
         
         ClientWorldLoader.getClientWorlds().forEach(world -> {
             if (!RenderStates.isDimensionRendered(world.dimension())) {
-                int updateNum = world.getChunkSource().getLightEngine().runLightUpdates(
-                    //1000, true, true
-                );
+                world.getChunkSource().getLightEngine().runLightUpdates();
             }
         });
     }
@@ -462,14 +459,14 @@ public class MyRenderHelper {
     }
     
     public static float transformFogDistance(float value) {
-        if (IPGlobal.debugDisableFog) {
+        if (!WorldRenderInfo.isFogEnabled()) {
             return value * 23333;
         }
-    
+
         // just disable fog for fuse-view portals for now
         if (PortalRendering.isRendering()) {
             PortalLike renderingPortal = PortalRendering.getRenderingPortal();
-        
+
             if (renderingPortal.isFuseView()) {
                 return value * 23333;
             }

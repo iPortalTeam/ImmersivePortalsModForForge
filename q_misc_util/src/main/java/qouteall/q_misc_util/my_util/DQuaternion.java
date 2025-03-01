@@ -8,14 +8,12 @@ import net.minecraft.world.phys.Vec3;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Quaterniond;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
-import qouteall.q_misc_util.Helper;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Objects;
 
 /**
@@ -249,6 +247,10 @@ public class DQuaternion {
      * Is two quaternions roughly the same
      */
     public static boolean isClose(DQuaternion a, DQuaternion b, double valve) {
+        return distance(a, b) < valve;
+    }
+
+    public static double distance(DQuaternion a, DQuaternion b) {
         double da1 = a.getX() - b.getX();
         double db1 = a.getY() - b.getY();
         double dc1 = a.getZ() - b.getZ();
@@ -261,7 +263,7 @@ public class DQuaternion {
         double dd2 = a.getW() + b.getW();
         double v2 = da2 * da2 + db2 * db2 + dc2 * dc2 + dd2 * dd2;
         
-        return v1 < valve || v2 < valve;
+        return Math.min(v1, v2);
     }
     
     @Override
@@ -400,6 +402,17 @@ public class DQuaternion {
         return new DQuaternion(qx, qy, qz, qw);
     }
     
+    public static DQuaternion fromFacingVecs(
+        Vec3 axisW, Vec3 axisH
+    ) {
+        return matrixToQuaternion(
+            axisW, axisH, axisW.cross(axisH)
+        );
+    }
+
+    /**
+     * Note: doesn't work when from and to are collinear
+     */
     public static DQuaternion getRotationBetween(Vec3 from, Vec3 to) {
         from = from.normalize();
         to = to.normalize();
@@ -495,11 +508,27 @@ public class DQuaternion {
         return new Vec3(Math.toDegrees(result.x), Math.toDegrees(-result.y), Math.toDegrees(result.z));
     }
     
-    @Nonnull
+    @NotNull
     public static DQuaternion fromNullable(@Nullable DQuaternion q) {
         if (q == null) {
             return DQuaternion.identity;
         }
         return q;
+    }
+
+    public Vec3 getAxisW() {
+        return this.rotate(new Vec3(1, 0, 0));
+    }
+
+    public Vec3 getAxisH() {
+        return this.rotate(new Vec3(0, 1, 0));
+    }
+
+    public Vec3 getNormal() {
+        return this.rotate(new Vec3(0, 0, 1));
+    }
+
+    public boolean isValid() {
+        return Math.abs(this.dotProduct(this)) > 0.9;
     }
 }

@@ -1,4 +1,4 @@
-package qouteall.imm_ptl.core.teleportation;
+package qouteall.imm_ptl.core.collision;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraftforge.api.distmarker.Dist;
@@ -17,7 +17,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.ClientWorldLoader;
 import qouteall.imm_ptl.core.IPGlobal;
@@ -34,7 +34,6 @@ import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.my_util.LimitedLogger;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -101,11 +100,24 @@ public class CollisionHelper {
     }
 
     public static boolean canCollideWithPortal(Entity entity, Portal portal, float partialTick) {
-        if (portal.canTeleportEntity(entity)) {
-            Vec3 cameraPosVec = entity.getEyePosition(partialTick);
-            return portal.isInFrontOfPortal(cameraPosVec);
+        if (!portal.canCollideWithEntity(entity)) {
+            return false;
         }
-        return false;
+
+        Vec3 cameraPosVec = entity.getEyePosition(partialTick);
+        boolean inFrontOfPortal = portal.isInFrontOfPortal(cameraPosVec);
+
+        if (!inFrontOfPortal) {
+            return false;
+        }
+
+        boolean inProjection = portal.isBoundingBoxInPortalProjection(entity.getBoundingBox());
+
+        if (!inProjection) {
+            return false;
+        }
+
+        return true;
     }
     
     public static double absMin(double a, double b) {
@@ -129,6 +141,10 @@ public class CollisionHelper {
         return result;
     }
 
+    /**
+     * Clips a VoxelShape with a plane.
+     * The things behind the plane (the opposite side of normal) will be clipped.
+     */
     @Nullable
     public static VoxelShape clipVoxelShape(VoxelShape shape, Vec3 clippingPlanePos, Vec3 clippingPlaneNormal) {
         if (shape.isEmpty()) {
@@ -188,19 +204,20 @@ public class CollisionHelper {
         boolean collidesWithFloor = collideY && attemptedMove.y < 0.0D;
         boolean touchGround = entity.onGround() || collidesWithFloor;
         boolean collidesHorizontally = collideX || collideZ;
-        if (entity.maxUpStep() > 0.0F && touchGround && collidesHorizontally) {
+        float maxUpStep = entity.maxUpStep();
+        if (maxUpStep > 0.0F && touchGround && collidesHorizontally) {
             // the entity is touching ground and has horizontal collision now
             // try to directly move to stepped position, make it approach the stair
             Vec3 stepping = collisionFunc.apply(
-                new Vec3(attemptedMove.x, (double) entity.maxUpStep(), attemptedMove.z),
+                new Vec3(attemptedMove.x, (double) maxUpStep, attemptedMove.z),
                 boundingBox
             );
             // try to move up in step height with expanded box
             Vec3 verticalStep = collisionFunc.apply(
-                new Vec3(0.0D, (double) entity.maxUpStep(), 0.0D),
+                new Vec3(0.0D, (double) maxUpStep, 0.0D),
                 boundingBox.expandTowards(attemptedMove.x, 0.0D, attemptedMove.z)
             );
-            if (verticalStep.y < (double) entity.maxUpStep()) {
+            if (verticalStep.y < (double) maxUpStep) {
                 // try to move horizontally after moving up
                 Vec3 horizontalMoveAfterVerticalStepping = collisionFunc.apply(
                     new Vec3(attemptedMove.x, 0.0D, attemptedMove.z),
@@ -231,18 +248,19 @@ public class CollisionHelper {
      */
     @IPVanillaCopy
     public static Vec3 handleCollisionWithShapeProcessor(
-        Entity entity, Vec3 attemptedMove, Function<VoxelShape, VoxelShape> filter,
-        Direction gravity
+        Entity entity,
+        AABB boundingBox, Level world,
+        Vec3 attemptedMove, Function<VoxelShape, VoxelShape> filter,
+        Direction gravity, double steppingScale
     ) {
         Direction jumpDirection = gravity.getOpposite();
         Direction.Axis gravityAxis = gravity.getAxis();
         
-        AABB boundingBox = entity.getBoundingBox();
-        List<VoxelShape> entityCollisions = entity.level().getEntityCollisions(entity, boundingBox.expandTowards(attemptedMove));
+        List<VoxelShape> entityCollisions = world.getEntityCollisions(entity, boundingBox.expandTowards(attemptedMove));
         
         // introduce a helper func to reduce argument count
         BiFunction<Vec3, AABB, Vec3> collisionFunc = (attempt, bb) ->
-            collideBoundingBox(entity, attempt, bb, entity.level(), entityCollisions, filter);
+            collideBoundingBox(entity, attempt, bb, world, entityCollisions, filter);
         
         // firstly do a normal collision regardless of stepping
         Vec3 collidedMovement = attemptedMove.lengthSqr() == 0.0D ? attemptedMove :
@@ -253,7 +271,11 @@ public class CollisionHelper {
         boolean collidesWithFloor = collidesOnGravityAxis && attemptToMoveAlongGravity;
         boolean touchGround = entity.onGround() || collidesWithFloor;
         boolean collidesHorizontally = movesOnNonGravityAxis(collisionDelta, gravityAxis);
-        float maxUpStep = entity.maxUpStep() * PehkuiInterface.invoker.getBaseScale(entity);
+        float maxUpStep = entity.maxUpStep()
+            * PehkuiInterface.invoker.getBaseScale(entity);
+        if (steppingScale > 1) {
+            maxUpStep *= steppingScale;
+        }
         if (maxUpStep > 0.0F && touchGround && collidesHorizontally) {
             // the entity is touching ground and has horizontal collision now
             // try to directly move to stepped position, make it approach the stair
@@ -333,11 +355,17 @@ public class CollisionHelper {
         }
         
         WorldBorder worldBorder = level.getWorldBorder();
-        boolean isCloseToWorldBorder = worldBorder.isInsideCloseToBorder(entity, collisionBox.expandTowards(vec));
-        if (isCloseToWorldBorder) {
+
+        Vec3 boundingBoxCenter = collisionBox.getCenter();
+
+        boolean addWorldBorderCollision =
+            worldBorder.isWithinBounds(boundingBoxCenter.x, boundingBoxCenter.z)
+                && worldBorder.getDistanceToBorder(boundingBoxCenter.x, boundingBoxCenter.z) < 32;
+        if (addWorldBorderCollision) {
             builder.add(worldBorder.getCollisionShape());
         }
         
+        // the entity is only used for collision context. the context does not use entity position
         Iterable<VoxelShape> blockCollisions = level.getBlockCollisions(entity, collisionBox.expandTowards(vec));
         
         for (VoxelShape blockCollision : blockCollisions) {
@@ -349,23 +377,7 @@ public class CollisionHelper {
         
         return IEEntity_Collision.ip_CollideWithShapes(vec, collisionBox, builder.build());
     }
-    
-    @Deprecated
-    @Nullable
-    public static AABB getCollisionBoxThisSide(
-        Portal portal,
-        @NotNull AABB originalBox
-    ) {
-        //cut the collision box a little bit more for horizontal portals
-        //because the box will be stretched by attemptedMove when calculating collision
-        Vec3 clippingPos = portal.getOriginPos();
-        return clipBox(
-            originalBox,
-            clippingPos,
-            portal.getNormal()
-        );
-    }
-    
+
     public static AABB transformBox(PortalLike portal, AABB originalBox) {
         if (portal.getRotation() == null && portal.getScale() == 1) {
             return originalBox.move(portal.getDestPos().subtract(portal.getOriginPos()));

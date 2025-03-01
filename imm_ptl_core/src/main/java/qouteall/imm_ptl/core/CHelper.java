@@ -1,5 +1,6 @@
 package qouteall.imm_ptl.core;
 
+import com.mojang.logging.LogUtils;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.Util;
@@ -8,29 +9,28 @@ import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.core.Registry;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import org.apache.commons.lang3.Validate;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL32;
+import org.slf4j.Logger;
 import qouteall.imm_ptl.core.ducks.IEClientWorld;
+import qouteall.imm_ptl.core.platform_specific.O_O;
 import qouteall.imm_ptl.core.portal.Portal;
-import qouteall.imm_ptl.core.render.context_management.RenderStates;
+import qouteall.imm_ptl.core.portal.animation.StableClientTimer;
 import qouteall.q_misc_util.Helper;
 
-import javax.annotation.Nullable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.lwjgl.opengl.GL11.GL_NO_ERROR;
@@ -38,6 +38,8 @@ import static org.lwjgl.opengl.GL11.GL_NO_ERROR;
 @OnlyIn(Dist.CLIENT)
 public class CHelper {
     
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private static int reportedErrorNum = 0;
     
     public static PlayerInfo getClientPlayerListEntry() {
@@ -127,8 +129,10 @@ public class CHelper {
     }
     
     public static double getSmoothCycles(long unitTicks) {
-        int playerAge = Minecraft.getInstance().player.tickCount;
-        return (playerAge % unitTicks + RenderStates.tickDelta) / (double) unitTicks;
+        return (
+            StableClientTimer.getStableTickTime() % unitTicks +
+                StableClientTimer.getStablePartialTicks()
+        ) / (double) unitTicks;
     }
     
     public static void disableDepthClamp() {
@@ -143,4 +147,47 @@ public class CHelper {
         }
     }
     
+    /**
+     * Get `modid/textures/dimension/dimension_id.png` first.
+     * If missing, then try to get the mod icon.
+     * If still missing, return null.
+     */
+    @Nullable
+    public static ResourceLocation getDimensionIconPath(ResourceKey<Level> dimension) {
+        ResourceLocation dimensionId = dimension.location();
+
+        ResourceLocation dimIconPath = new ResourceLocation(
+            dimensionId.getNamespace(),
+            "textures/dimension/" + dimensionId.getPath() + ".png"
+        );
+
+        Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(dimIconPath);
+
+        if (resource.isEmpty()) {
+            LOGGER.info("Cannot load texture {}", dimIconPath);
+
+            ResourceLocation modIconLocation = O_O.getModIconLocation(dimensionId.getNamespace());
+
+            if (modIconLocation == null) {
+                return null;
+            }
+
+            ResourceLocation modIconPath = new ResourceLocation(
+                modIconLocation.getNamespace(),
+                modIconLocation.getPath()
+            );
+
+            Optional<Resource> modIconResource = Minecraft.getInstance().getResourceManager().getResource(modIconPath);
+
+            if (modIconResource.isEmpty()) {
+                LOGGER.info("Cannot load texture {}", modIconPath);
+                return null;
+            }
+
+            return modIconPath;
+        }
+
+        return dimIconPath;
+    }
+
 }

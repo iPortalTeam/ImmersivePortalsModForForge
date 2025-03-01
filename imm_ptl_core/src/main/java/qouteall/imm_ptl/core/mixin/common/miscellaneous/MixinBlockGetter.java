@@ -1,12 +1,13 @@
 package qouteall.imm_ptl.core.mixin.common.miscellaneous;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import qouteall.imm_ptl.core.IPMcHelper;
 import qouteall.q_misc_util.Helper;
 
@@ -16,7 +17,8 @@ import java.util.function.Function;
 @Mixin(BlockGetter.class)
 public interface MixinBlockGetter {
 	
-//	@ModifyVariable( //TODO Reenable this
+//	// avoid lagging due to long block traversal
+//	@ModifyVariable(
 //		method = "traverseBlocks",
 //		at = @At("HEAD"),
 //		argsOnly = true,
@@ -29,8 +31,7 @@ public interface MixinBlockGetter {
 //	) {
 //		if (from.distanceToSqr(_to) > (512 * 512)) {
 //			IPMcHelper.limitedLogger.invoke(() -> {
-//				Helper.err("raycast too far");
-//				new Throwable().printStackTrace();
+//				Helper.logger.error("Raycast too far", new Throwable());
 //			});
 //			return _to.subtract(from).normalize().scale(30).add(from);
 //		}

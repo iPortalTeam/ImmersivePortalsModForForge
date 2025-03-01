@@ -7,6 +7,9 @@ import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.IPGlobal;
@@ -18,21 +21,16 @@ import qouteall.imm_ptl.core.render.context_management.RenderStates;
 
 import java.util.function.Consumer;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.world.phys.Vec3;
-
-import static org.lwjgl.opengl.GL11.GL_DEPTH_WRITEMASK;
-import static org.lwjgl.opengl.GL11.glGetBoolean;
-
 public class ViewAreaRenderer {
     
     public static void renderPortalArea(
-        PortalLike portal, Vec3 fogColor,
+        PortalRenderable portalRenderable, Vec3 fogColor,
         Matrix4f modelViewMatrix, Matrix4f projectionMatrix,
         boolean doFaceCulling, boolean doModifyColor,
-        boolean doModifyDepth
+        boolean doModifyDepth, boolean doClip
     ) {
+        PortalLike portalLike = portalRenderable.getPortalLike();
+
         if (doFaceCulling) {
             GlStateManager._enableCull();
         }
@@ -40,7 +38,7 @@ public class ViewAreaRenderer {
             GlStateManager._disableCull();
         }
         
-        if (portal.isFuseView() && IPGlobal.maxPortalLayer != 0) {
+        if (portalLike.isFuseView() && IPGlobal.maxPortalLayer != 0) {
             GlStateManager._colorMask(false, false, false, false);
         }
         else {
@@ -53,7 +51,7 @@ public class ViewAreaRenderer {
         }
         
         if (doModifyDepth) {
-            if (portal.isFuseView()) {
+            if (portalLike.isFuseView()) {
                 GlStateManager._depthMask(false);
             }
             else {
@@ -69,9 +67,19 @@ public class ViewAreaRenderer {
             MyRenderHelper.applyMirrorFaceCulling();
         }
         
+        if (doClip) {
+            if (PortalRendering.isRendering()) {
+                FrontClipping.setupInnerClipping(
+                    PortalRendering.getActiveClippingPlane(),
+                    modelViewMatrix, 0  // don't do adjustment
+                );
+            }
+        }
+        else {
+            FrontClipping.disableClipping();
+        }
+
         GlStateManager._enableDepthTest();
-        // Removed by Mojang
-        //GlStateManager._disableTexture();
         
         CHelper.enableDepthClamp();
         
@@ -87,15 +95,13 @@ public class ViewAreaRenderer {
         
         ViewAreaRenderer.buildPortalViewAreaTrianglesBuffer(
             fogColor,
-            portal,
+            portalRenderable,
             CHelper.getCurrentCameraPos(),
-            RenderStates.tickDelta
+            RenderStates.getPartialTick()
         );
         
         shader.clear();
 
-        // Removed by Mojang
-        //GlStateManager._enableTexture();
         GlStateManager._enableCull();
         CHelper.disableDepthClamp();
         
@@ -106,11 +112,15 @@ public class ViewAreaRenderer {
             MyRenderHelper.recoverFaceCulling();
         }
         
+        if (PortalRendering.isRendering()) {
+            FrontClipping.disableClipping();
+        }
+
         CHelper.checkGlError();
     }
     
     public static void buildPortalViewAreaTrianglesBuffer(
-        Vec3 fogColor, PortalLike portal,
+        Vec3 fogColor, PortalRenderable portalRenderable,
         Vec3 cameraPos, float tickDelta
     ) {
         Tesselator tessellator = RenderSystem.renderThreadTesselator();
@@ -118,13 +128,25 @@ public class ViewAreaRenderer {
         
         bufferBuilder.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
         
-        Vec3 posInPlayerCoordinate = portal.getOriginPos().subtract(cameraPos);
+        Vec3 originRelativeToCamera = portalRenderable.getPortalLike().getOriginPos().subtract(cameraPos);
         
         Consumer<Vec3> vertexOutput = p -> putIntoVertex(
             bufferBuilder, p, fogColor
         );
         
-        portal.renderViewAreaMesh(posInPlayerCoordinate, vertexOutput);
+        if (portalRenderable instanceof Portal portal) {
+            portal.renderViewAreaMesh(originRelativeToCamera, vertexOutput);
+        }
+        else if (portalRenderable instanceof PortalRenderer.PortalGroupToRender portalGroupToRender) {
+            PortalLike portalLike = portalGroupToRender.getPortalLike();
+            for (Portal portal : portalGroupToRender.portals()) {
+                Vec3 relativeToGroup = portal.getOriginPos().subtract(portalLike.getOriginPos());
+                portal.renderViewAreaMesh(
+                    originRelativeToCamera.add(relativeToGroup),
+                    vertexOutput
+                );
+            }
+        }
         
         BufferUploader.draw(bufferBuilder.end());
     }
@@ -171,19 +193,24 @@ public class ViewAreaRenderer {
         Vec3 posInPlayerCoordinate
     ) {
         GeometryPortalShape specialShape = portal.specialShape;
-        
+        assert specialShape != null;
+
+        specialShape.normalize(portal.width, portal.height);
+        double halfWidth = portal.width / 2;
+        double halfHeight = portal.height / 2;
+
         for (GeometryPortalShape.TriangleInPlane triangle : specialShape.triangles) {
             Vec3 a = posInPlayerCoordinate
-                .add(portal.axisW.scale(triangle.x1))
-                .add(portal.axisH.scale(triangle.y1));
+                .add(portal.axisW.scale(triangle.x1 * halfWidth))
+                .add(portal.axisH.scale(triangle.y1 * halfHeight));
             
             Vec3 b = posInPlayerCoordinate
-                .add(portal.axisW.scale(triangle.x3))
-                .add(portal.axisH.scale(triangle.y3));
+                .add(portal.axisW.scale(triangle.x3 * halfWidth))
+                .add(portal.axisH.scale(triangle.y3 * halfHeight));
             
             Vec3 c = posInPlayerCoordinate
-                .add(portal.axisW.scale(triangle.x2))
-                .add(portal.axisH.scale(triangle.y2));
+                .add(portal.axisW.scale(triangle.x2 * halfWidth))
+                .add(portal.axisH.scale(triangle.y2 * halfHeight));
             
             vertexOutput.accept(a);
             vertexOutput.accept(b);

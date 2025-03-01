@@ -1,14 +1,14 @@
 package qouteall.imm_ptl.core.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -19,7 +19,7 @@ import qouteall.imm_ptl.core.render.context_management.WorldRenderInfo;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.my_util.DQuaternion;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The camera rotations are applied in this order:
@@ -44,6 +44,19 @@ public class TransformationManager {
     public static boolean isIsometricView = false;
     public static float isometricViewLength = 50;
     
+    public static DQuaternion getPlayerCameraRotation() {
+        LocalPlayer player = client.player;
+        if (player == null) {
+            return DQuaternion.identity;
+        }
+
+        Direction gravity = GravityChangerInterface.invoker.getGravityDirection(player);
+
+        return getCameraRotationWithGravity(
+            gravity, player.getXRot(), player.getYRot()
+        );
+    }
+
     // gets rawCameraRotation * gravity
     private static DQuaternion getCameraRotationWithGravity(
         Direction gravityDirection,
@@ -126,7 +139,7 @@ public class TransformationManager {
             
             DQuaternion oldCameraRotation = getCameraRotationWithGravity(
                 oldGravityDir,
-                player.getViewXRot(RenderStates.tickDelta), player.getViewYRot(RenderStates.tickDelta)
+                player.getViewXRot(RenderStates.getPartialTick()), player.getViewYRot(RenderStates.getPartialTick())
             );
             DQuaternion currentAnimationDelta = getCurrentAnimationDelta();
             if (currentAnimationDelta != null) {
@@ -138,20 +151,25 @@ public class TransformationManager {
                     portal.getRotation().getConjugated()
                 );
             
-            Direction newGravityDir = portal.getTeleportedGravityDirection(oldGravityDir);
+            Direction oldBaseGravityDir = GravityChangerInterface.invoker.getBaseGravityDirection(player);
+            Direction newBaseGravityDir = portal.getTeleportedGravityDirection(oldBaseGravityDir);
             
-            if (newGravityDir != oldGravityDir) {
+            if (newBaseGravityDir != oldBaseGravityDir) {
                 GravityChangerInterface.invoker.setClientPlayerGravityDirection(
-                    player, newGravityDir
+                    player, newBaseGravityDir
                 );
             }
             
+            // if there is some gravity effect
+            // the immediate gravity direction may be different to base gravity direction
+            Direction immediateNewGravityDir = GravityChangerInterface.invoker.getGravityDirection(player);
+
             // rawCameraRotation = finalRot * portalRot^-1 * animationDelta^-1 * gravity^-1
             // when getting the new pitch yaw, no need to consider portalRot and animation
             // rawCameraRotation = finalRot * gravity^-1
             
             DQuaternion newGravityRot = DQuaternion.fromNullable(
-                GravityChangerInterface.invoker.getExtraCameraRotation(newGravityDir)
+                GravityChangerInterface.invoker.getExtraCameraRotation(immediateNewGravityDir)
             );
 
             DQuaternion newRawCameraRotation = immediateFinalRot.hamiltonProduct(newGravityRot.getConjugated());
@@ -185,7 +203,7 @@ public class TransformationManager {
             // animationDelta = gravity^-1 * rawCameraRotation^-1 * finalRot
             // animationDelta = (rawCameraRotation * gravity)^-1 * finalRot
             
-            DQuaternion newCameraRotationWithGravity = getCameraRotationWithGravity(newGravityDir, finalPitch, finalYaw);
+            DQuaternion newCameraRotationWithGravity = getCameraRotationWithGravity(immediateNewGravityDir, finalPitch, finalYaw);
 
             DQuaternion newAnimationDelta = newCameraRotationWithGravity.getConjugated().hamiltonProduct(immediateFinalRot);
 
@@ -211,7 +229,7 @@ public class TransformationManager {
             client.player,
             !client.options.getCameraType().isFirstPerson(),
             client.options.getCameraType().isMirrored(),
-            RenderStates.tickDelta
+            RenderStates.getPartialTick()
         );
     }
     

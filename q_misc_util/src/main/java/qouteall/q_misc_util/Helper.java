@@ -9,30 +9,36 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.util.Mth;
+import net.minecraft.nbt.Tag;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import qouteall.q_misc_util.my_util.DQuaternion;
 import qouteall.q_misc_util.my_util.IntBox;
+import qouteall.q_misc_util.my_util.LongBlockPos;
 
-import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -41,7 +47,7 @@ import java.util.stream.Stream;
 // helper methods
 public class Helper {
     
-    private static final Logger logger = LogManager.getLogger("Portal");
+    public static final Logger logger = LogManager.getLogger("Portal");
     
     public static final Gson gson = new GsonBuilder().setPrettyPrinting().setLenient().create();
     
@@ -354,6 +360,20 @@ public class Helper {
         return Math.sqrt(dx * dx + dy * dy);
     }
     
+    public static <T> void swapListElement(List<T> entries, int i1, int i2) {
+        T temp = entries.get(i1);
+        entries.set(i1, entries.get(i2));
+        entries.set(i2, temp);
+    }
+
+    // positive if it's rotating counter clock wise
+    public static double crossProduct2D(
+        double x1, double y1,
+        double x2, double y2
+    ) {
+        return x1 * y2 - x2 * y1;
+    }
+
     public static class SimpleBox<T> {
         public T obj;
         
@@ -525,18 +545,37 @@ public class Helper {
      * Note: if the deserializer returns null, it won't be in the result list.
      */
     public static <X> ArrayList<X> listTagToList(ListTag listTag, Function<CompoundTag, X> deserializer) {
+        return listTagDeserialize(listTag, deserializer, CompoundTag.class);
+    }
+
+    public static <X> ListTag listToListTag(List<X> list, Function<X, CompoundTag> serializer) {
+        return listTagSerialize(list, serializer);
+    }
+
+    /**
+     * It's safe to modify the result array list.
+     * Note: if the deserializer returns null, it won't be in the result list.
+     */
+    public static <X, TT extends Tag> ArrayList<X> listTagDeserialize(
+        ListTag listTag, Function<TT, X> deserializer,
+        Class<TT> tagClass
+    ) {
         ArrayList<X> result = new ArrayList<>();
         listTag.forEach(tag -> {
-            CompoundTag compoundTag = (CompoundTag) tag;
-            X obj = deserializer.apply(compoundTag);
-            if (obj != null) {
-                result.add(obj);
+            if (tag.getClass() == tagClass) {
+                X obj = deserializer.apply((TT) tag);
+                if (obj != null) {
+                    result.add(obj);
+                }
+            }
+            else {
+                logger.error("Unexpected tag class: {}", tag.getClass(), new Throwable());
             }
         });
         return result;
     }
     
-    public static <X> ListTag listToListTag(List<X> list, Function<X, CompoundTag> serializer) {
+    public static <X, TT extends Tag> ListTag listTagSerialize(List<X> list, Function<X, TT> serializer) {
         ListTag listTag = new ListTag();
         for (X x : list) {
             listTag.add(serializer.apply(x));
@@ -849,7 +888,7 @@ public class Helper {
     // treat ArrayList as an integer to object map
     // do computeIfAbsent
     public static <T> T arrayListComputeIfAbsent(
-        ArrayList<T> arrayList,
+        List<T> arrayList,
         int index,
         Supplier<T> supplier
     ) {
@@ -938,11 +977,248 @@ public class Helper {
             public B get(int index) {
                 return mapping.apply(originalList.get(index));
             }
-        
+
             @Override
             public int size() {
                 return originalList.size();
             }
         };
+    }
+
+    // parse double without try catching
+    public static OptionalDouble parseDouble(String str) {
+        try {
+            return OptionalDouble.of(Double.parseDouble(str));
+        }
+        catch (NumberFormatException e) {
+            return OptionalDouble.empty();
+        }
+    }
+
+    // parse int without try catching
+    public static OptionalInt parseInt(String str) {
+        try {
+            return OptionalInt.of(Integer.parseInt(str));
+        }
+        catch (NumberFormatException e) {
+            return OptionalInt.empty();
+        }
+    }
+
+    public static List<Vec3> deduplicateWithPrecision(
+        Collection<Vec3> points,
+        int precision
+    ) {
+        HashSet<LongBlockPos> set = new HashSet<>();
+        for (Vec3 point : points) {
+            set.add(new LongBlockPos(
+                (long) Math.round(point.x * precision),
+                (long) Math.round(point.y * precision),
+                (long) Math.round(point.z * precision)
+            ));
+        }
+        return set.stream().map(
+            blockPos -> new Vec3(
+                blockPos.x() / (double) precision,
+                blockPos.y() / (double) precision,
+                blockPos.z() / (double) precision
+            )
+        ).collect(Collectors.toList());
+    }
+
+    public static double getDistanceFromPointToLine(
+        Vec3 point,
+        Vec3 lineOrigin,
+        Vec3 lineDirection
+    ) {
+        Vec3 lineDirectionNormalized = lineDirection.normalize();
+
+        Vec3 pointToLineOrigin = lineOrigin.subtract(point);
+        Vec3 pointToLineOriginProjected = pointToLineOrigin.subtract(
+            lineDirectionNormalized.scale(pointToLineOrigin.dot(lineDirectionNormalized))
+        );
+        return pointToLineOriginProjected.length();
+    }
+
+    public static interface BoxEdgeConsumer {
+        void consume(
+            int ax, int ay, int az,
+            int bx, int by, int bz
+        );
+    }
+
+    public static void traverseBoxEdge(
+        BoxEdgeConsumer consumer
+    ) {
+        for (int dx = 0; dx <= 1; dx++) {
+            for (int dy = 0; dy <= 1; dy++) {
+                consumer.consume(dx, dy, 0, dx, dy, 1);
+            }
+        }
+
+        for (int dx = 0; dx <= 1; dx++) {
+            for (int dz = 0; dz <= 1; dz++) {
+                consumer.consume(dx, 0, dz, dx, 1, dz);
+            }
+        }
+
+        for (int dy = 0; dy <= 1; dy++) {
+            for (int dz = 0; dz <= 1; dz++) {
+                consumer.consume(0, dy, dz, 1, dy, dz);
+            }
+        }
+    }
+
+    public static List<Vec3> verticesAndEdgeMidpoints(AABB box) {
+        List<Vec3> result = new ArrayList<>();
+        for (int xi = 0; xi <= 2; xi++) {
+            for (int yi = 0; yi <= 2; yi++) {
+                for (int zi = 0; zi <= 2; zi++) {
+                    if (xi != 1 || yi != 1 || zi != 1) {
+                        double x = box.minX + (xi / 2.0) * (box.maxX - box.minX);
+                        double y = box.minY + (yi / 2.0) * (box.maxY - box.minY);
+                        double z = box.minZ + (zi / 2.0) * (box.maxZ - box.minZ);
+
+                        result.add(new Vec3(x, y, z));
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public static Vec3 alignToBoxSurface(AABB box, Vec3 pos, int gridCount) {
+        double x = pos.x;
+        double y = pos.y;
+        double z = pos.z;
+
+        if (x < box.minX) x = box.minX;
+        if (y < box.minY) y = box.minY;
+        if (z < box.minZ) z = box.minZ;
+        if (x > box.maxX) x = box.maxX;
+        if (y > box.maxY) y = box.maxY;
+        if (z > box.maxZ) z = box.maxZ;
+
+        double boxSizeX = box.getXsize();
+        double boxSizeY = box.getYsize();
+        double boxSizeZ = box.getZsize();
+
+        double xOffset = x - box.minX;
+        double yOffset = y - box.minY;
+        double zOffset = z - box.minZ;
+
+        // align to grid
+        xOffset = Math.round(xOffset * gridCount) / (double) gridCount;
+        yOffset = Math.round(yOffset * gridCount) / (double) gridCount;
+        zOffset = Math.round(zOffset * gridCount) / (double) gridCount;
+
+        // align to the nearest surface
+        double distanceToXMin = xOffset;
+        double distanceToXMax = boxSizeX - xOffset;
+        double distanceToYMin = yOffset;
+        double distanceToYMax = boxSizeY - yOffset;
+        double distanceToZMin = zOffset;
+        double distanceToZMax = boxSizeZ - zOffset;
+
+        double minDistance = Math.min(
+            Math.min(distanceToXMin, distanceToXMax),
+            Math.min(
+                Math.min(distanceToYMin, distanceToYMax),
+                Math.min(distanceToZMin, distanceToZMax)
+            )
+        );
+
+        if (minDistance == distanceToXMin) {
+            xOffset = 0;
+        }
+        else if (minDistance == distanceToXMax) {
+            xOffset = boxSizeX;
+        }
+        else if (minDistance == distanceToYMin) {
+            yOffset = 0;
+        }
+        else if (minDistance == distanceToYMax) {
+            yOffset = boxSizeY;
+        }
+        else if (minDistance == distanceToZMin) {
+            zOffset = 0;
+        }
+        else if (minDistance == distanceToZMax) {
+            zOffset = boxSizeZ;
+        }
+
+        return new Vec3(
+            box.minX + xOffset, box.minY + yOffset, box.minZ + zOffset
+        );
+    }
+
+    @FunctionalInterface
+    public static interface SwappingFunc {
+        void swap(int validElementIndex, int invalidElementIndex);
+    }
+
+    /**
+     * Compacts an array in-place, by moving valid elements at the end to
+     * fill in the places of invalid elements in the beginning.
+     * After using this, all valid elements will be at the beginning of the array without gaps.
+     * @param arraySize size of the array
+     * @param isElementValid predicate that returns true if the element at the
+     * @param swap function that swaps a valid element with an invalid element.
+     *             Its first argument is the index of a valid element on the right side,
+     *             and its second argument is the index of an invalid element on the left side.
+     * @return number of valid elements in the beginning of the array
+     */
+    public static int compactArrayStorage(
+        int arraySize,
+        IntPredicate isElementValid,
+        SwappingFunc swap
+    ) {
+        int validElementCount = 0;
+        int invalidElementCount = 0;
+
+        while (validElementCount + invalidElementCount < arraySize) {
+            if (isElementValid.test(validElementCount)) {
+                validElementCount++;
+            }
+            else {
+                // the element at `validElementCount` is invalid
+                invalidElementCount++;
+                int invalidElementIndex = arraySize - invalidElementCount;
+
+                while (invalidElementIndex > validElementCount) {
+                    if (isElementValid.test(invalidElementIndex)) {
+                        // the element at `invalidElementIndex` is valid
+                        swap.swap(invalidElementIndex, validElementCount);
+                        validElementCount++;
+                        break;
+                    }
+                    else {
+                        invalidElementCount++;
+                        invalidElementIndex = arraySize - invalidElementCount;
+                    }
+                }
+            }
+        }
+
+        return validElementCount;
+    }
+
+    public static <T> Stream<T> listReverseStream(List<T> list) {
+        return Streams.stream(new Iterator<T>() {
+            int index = list.size() - 1;
+
+            @Override
+            public boolean hasNext() {
+                return index >= 0;
+            }
+
+            @Override
+            public T next() {
+                int i = index;
+                index -= 1;
+                return list.get(i);
+            }
+        });
     }
 }
