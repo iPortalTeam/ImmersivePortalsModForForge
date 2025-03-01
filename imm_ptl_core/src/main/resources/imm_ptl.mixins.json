@@ -6,7 +6,6 @@
   "refmap": "mixins.imm_ptl.refmap.json",
   "mixins": [
     "common.MixinClipContext",
-    "common.MixinCommands",
     "common.MixinConnection_Debug",
     "common.MixinDedicatedServer",
     "common.MixinEntityAccess",

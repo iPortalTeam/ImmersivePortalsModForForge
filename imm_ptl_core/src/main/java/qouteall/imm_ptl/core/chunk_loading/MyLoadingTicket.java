@@ -34,7 +34,7 @@ public class MyLoadingTicket {
         );
     
     public static DistanceManager getTicketManager(ServerLevel world) {
-        return ((IEServerChunkManager) world.getChunkSource()).getTicketManager();
+        return ((IEServerChunkManager) world.getChunkSource()).ip_getDistanceManager();
     }
     
     public static final WeakHashMap<ServerLevel, LongSortedSet>
