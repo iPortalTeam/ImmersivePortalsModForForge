@@ -6,7 +6,7 @@ import net.minecraft.world.phys.Vec3;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.teleportation.PortalCollisionHandler;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public interface IEEntity {
     void ip_notifyCollidingWithPortal(Entity portal);
@@ -20,11 +20,13 @@ public interface IEEntity {
     
     @Nullable
     @Deprecated
-    Portal getCollidingPortal();
+    Portal ip_getCollidingPortal();
     
-    void tickCollidingPortal();
+    void ip_tickCollidingPortal();
     
-    boolean isRecentlyCollidingWithPortal();
+    boolean ip_isCollidingWithPortal();
+
+    boolean ip_isRecentlyCollidingWithPortal();
     
     void ip_clearCollidingPortal();
     

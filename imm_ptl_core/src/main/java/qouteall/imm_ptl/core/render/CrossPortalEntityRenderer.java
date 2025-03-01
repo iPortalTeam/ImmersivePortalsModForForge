@@ -59,7 +59,7 @@ public class CrossPortalEntityRenderer {
     private static void onClientTick() {
         collidedEntities.entrySet().removeIf(entry ->
             entry.getKey().isRemoved() ||
-                ((IEEntity) entry.getKey()).getCollidingPortal() == null
+                ((IEEntity) entry.getKey()).ip_getCollidingPortal() == null
         );
     }
     
@@ -68,7 +68,7 @@ public class CrossPortalEntityRenderer {
             return;
         }
         
-        Portal collidingPortal = ((IEEntity) entity).getCollidingPortal();
+        Portal collidingPortal = ((IEEntity) entity).ip_getCollidingPortal();
         if (collidingPortal != null) {
             collidedEntities.put(entity, null);
         }
@@ -110,7 +110,7 @@ public class CrossPortalEntityRenderer {
         }
         if (!PortalRendering.isRendering()) {
             if (collidedEntities.containsKey(entity)) {
-                Portal collidingPortal = ((IEEntity) entity).getCollidingPortal();
+                Portal collidingPortal = ((IEEntity) entity).ip_getCollidingPortal();
                 if (collidingPortal == null) {
                     //Helper.err("Colliding Portal Record Invalid " + entity);
                     return;
@@ -144,7 +144,7 @@ public class CrossPortalEntityRenderer {
             return;
         }
         collidedEntities.keySet().forEach(entity -> {
-            Portal collidingPortal = ((IEEntity) entity).getCollidingPortal();
+            Portal collidingPortal = ((IEEntity) entity).ip_getCollidingPortal();
             if (collidingPortal == null) {
                 //Helper.err("Colliding Portal Record Invalid " + entity);
                 return;
@@ -352,7 +352,7 @@ public class CrossPortalEntityRenderer {
         }
         if (PortalRendering.isRendering()) {
             PortalLike renderingPortal = PortalRendering.getRenderingPortal();
-            Portal collidingPortal = ((IEEntity) entity).getCollidingPortal();
+            Portal collidingPortal = ((IEEntity) entity).ip_getCollidingPortal();
             
             if (entity instanceof Player && !renderingPortal.getDoRenderPlayer()) {
                 return false;

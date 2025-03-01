@@ -15,7 +15,6 @@ import qouteall.imm_ptl.core.ducks.IEEntity;
 import qouteall.imm_ptl.core.ducks.IEServerPlayNetworkHandler;
 import qouteall.imm_ptl.core.ducks.IEServerPlayerEntity;
 import qouteall.imm_ptl.core.mixin.common.MixinEntityAccess;
-import qouteall.imm_ptl.core.network.IPNetworking;
 import qouteall.imm_ptl.core.platform_specific.O_O;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.Dim_Confirm;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
@@ -32,7 +31,6 @@ import javax.annotation.Nullable;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -447,7 +445,7 @@ public class ServerTeleportationManager {
         for (ServerLevel world : MiscHelper.getServer().getAllLevels()) {
             for (Entity entity : world.getAllEntities()) {
                 if (!(entity instanceof ServerPlayer)) {
-                    Portal collidingPortal = ((IEEntity) entity).getCollidingPortal();
+                    Portal collidingPortal = ((IEEntity) entity).ip_getCollidingPortal();
                     
                     if (collidingPortal != null && collidingPortal.getIsGlobal()) {
                         if (shouldEntityTeleport(collidingPortal, entity)) {

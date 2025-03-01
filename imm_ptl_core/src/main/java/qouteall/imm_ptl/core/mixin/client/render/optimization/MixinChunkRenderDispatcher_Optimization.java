@@ -56,7 +56,7 @@ public abstract class MixinChunkRenderDispatcher_Optimization {
     private Executor executor;
     
     @Redirect(
-        method = "<init>",
+        method = "Lnet/minecraft/client/renderer/chunk/ChunkRenderDispatcher;<init>(Lnet/minecraft/client/multiplayer/ClientLevel;Lnet/minecraft/client/renderer/LevelRenderer;Ljava/util/concurrent/Executor;ZLnet/minecraft/client/renderer/ChunkBufferBuilderPack;I)V",
         at = @At(
             value = "INVOKE",
             target = "Ljava/lang/Math;max(II)I",
@@ -73,7 +73,7 @@ public abstract class MixinChunkRenderDispatcher_Optimization {
     
     // inject on constructor seems to be not working normally, so use redirect
     @Redirect(
-        method = "<init>",
+        method = "Lnet/minecraft/client/renderer/chunk/ChunkRenderDispatcher;<init>(Lnet/minecraft/client/multiplayer/ClientLevel;Lnet/minecraft/client/renderer/LevelRenderer;Ljava/util/concurrent/Executor;ZLnet/minecraft/client/renderer/ChunkBufferBuilderPack;I)V",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/util/thread/ProcessorMailbox;create(Ljava/util/concurrent/Executor;Ljava/lang/String;)Lnet/minecraft/util/thread/ProcessorMailbox;"

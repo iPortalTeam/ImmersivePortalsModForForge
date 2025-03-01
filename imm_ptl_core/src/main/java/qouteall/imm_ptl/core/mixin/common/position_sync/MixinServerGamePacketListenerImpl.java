@@ -235,7 +235,7 @@ public abstract class MixinServerGamePacketListenerImpl implements IEServerPlayN
         if (IPGlobal.serverTeleportationManager.isJustTeleported(player, 100)) {
             return false;
         }
-        if (((IEEntity) player).getCollidingPortal() != null) {
+        if (((IEEntity) player).ip_getCollidingPortal() != null) {
             return false;
         }
         boolean portalsNearby = IPMcHelper.getNearbyPortals(
@@ -310,7 +310,7 @@ public abstract class MixinServerGamePacketListenerImpl implements IEServerPlayN
         if (IPGlobal.looseMovementCheck) {
             return true;
         }
-        if (((IEEntity) player).getCollidingPortal() != null) {
+        if (((IEEntity) player).ip_getCollidingPortal() != null) {
             return true;
         }
         boolean portalsNearby = IPMcHelper.getNearbyPortals(player, 16).findFirst().isPresent();

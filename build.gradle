@@ -5,7 +5,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.0.+' //, changing: true
         classpath 'org.spongepowered:mixingradle:0.7.+' // MixinGradle
         classpath 'org.parchmentmc:librarian:1.+'
     }
@@ -43,6 +43,10 @@ allprojects {
             maven { url "https://maven.shedaniel.me/" }
         }
         maven {
+            name "createmod maven"
+            url "https://maven.createmod.net/"
+        }
+        maven {
             name "theillusivec4"
             url = "https://maven.theillusivec4.top/"
         }
@@ -70,7 +74,8 @@ allprojects {
         api fg.deobf("teamtwilight:twilightforest:${project.twilightforest_version}:universal")
 //        api fg.deobf("curse.maven:twilightforest-227639:${project.twilightforest_fileid}")
         // Flywheel
-        compileOnly fg.deobf("com.jozufozu.flywheel:flywheel-forge-1.19.3:${project.flywheel_version}") // TODO @Nick1st there's no flywheel yet
+//        compileOnly fg.deobf("com.jozufozu.flywheel:flywheel-forge-1.19.3:${project.flywheel_version}") // TODO @Nick1st there's no flywheel yet
+        api fg.deobf("dev.engine-room.flywheel:flywheel-forge-${minecraft_version}:${flywheel_version}")
         // Rubidium
         //api fg.deobf("curse.maven:rubidium-574856:${project.rubidium_fileid}")
         api fg.deobf("curse.maven:sodium-908741:${project.embeddium_fileid}")

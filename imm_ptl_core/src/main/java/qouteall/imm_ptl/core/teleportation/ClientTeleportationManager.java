@@ -5,7 +5,6 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.util.Tuple;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -24,7 +23,6 @@ import qouteall.imm_ptl.core.ducks.IEMinecraftClient;
 import qouteall.imm_ptl.core.ducks.IEParticleManager;
 import qouteall.imm_ptl.core.mixin.common.MixinEntityAccess;
 import qouteall.imm_ptl.core.network.PacketRedirectionClient;
-import qouteall.imm_ptl.core.network.IPNetworkingClient;
 import qouteall.imm_ptl.core.platform_specific.O_O;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.Teleport;
@@ -473,7 +471,7 @@ public class ClientTeleportationManager {
     private void changePlayerMotionIfCollidingWithPortal() {
         LocalPlayer player = client.player;
         
-        Portal portal = ((IEEntity) player).getCollidingPortal();
+        Portal portal = ((IEEntity) player).ip_getCollidingPortal();
         
         if (portal != null) {
             if (PortalExtension.get(portal).motionAffinity > 0) {
@@ -515,7 +513,7 @@ public class ClientTeleportationManager {
         }
         
         AABB playerBoundingBox = player.getBoundingBox();
-        Portal collidingPortal = ((IEEntity) player).getCollidingPortal();
+        Portal collidingPortal = ((IEEntity) player).ip_getCollidingPortal();
         
         Direction gravityDir = GravityChangerInterface.invoker.getGravityDirection(player);
         Direction levitationDir = gravityDir.getOpposite();
@@ -601,7 +599,7 @@ public class ClientTeleportationManager {
                 Helper.getCoordinate(expectedPos, levitationDir.getAxis())
             );
             
-            Portal currentCollidingPortal = ((IEEntity) player).getCollidingPortal();
+            Portal currentCollidingPortal = ((IEEntity) player).ip_getCollidingPortal();
             if (currentCollidingPortal != null) {
                 Vec3 eyePos = McHelper.getEyePos(player);
                 Vec3 newEyePos = newPos.add(McHelper.getEyeOffset(player));

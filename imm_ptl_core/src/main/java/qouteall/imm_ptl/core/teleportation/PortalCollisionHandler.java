@@ -349,7 +349,7 @@ public class PortalCollisionHandler {
             p -> true
         ).forEach(p -> CollisionHelper.notifyCollidingPortals(p, partialTicks));
         
-        // don't tickCollidingPortal() as it only removes collisions
+        // don't ip_tickCollidingPortal() as it only removes collisions
         
         McHelper.setEyePos(entity, newEyePos, newLastTickEyePos);
         McHelper.updateBoundingBox(entity);

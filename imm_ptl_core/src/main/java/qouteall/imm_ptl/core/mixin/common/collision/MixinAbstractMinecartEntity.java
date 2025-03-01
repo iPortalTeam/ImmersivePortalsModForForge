@@ -19,7 +19,7 @@ public class MixinAbstractMinecartEntity {
 //        at = @At("HEAD")
 //    )
 //    private void onTick(CallbackInfo ci) {
-//        ((IEEntity) this).tickCollidingPortal(1);
+//        ((IEEntity) this).ip_tickCollidingPortal(1);
 //    }
     
     @Inject(

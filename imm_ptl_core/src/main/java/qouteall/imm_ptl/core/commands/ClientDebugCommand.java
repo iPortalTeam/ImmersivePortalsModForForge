@@ -5,7 +5,6 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -41,7 +40,6 @@ import net.minecraft.world.level.entity.EntityTickList;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -195,7 +193,7 @@ public class ClientDebugCommand {
             .literal("get_player_colliding_portal_client")
             .executes(context -> {
                 Portal collidingPortal =
-                    ((IEEntity) Minecraft.getInstance().player).getCollidingPortal();
+                    ((IEEntity) Minecraft.getInstance().player).ip_getCollidingPortal();
                 CHelper.printChat(
                     collidingPortal != null ? collidingPortal.toString() : "null"
                 );
