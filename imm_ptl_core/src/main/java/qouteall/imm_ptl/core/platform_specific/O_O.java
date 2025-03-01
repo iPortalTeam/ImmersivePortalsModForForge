@@ -56,7 +56,7 @@ public class O_O {
 
     public static void loadConfigFabric() { // TODO @Nick1st Remove or change this, as it's no longer in the upstream
         Helper.log("Loading Immersive Portals config");
-        IPConfig ipConfig = IPConfig.readConfig();
+        IPConfig ipConfig = IPConfig.getConfig();
         ipConfig.onConfigChanged();
         ipConfig.saveConfigFile();
     }

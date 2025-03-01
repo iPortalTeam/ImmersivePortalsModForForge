@@ -22,7 +22,6 @@ import qouteall.imm_ptl.peripheral.alternate_dimension.ChaosBiomeSource;
 import qouteall.imm_ptl.peripheral.alternate_dimension.ErrorTerrainGenerator;
 import qouteall.imm_ptl.peripheral.alternate_dimension.FormulaGenerator;
 import qouteall.imm_ptl.peripheral.alternate_dimension.NormalSkylandGenerator;
-import qouteall.imm_ptl.peripheral.dim_stack.DimStackGameRule;
 import qouteall.imm_ptl.peripheral.dim_stack.DimStackManagement;
 import qouteall.imm_ptl.peripheral.guide.IPOuterClientMisc;
 import qouteall.imm_ptl.peripheral.mixin.common.end_portal.IEEndDragonFight;
@@ -53,8 +52,7 @@ public class PeripheralModMain {
         FormulaGenerator.init();
         
         IntrinsicPortalGeneration.init();
-        
-        DimStackGameRule.init();
+
         DimStackManagement.init();
         
         AlternateDimensions.init();

@@ -3,6 +3,7 @@ package qouteall.q_misc_util.api;
 import com.mojang.serialization.Lifecycle;
 import net.minecraft.core.DefaultedMappedRegistry;
 import net.minecraft.core.Holder;
+import net.minecraft.core.LayeredRegistryAccess;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
@@ -14,16 +15,18 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
-import net.minecraft.world.level.levelgen.WorldGenSettings;
 import net.minecraft.world.level.levelgen.WorldOptions;
+import net.minecraftforge.common.MinecraftForge;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import qouteall.q_misc_util.dimension.DimensionMisc;
 import qouteall.q_misc_util.dimension.DynamicDimensionsImpl;
 import qouteall.q_misc_util.dimension.ExtraDimensionStorage;
+import qouteall.q_misc_util.forge.events.ServerDimensionsLoadEvent;
+import qouteall.q_misc_util.mixin.dimension.IELayeredRegistryAccess;
 import qouteall.q_misc_util.mixin.dimension.IEMappedRegistry;
 
+import java.util.List;
 import java.util.Set;
 
 public class DimensionAPI {
@@ -154,16 +157,26 @@ public class DimensionAPI {
 //            }
 //        );
     
-//    /**
-//     * Will be triggered when the client receives dimension data synchronization
-//     */
-//    public static final Event<DynamicUpdateListener> clientDimensionUpdateEvent = //TODO Reimplement this !IMPORTANT
-//        EventFactory.createArrayBacked(
-//            DynamicUpdateListener.class,
-//            arr -> (set) -> {
-//                for (DynamicUpdateListener runnable : arr) {
-//                    runnable.run(set);
-//                }
-//            }
-//        );
+    /**
+     * This is called when opening "Add Dimension" GUI in dimension stack
+     */
+    public static MappedRegistry<LevelStem> collectCustomDimensions(
+        RegistryAccess.Frozen worldGenLoadContext,
+        WorldOptions options
+    ) {
+        MappedRegistry<LevelStem> subDimensionRegistry = new MappedRegistry<>(Registries.LEVEL_STEM, Lifecycle.stable());
+
+        RegistryAccess.Frozen subRegistryAccess =
+            new RegistryAccess.ImmutableRegistryAccess(List.of(subDimensionRegistry)).freeze();
+
+        LayeredRegistryAccess<Integer> wrappedLayeredRegistryAccess = IELayeredRegistryAccess.ip_init(
+            List.of(1, 2),
+            List.of(worldGenLoadContext, subRegistryAccess)
+        );
+        RegistryAccess.Frozen wrappedRegistryAccess = wrappedLayeredRegistryAccess.compositeAccess();
+
+        MinecraftForge.EVENT_BUS.post(new ServerDimensionsLoadEvent(options, wrappedRegistryAccess));
+
+        return subDimensionRegistry;
+    }
 }

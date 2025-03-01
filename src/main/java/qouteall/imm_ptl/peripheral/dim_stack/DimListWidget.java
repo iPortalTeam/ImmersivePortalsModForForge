@@ -1,21 +1,26 @@
 package qouteall.imm_ptl.peripheral.dim_stack;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import qouteall.q_misc_util.Helper;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.jetbrains.annotations.Nullable;
 
 public class DimListWidget extends AbstractSelectionList<DimEntryWidget> {
-    public final List<DimEntryWidget> entryWidgets = new ArrayList<>();
+
+    public static final int ROW_WIDTH = 300;
+
+    public static interface DraggingCallback {
+        void run(int selectedIndex, int mouseOnIndex);
+    }
+
     public final Screen parent;
     private final Type type;
-    
+    @Nullable
+    private final DraggingCallback draggingCallback;
+
     @Override
     public void updateNarration(NarrationElementOutput builder) {
     
@@ -32,28 +37,34 @@ public class DimListWidget extends AbstractSelectionList<DimEntryWidget> {
         int bottom,
         int itemHeight,
         Screen parent,
-        Type type
+        Type type,
+        @Nullable DraggingCallback draggingCallback
     ) {
         super(Minecraft.getInstance(), width, height, top, bottom, itemHeight);
         this.parent = parent;
         this.type = type;
-    }
-    
-    public void update() {
-        this.clearEntries();
-        this.entryWidgets.forEach(this::addEntry);
+        this.draggingCallback = draggingCallback;
+        setRenderBackground(false);
+        setRenderTopAndBottom(false);
     }
     
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (type == Type.mainDimensionList) {
+        if (type == Type.mainDimensionList && draggingCallback != null) {
             DimEntryWidget selected = getSelected();
-            
+
             if (selected != null) {
                 DimEntryWidget mouseOn = getEntryAtPosition(mouseX, mouseY);
                 if (mouseOn != null) {
                     if (mouseOn != selected) {
-                        switchEntries(selected, mouseOn);
+                        int selectedIndex = children().indexOf(selected);
+                        int mouseOnIndex = children().indexOf(mouseOn);
+                        if (selectedIndex != -1 && mouseOnIndex != -1) {
+                            draggingCallback.run(selectedIndex, mouseOnIndex);
+                        }
+                        else {
+                            Helper.err("Invalid dragging");
+                        }
                     }
                 }
             }
@@ -62,24 +73,14 @@ public class DimListWidget extends AbstractSelectionList<DimEntryWidget> {
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
     }
     
-    private void switchEntries(DimEntryWidget a, DimEntryWidget b) {
-        int i1 = entryWidgets.indexOf(a);
-        int i2 = entryWidgets.indexOf(b);
-        if (i1 == -1 || i2 == -1) {
-            Helper.err("Dimension Stack GUI Abnormal");
-            return;
-        }
-        
-        DimEntryWidget temp = entryWidgets.get(i1);
-        entryWidgets.set(i1, entryWidgets.get(i2));
-        entryWidgets.set(i2, temp);
-        
-        update();
-    }
-    
-    
+    // make it wider
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
-        super.render(guiGraphics, mouseX, mouseY, delta);
+    public int getRowWidth() {
+        return ROW_WIDTH;
+    }
+
+    @Override
+    protected int getScrollbarPosition() {
+        return (width - ROW_WIDTH) / 2 + ROW_WIDTH;
     }
 }

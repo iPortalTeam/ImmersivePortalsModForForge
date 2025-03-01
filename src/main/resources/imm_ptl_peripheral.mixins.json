@@ -27,7 +27,7 @@
     "client.alternate_dimension.MixinFogRenderer_A",
     "client.alternate_dimension.MixinWorldRenderer_A",
     "client.dim_stack.MixinCreateWorldScreen",
-    "client.dim_stack.MixinMoreTabCreateWorldScreen"
+    "client.dim_stack.MixinCreateWorldScreenMoreTab"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,14 +1,15 @@
 package qouteall.imm_ptl.peripheral.dim_stack;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import qouteall.imm_ptl.core.CHelper;
+import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.my_util.GuiHelper;
+
+import java.util.OptionalInt;
 
 public class DimStackEntryEditScreen extends Screen {
     
@@ -38,7 +39,11 @@ public class DimStackEntryEditScreen extends Screen {
     
     private final Button helpButton;
     
-    protected DimStackEntryEditScreen(DimStackScreen parent, DimEntryWidget editing) {
+    protected DimStackEntryEditScreen(
+        DimStackScreen parent,
+        DimEntryWidget editing,
+        Runnable callback
+    ) {
         super(Component.translatable("imm_ptl.dim_stack_edit_screen"));
         
         this.parent = parent;
@@ -54,7 +59,7 @@ public class DimStackEntryEditScreen extends Screen {
         
         flipButton =
             Button.builder(
-                Component.translatable(editing.entry.flipped ? "imm_ptl.enabled" : "imm_ptl.disabled"),
+                    Component.translatable(editing.entry.flipped ? "imm_ptl.enabled" : "imm_ptl.disabled"),
                     button -> {
                         editing.entry.flipped = !editing.entry.flipped;
                         button.setMessage(
@@ -106,7 +111,7 @@ public class DimStackEntryEditScreen extends Screen {
         }
         bedrockBlockField.setCursorPosition(0);
         bedrockBlockField.setHighlightPos(0);
-    
+
         connectsPreviousButton = Button.builder(
             Component.translatable(editing.entry.connectsPrevious ? "imm_ptl.enabled" : "imm_ptl.disabled"),
             button -> {
@@ -130,57 +135,29 @@ public class DimStackEntryEditScreen extends Screen {
         finishButton = Button.builder(
             Component.translatable("imm_ptl.finish"),
             button -> {
-                try {
-                    editing.entry.horizontalRotation = Double.parseDouble(horizontalRotationField.getValue());
-                }
-                catch (NumberFormatException e) {
-                    e.printStackTrace();
-                    editing.entry.horizontalRotation = 0;
-                }
+                editing.entry.horizontalRotation =
+                    Helper.parseDouble(horizontalRotationField.getValue()).orElse(0);
                 
-                try {
-                    editing.entry.scale = Double.parseDouble(scaleField.getValue());
-                }
-                catch (NumberFormatException e) {
-                    e.printStackTrace();
-                    editing.entry.scale = 1;
-                }
+                editing.entry.scale =
+                    Helper.parseDouble(scaleField.getValue()).orElse(1);
                 
-                try {
-                    if (!topYField.getValue().isEmpty()) {
-                        editing.entry.topY = Integer.parseInt(topYField.getValue());
-                    }
-                    else {
-                        editing.entry.topY = null;
-                    }
-                }
-                catch (NumberFormatException e) {
-                    e.printStackTrace();
-                    editing.entry.topY = null;
-                }
+                OptionalInt topY = Helper.parseInt(topYField.getValue());
+                editing.entry.topY = topY.isPresent() ? topY.getAsInt() : null;
                 
-                try {
-                    if (!bottomYField.getValue().isEmpty()) {
-                        editing.entry.bottomY = Integer.parseInt(bottomYField.getValue());
-                    }
-                    else {
-                        editing.entry.bottomY = null;
-                    }
-                }
-                catch (NumberFormatException e) {
-                    e.printStackTrace();
-                    editing.entry.bottomY = null;
-                }
+                OptionalInt bottomY = Helper.parseInt(bottomYField.getValue());
+                editing.entry.bottomY = bottomY.isPresent() ? bottomY.getAsInt() : null;
                 
                 editing.entry.bedrockReplacementStr = bedrockBlockField.getValue();
                 
                 Minecraft.getInstance().setScreen(parent);
+                callback.run();
             }
         ).build();
         
         this.helpButton = DimStackScreen.createHelpButton(this);
     }
     
+
     @Override
     public void tick() {
         super.tick();
@@ -304,7 +281,7 @@ public class DimStackEntryEditScreen extends Screen {
             ),
             GuiHelper.elasticBlankSpace()
         );
-    
+
         helpButton.setX(width - 50);
         helpButton.setY(5);
         helpButton.setWidth(20);
