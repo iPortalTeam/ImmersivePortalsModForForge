@@ -20,6 +20,7 @@ import qouteall.q_misc_util.forge.events.ClientDimensionUpdateEvent;
 import qouteall.q_misc_util.mixin.client.IEClientPacketListener_Misc;
 
 import java.util.Set;
+import java.util.function.Supplier;
 
 public class MiscNetworking {
     public static final ResourceLocation id_stcRemote =

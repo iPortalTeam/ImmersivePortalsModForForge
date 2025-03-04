@@ -22,6 +22,61 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class PortalUtils {
+    /**
+     * Note: It only considers portals. It does not consider blocks and other entities.
+     * Note: Invisible portals are also considered in raytracing. For visible-only use the predicate.
+     */
+    @NotNull
+    public static Optional<Pair<Portal, Vec3>> raytracePortals(
+        Level world, Vec3 from, Vec3 to,
+        boolean includeGlobalPortal,
+        Predicate<Portal> predicate
+    ) {
+        return lenientRayTracePortals(world, from, to, includeGlobalPortal, predicate, 0.001);
+    }
+
+    @NotNull
+    public static Optional<Pair<Portal, Vec3>> lenientRayTracePortals(
+        Level world, Vec3 from, Vec3 to, boolean includeGlobalPortal,
+        Predicate<Portal> predicate, double leniency
+    ) {
+        Stream<Portal> portalStream = McHelper.getEntitiesNearby(
+            world,
+            from,
+            Portal.class,
+            from.distanceTo(to)
+        ).stream();
+        if (includeGlobalPortal) {
+            List<Portal> globalPortals = GlobalPortalStorage.getGlobalPortals(world);
+            portalStream = Streams.concat(
+                portalStream,
+                globalPortals.stream()
+            );
+        }
+        return portalStream.map(
+            portal -> new Pair<Portal, Vec3>(
+                portal, portal.lenientRayTrace(from, to, leniency)
+            )
+        ).filter(
+            portalAndHitPos -> portalAndHitPos.getSecond() != null
+                && predicate.test(portalAndHitPos.getFirst())
+        ).min(
+            Comparator.comparingDouble(
+                portalAndHitPos -> portalAndHitPos.getSecond().distanceToSqr(from)
+            )
+        );
+    }
+
+    public static Optional<Pair<Portal, Vec3>> raytracePortalFromEntityView(
+        Entity player, float tickDelta, double maxDistance, boolean includeGlobalPortal,
+        Predicate<Portal> predicate
+    ) {
+        Vec3 from = player.getEyePosition(tickDelta);
+        Vec3 to = from.add(player.getViewVector(tickDelta).scale(maxDistance));
+        Level world = player.level();
+        return raytracePortals(world, from, to, includeGlobalPortal, predicate);
+    }
+
     public static record PortalAwareRaytraceResult(
         Level world,
         BlockHitResult hitResult,
@@ -66,8 +121,16 @@ public class PortalUtils {
         }
         
         Vec3 endingPoint = startingPoint.add(direction.scale(maxDistance));
-        Optional<Pair<Portal, Vec3>> portalHit = PortalManipulation.raytracePortals(
-            world, startingPoint, endingPoint, true
+        Optional<Pair<Portal, Vec3>> portalHit = raytracePortals(
+            world, startingPoint, endingPoint, true,
+            p -> {
+                if (entity instanceof Player player) {
+                    return p.isInteractableBy(player);
+                }
+                else {
+                    return p.isVisible();
+                }
+            }
         );
         
         ClipContext context = new ClipContext(
@@ -109,6 +172,7 @@ public class PortalUtils {
         if (shouldContinueRaytraceInsidePortal) {
             double portalDistance = portalHit.get().getSecond().distanceTo(startingPoint);
             Portal portal = portalHit.get().getFirst();
+
             Vec3 newStartingPoint = portal.transformPoint(portalHit.get().getSecond())
                 .add(portal.getContentDirection().scale(0.001));
             Vec3 newDirection = portal.transformLocalVecNonScale(direction);
@@ -130,5 +194,13 @@ public class PortalUtils {
         else {
             return null;
         }
+    }
+
+    @Deprecated
+    public static Optional<Pair<Portal, Vec3>> raytracePortalsFromPlayer(
+        Player player, float tickDelta, double maxDistance, boolean includeGlobalPortal,
+        Predicate<Portal> p
+    ) {
+        return raytracePortalFromEntityView(player, tickDelta, maxDistance, includeGlobalPortal, p);
     }
 }

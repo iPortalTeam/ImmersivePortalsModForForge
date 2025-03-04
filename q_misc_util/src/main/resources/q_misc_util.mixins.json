@@ -5,6 +5,7 @@
   "refmap": "mixins.imm_ptl.refmap.json",
   "mixins": [
     "IELevelStorageAccess_Misc",
+    "MixinLevelStorageSource_Fix",
     "MixinMappedRegistry",
     "MixinMinecraftServer_Misc",
     "MixinServerGamePacketListenerImpl_Misc",
@@ -14,6 +15,7 @@
     "dimension.MixinLevelProperties_D",
     "dimension.MixinMinecraftServer_D",
     "dimension.MixinPlayerList_Misc",
+    "dimension.MixinWorldDimensions",
     "dimension.MixinWorldGenSettings"
   ],
   "client": [

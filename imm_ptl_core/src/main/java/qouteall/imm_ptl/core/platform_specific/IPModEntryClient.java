@@ -91,10 +91,10 @@ public class IPModEntryClient {
             ExperimentalIrisPortalRenderer.init();
             
             IPGlobal.clientTaskList.addTask(MyTaskList.oneShotTask(() -> {
-                if (IPGlobal.enableWarning) {
+                if (IPConfig.getConfig().shouldDisplayWarning("iris")) {
                     CHelper.printChat(
                         Component.translatable("imm_ptl.iris_warning")
-                            .append(IPMcHelper.getDisableWarningText())
+                            .append(IPMcHelper.getDisableWarningText("iris"))
                     );
                 }
             }));

@@ -37,9 +37,6 @@ public class ExtraDimensionStorage {
     
     public static void init() {
         MinecraftForge.EVENT_BUS.register(ExtraDimensionStorage.class);
-//        DimensionAPI.serverDimensionsLoadEvent.register( //TODO Reimplement this !DONE
-//            ExtraDimensionStorage::loadExtraDimensions
-//        );
     }
 
     @SubscribeEvent

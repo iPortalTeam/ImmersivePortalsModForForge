@@ -14,10 +14,11 @@ import qouteall.q_misc_util.forge.networking.Message;
 @Mixin(PlayerList.class)
 public class MixinPlayerList_Misc {
     @Inject(
-        method = "placeNewPlayer(Lnet/minecraft/network/Connection;Lnet/minecraft/server/level/ServerPlayer;)V",
+        method = "placeNewPlayer",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/network/protocol/game/ClientboundLoginPacket;<init>(IZLnet/minecraft/world/level/GameType;Lnet/minecraft/world/level/GameType;Ljava/util/Set;Lnet/minecraft/core/RegistryAccess$Frozen;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/resources/ResourceKey;JIIIZZZZLjava/util/Optional;I)V"
+            target = "Lnet/minecraft/network/protocol/game/ClientboundLoginPacket;<init>(IZLnet/minecraft/world/level/GameType;Lnet/minecraft/world/level/GameType;Ljava/util/Set;Lnet/minecraft/core/RegistryAccess$Frozen;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/resources/ResourceKey;JIIIZZZZLjava/util/Optional;I)V",
+            shift = At.Shift.AFTER
         )
     )
     private void onConnectionEstablished(
@@ -26,6 +27,5 @@ public class MixinPlayerList_Misc {
         CallbackInfo ci
     ) {
         Message.sendToPlayer(new Dim_Sync(), player);
-        //player.connection.send(MiscNetworking.createDimSyncPacket());
     }
 }

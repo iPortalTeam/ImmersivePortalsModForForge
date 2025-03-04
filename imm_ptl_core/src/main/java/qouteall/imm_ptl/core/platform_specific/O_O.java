@@ -53,17 +53,6 @@ public class O_O {
     public static Path getGameDir() {
         return FMLPaths.GAMEDIR.get();
     }
-
-    public static void loadConfigFabric() { // TODO @Nick1st Remove or change this, as it's no longer in the upstream
-        Helper.log("Loading Immersive Portals config");
-        IPConfig ipConfig = IPConfig.getConfig();
-        ipConfig.onConfigChanged();
-        ipConfig.saveConfigFile();
-    }
-    
-    public static void onServerConstructed() { // TODO @Nick1st Remove this if unused
-        // forge version initialize server config
-    }
     
     private static final BlockState obsidianState = Blocks.OBSIDIAN.defaultBlockState();
     
@@ -136,7 +125,20 @@ public class O_O {
             return false;
         }
     }
-    
+
+    public static @org.jetbrains.annotations.Nullable String getImmPtlVersion() {
+        if (!FMLEnvironment.production) {
+            return null;
+        }
+
+        return ModList.get()
+                .getModContainerById("imm_ptl_core")
+                .get()
+                .getModInfo()
+                .getVersion()
+                .toString();
+    }
+
     public static boolean shouldUpdateImmPtl(String latestReleaseVersion) { // TODO @Nick1st Implement Forge Version checking
         ArtifactVersion currentVersion = ModList.get().getModContainerById("imm_ptl_core").get().getModInfo().getVersion();
         ArtifactVersion latestVersion = new DefaultArtifactVersion(latestReleaseVersion);
@@ -146,6 +148,10 @@ public class O_O {
         }
 
         return false;
+    }
+
+    public static String getIssueLink() {
+        return "https://github.com/iPortalTeam/ImmersivePortalsMod/issues";
     }
 
     @org.jetbrains.annotations.Nullable

@@ -6,7 +6,6 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
@@ -20,7 +19,7 @@ import net.minecraftforge.registries.RegistryObject;
 import qouteall.imm_ptl.peripheral.CommandStickItem;
 import qouteall.imm_ptl.peripheral.PeripheralModMain;
 import qouteall.imm_ptl.peripheral.alternate_dimension.PeripheralRegistries;
-import qouteall.imm_ptl.peripheral.guide.IPOuterClientMisc;
+import qouteall.imm_ptl.peripheral.wand.PortalWandItem;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -41,7 +40,8 @@ public class PeripheralModEntry {
         public InteractionResult useOn(UseOnContext context) {
             if (context.getLevel().isClientSide()) {
                 if (context.getPlayer() != null) {
-                    IPOuterClientMisc.onClientPlacePortalHelper();
+                    // TODO @Nick1st
+                    //IPOuterClientMisc.onClientPlacePortalHelper();
                 }
             }
             
@@ -62,6 +62,7 @@ public class PeripheralModEntry {
     public static final RegistryObject<Block> PORTAL_HELPER_BLOCK = BLOCKS.register("portal_helper", () -> new Block(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).noOcclusion().isRedstoneConductor((a, b, c) -> false)));
     public static final RegistryObject<Item> PORTAL_HELPER_ITEM = ITEMS.register("portal_helper", () -> new PortalHelperItem(PORTAL_HELPER_BLOCK.get(), new Item.Properties()));
     public static final RegistryObject<Item> COMMAND_STICK_ITEM = ITEMS.register("command_stick", () -> new CommandStickItem(new Item.Properties()));
+    public static final RegistryObject<Item> PORTAL_WAND = ITEMS.register("portal_wand", () -> new PortalWandItem(new Item.Properties()));
 
     private static void registerBlockItems() {
         //PeripheralModMain.registerCommandStickTypes();

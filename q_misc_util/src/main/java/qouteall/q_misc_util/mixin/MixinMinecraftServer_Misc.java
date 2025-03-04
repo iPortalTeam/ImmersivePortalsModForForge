@@ -1,8 +1,6 @@
 package qouteall.q_misc_util.mixin;
 
 import com.google.common.collect.Maps;
-import com.mojang.authlib.GameProfileRepository;
-import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.datafixers.DataFixer;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -11,7 +9,6 @@ import net.minecraft.server.WorldStem;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.progress.ChunkProgressListenerFactory;
 import net.minecraft.server.packs.repository.PackRepository;
-import net.minecraft.server.players.GameProfileCache;
 import net.minecraft.util.thread.ReentrantBlockableEventLoop;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.LevelStorageSource;
@@ -73,6 +70,7 @@ public abstract class MixinMinecraftServer_Misc extends ReentrantBlockableEventL
     
     @Override
     public void ip_addDimensionToWorldMap(ResourceKey<Level> dim, ServerLevel world) {
+        // use read-copy-update to avoid concurrency issues
         LinkedHashMap<ResourceKey<Level>, ServerLevel> newMap =
             Maps.<ResourceKey<Level>, ServerLevel>newLinkedHashMap();
         
@@ -80,13 +78,13 @@ public abstract class MixinMinecraftServer_Misc extends ReentrantBlockableEventL
         
         newMap.putAll(oldMap);
         newMap.put(dim, world);
-        
-        // do not directly mutate the map to avoid concurrency issues
+
         this.levels = newMap;
     }
     
     @Override
     public void ip_removeDimensionFromWorldMap(ResourceKey<Level> dimension) {
+        // use read-copy-update to avoid concurrency issues
         LinkedHashMap<ResourceKey<Level>, ServerLevel> newMap =
             Maps.<ResourceKey<Level>, ServerLevel>newLinkedHashMap();
         
@@ -97,8 +95,7 @@ public abstract class MixinMinecraftServer_Misc extends ReentrantBlockableEventL
                 newMap.put(entry.getKey(), entry.getValue());
             }
         }
-        
-        // do not directly mutate the map to avoid concurrency issues
+
         this.levels = newMap;
     }
     

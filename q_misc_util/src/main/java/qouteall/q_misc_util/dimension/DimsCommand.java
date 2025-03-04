@@ -1,7 +1,6 @@
 package qouteall.q_misc_util.dimension;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.minecraft.commands.CommandSourceStack;
@@ -13,8 +12,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.LevelStem;
 import qouteall.q_misc_util.api.DimensionAPI;
-
-import java.util.Optional;
 
 public class DimsCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -41,15 +38,16 @@ public class DimsCommand {
                         cloneDimension(
                             templateDimension, newDimId
                         );
-                        
-//                        context.getSource().sendSuccess(
-//                            Component.literal("Warning: the dynamic dimension feature is not yet stable now"),
-//                            false
-//                        );
-                        
+
                         context.getSource().sendSuccess(() -> Component.literal(
                             "Dynamically added dimension %s".formatted(newDimensionId)
                         ), true);
+
+                        context.getSource().sendSuccess(
+                            () -> Component.literal("Warning: In the current version, dynamic dimension feature is still experimental and not yet stable."),
+                            false
+                        );
+
                         return 0;
                     })
                 )
@@ -66,17 +64,17 @@ public class DimsCommand {
                     DimensionAPI.removeDimensionDynamically(dimension);
                     
                     DimensionAPI.deleteDimensionConfiguration(dimension.dimension());
-                    
-//                    context.getSource().sendSuccess(
-//                        Component.literal("Warning: the dynamic dimension feature is not yet stable now"),
-//                        false
-//                    );
-                    
+
                     context.getSource().sendSuccess(() -> Component.literal(
                         "Dynamically removed dimension %s . Its world file is not yet deleted."
                             .formatted(dimension.dimension().location())
                     ), true);
                     
+                    context.getSource().sendSuccess(
+                        () -> Component.literal("Warning: In the current version, dynamic dimension feature is still experimental and not yet stable."),
+                        false
+                    );
+
                     return 0;
                 })
             

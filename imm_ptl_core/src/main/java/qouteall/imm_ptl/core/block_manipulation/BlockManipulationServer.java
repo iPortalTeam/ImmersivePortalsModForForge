@@ -84,6 +84,7 @@ public class BlockManipulationServer {
             IPGlobal.maxNormalPortalRadius
         ).anyMatch(portal ->
             portal.dimensionTo == dimension &&
+                portal.isInteractableBy(player) &&
                 portal.transformPoint(playerPos).distanceToSqr(pos) <
                     distanceSquare * portal.getScale() * portal.getScale()
         );

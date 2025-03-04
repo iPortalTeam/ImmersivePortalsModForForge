@@ -2,15 +2,18 @@ package qouteall.q_misc_util;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import io.netty.buffer.Unpooled;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -28,14 +31,14 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkDirection;
 import org.apache.commons.lang3.Validate;
+import org.slf4j.Logger;
+import qouteall.q_misc_util.my_util.DQuaternion;
+import qouteall.q_misc_util.my_util.LimitedLogger;
 import qouteall.q_misc_util.forge.networking.Message;
 import qouteall.q_misc_util.forge.networking.Remote_StC;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -46,7 +49,10 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 public class ImplRemoteProcedureCall {
-    public static final Gson gson;
+    private static final Logger LOGGER = LogUtils.getLogger();
+    private static final LimitedLogger LIMITED_LOGGER = new LimitedLogger(100);
+
+    public static final Gson gson = MiscHelper.gson;
     
     private static final ConcurrentHashMap<String, Method> methodCache = new ConcurrentHashMap<>();
     
@@ -56,9 +62,6 @@ public class ImplRemoteProcedureCall {
     private static final JsonParser jsonParser = new JsonParser();
     
     static {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gson = gsonBuilder.create();
-        
         serializerMap = ImmutableMap.<Class, BiConsumer<FriendlyByteBuf, Object>>builder()
             .put(ResourceLocation.class, (buf, o) -> buf.writeResourceLocation(((ResourceLocation) o)))
             .put(ResourceKey.class, (buf, o) -> buf.writeResourceLocation(((ResourceKey) o).location()))
@@ -76,6 +79,14 @@ public class ImplRemoteProcedureCall {
             .put(ItemStack.class, (buf, o) -> serializeByCodec(buf, ItemStack.CODEC, o))
             .put(CompoundTag.class, (buf, o) -> buf.writeNbt(((CompoundTag) o)))
             .put(Component.class, (buf, o) -> buf.writeComponent(((Component) o)))
+            .put(DQuaternion.class, (buf, o) -> {
+                DQuaternion dQuaternion = (DQuaternion) o;
+                buf.writeDouble(dQuaternion.x);
+                buf.writeDouble(dQuaternion.y);
+                buf.writeDouble(dQuaternion.z);
+                buf.writeDouble(dQuaternion.w);
+            })
+            .put(byte[].class, (buf, o) -> buf.writeByteArray(((byte[]) o)))
             .build();
         
         deserializerMap = ImmutableMap.<Type, Function<FriendlyByteBuf, Object>>builder()
@@ -103,11 +114,18 @@ public class ImplRemoteProcedureCall {
             .put(ItemStack.class, buf -> deserializeByCodec(buf, ItemStack.CODEC))
             .put(CompoundTag.class, buf -> buf.readNbt())
             .put(Component.class, buf -> buf.readComponent())
+            .put(DQuaternion.class, buf ->
+                new DQuaternion(
+                    buf.readDouble(), buf.readDouble(), buf.readDouble(), buf.readDouble()
+                )
+            )
+            .put(byte[].class, buf -> buf.readByteArray())
             .build();
     }
     
+    @SuppressWarnings("rawtypes")
     private static Object deserializeByCodec(FriendlyByteBuf buf, Codec codec) {
-        String jsonString = readStringNonClientOnly(buf);
+        String jsonString = buf.readUtf();
         JsonElement jsonElement = jsonParser.parse(jsonString);
         
         return codec.parse(JsonOps.INSTANCE, jsonElement).getOrThrow(
@@ -115,25 +133,21 @@ public class ImplRemoteProcedureCall {
         );
     }
     
-    // readString() is client only
-    private static String readStringNonClientOnly(FriendlyByteBuf buf) {
-        return buf.readUtf(32767);
-    }
-    
-    private static Object deserialize(FriendlyByteBuf buf, Type type) {
+    private static Object deserializeArgument(FriendlyByteBuf buf, Type type) {
         Function<FriendlyByteBuf, Object> deserializer = deserializerMap.get(type);
         if (deserializer == null) {
-            String json = readStringNonClientOnly(buf);
+            String json = buf.readUtf();
             return gson.fromJson(json, type);
         }
         
         return deserializer.apply(buf);
     }
     
-    private static void serialize(FriendlyByteBuf buf, Object object) {
+    private static void serializeArgument(FriendlyByteBuf buf, Object object) {
         BiConsumer<FriendlyByteBuf, Object> serializer = serializerMap.get(object.getClass());
         
         if (serializer == null) {
+            // TODO optimize it
             serializer = serializerMap.entrySet().stream().filter(
                 e -> e.getKey().isAssignableFrom(object.getClass())
             ).findFirst().map(Map.Entry::getValue).orElse(null);
@@ -148,6 +162,7 @@ public class ImplRemoteProcedureCall {
         serializer.accept(buf, object);
     }
     
+    @SuppressWarnings("rawtypes")
     private static void serializeByCodec(FriendlyByteBuf buf, Codec codec, Object object) {
         JsonElement result = (JsonElement) codec.encodeStart(JsonOps.INSTANCE, object).getOrThrow(
             false, e -> {
@@ -180,55 +195,96 @@ public class ImplRemoteProcedureCall {
     
     @OnlyIn(Dist.CLIENT)
     public static Runnable clientReadPacketAndGetHandler(FriendlyByteBuf buf) {
-        String methodPath = readStringNonClientOnly(buf);
+        String methodPath = null;
         
-        Method method = getMethodByPath(methodPath);
-        
-        Type[] genericParameterTypes = method.getGenericParameterTypes();
-        
-        Object[] arguments = new Object[genericParameterTypes.length];
-        
-        for (int i = 0; i < genericParameterTypes.length; i++) {
-            Type parameterType = genericParameterTypes[i];
-            Object obj = deserialize(buf, parameterType);
-            arguments[i] = obj;
+        try {
+            methodPath = buf.readUtf();
+            Method method = getMethodByPath(methodPath);
+
+            Type[] genericParameterTypes = method.getGenericParameterTypes();
+
+            Object[] arguments = new Object[genericParameterTypes.length];
+
+            for (int i = 0; i < genericParameterTypes.length; i++) {
+                Type parameterType = genericParameterTypes[i];
+                Object obj = deserializeArgument(buf, parameterType);
+                arguments[i] = obj;
+            }
+
+            return () -> {
+                try {
+                    method.invoke(null, arguments);
+                }
+                catch (Exception e) {
+                    LIMITED_LOGGER.invoke(() -> {
+                        LOGGER.error("Processing remote procedure call", e);
+                        clientTellFailure();
+                    });
+                }
+            };
         }
-        
-        return () -> {
-            try {
-                method.invoke(null, arguments);
-            }
-            catch (IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException(e);
-            }
-        };
+        catch (Exception e) {
+            String methodPath_ = methodPath;
+            LIMITED_LOGGER.invoke(() -> {
+                LOGGER.error("Failed to parse remote procedure call {}", methodPath_, e);
+                clientTellFailure();
+            });
+
+            return () -> {};
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    private static void clientTellFailure() {
+        Minecraft.getInstance().gui.getChat().addMessage(Component.literal(
+            "The client failed to process a packet from server. See the log for details."
+        ).withStyle(ChatFormatting.RED));
     }
     
     public static Runnable serverReadPacketAndGetHandler(ServerPlayer player, FriendlyByteBuf buf) {
-        String methodPath = readStringNonClientOnly(buf);
-        
-        Method method = getMethodByPath(methodPath);
-        
-        Type[] genericParameterTypes = method.getGenericParameterTypes();
-        
-        Object[] arguments = new Object[genericParameterTypes.length];
-        arguments[0] = player;
-        
-        //the first argument is the player
-        for (int i = 1; i < genericParameterTypes.length; i++) {
-            Type parameterType = genericParameterTypes[i];
-            Object obj = deserialize(buf, parameterType);
-            arguments[i] = obj;
+        String methodPath = null;
+        try {
+            methodPath = buf.readUtf();
+            Method method = getMethodByPath(methodPath);
+
+            Type[] genericParameterTypes = method.getGenericParameterTypes();
+
+            Object[] arguments = new Object[genericParameterTypes.length];
+            arguments[0] = player;
+
+            //the first argument is the player
+            for (int i = 1; i < genericParameterTypes.length; i++) {
+                Type parameterType = genericParameterTypes[i];
+                Object obj = deserializeArgument(buf, parameterType);
+                arguments[i] = obj;
+            }
+
+            return () -> {
+                try {
+                    method.invoke(null, arguments);
+                }
+                catch (Exception e) {
+                    LIMITED_LOGGER.invoke(() -> {
+                        LOGGER.error("Processing remote procedure call {}", player, e);
+                        serverTellFailure(player);
+                    });
+                }
+            };
         }
-        
-        return () -> {
-            try {
-                method.invoke(null, arguments);
-            }
-            catch (IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException(e);
-            }
-        };
+        catch (Exception e) {
+            String methodPath_ = methodPath;
+            LIMITED_LOGGER.invoke(() -> {
+                LOGGER.error("Failed to parse remote procedure call {}", methodPath_, e);
+                serverTellFailure(player);
+            });
+            return () -> {};
+        }
+    }
+
+    private static void serverTellFailure(ServerPlayer player) {
+        player.sendSystemMessage(Component.literal(
+            "The server failed to process a packet sent from client."
+        ).withStyle(ChatFormatting.RED));
     }
     
     public static void serializeStringWithArguments(
@@ -237,7 +293,7 @@ public class ImplRemoteProcedureCall {
         buf.writeUtf(methodPath);
         
         for (Object argument : arguments) {
-            serialize(buf, argument);
+            serializeArgument(buf, argument);
         }
     }
     

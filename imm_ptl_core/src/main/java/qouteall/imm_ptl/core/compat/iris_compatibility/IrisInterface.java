@@ -6,6 +6,7 @@ import net.irisshaders.iris.shadows.ShadowRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import qouteall.q_misc_util.Helper;
 
+import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Field;
 
 public class IrisInterface {
@@ -32,6 +33,11 @@ public class IrisInterface {
         }
         
         public void reloadPipelines() {}
+
+        @Nullable
+        public String getShaderpackName() {
+            return null;
+        }
     }
     
     public static class OnIrisPresent extends Invoker {
@@ -77,6 +83,12 @@ public class IrisInterface {
         @Override
         public void reloadPipelines() {
             Iris.getPipelineManager().destroyPipeline();
+        }
+
+        @Nullable
+        @Override
+        public String getShaderpackName() {
+            return Iris.getCurrentPackName();
         }
     }
     

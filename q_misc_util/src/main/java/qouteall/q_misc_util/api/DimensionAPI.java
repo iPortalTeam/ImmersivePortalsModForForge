@@ -1,7 +1,6 @@
 package qouteall.q_misc_util.api;
 
 import com.mojang.serialization.Lifecycle;
-import net.minecraft.core.DefaultedMappedRegistry;
 import net.minecraft.core.Holder;
 import net.minecraft.core.LayeredRegistryAccess;
 import net.minecraft.core.MappedRegistry;

@@ -118,9 +118,7 @@ public class McRemoteProcedureCall {
     public static Packet createPacketToSendToClient(
         String methodPath, Object... arguments
     ) {
-        Packet packet =
-            ImplRemoteProcedureCall.createS2CPacket(methodPath, arguments);
-        return packet;
+        return ImplRemoteProcedureCall.createS2CPacket(methodPath, arguments);
     }
     
     /**
@@ -152,8 +150,11 @@ public class McRemoteProcedureCall {
         String methodPath,
         Object... arguments
     ) {
-        ServerboundCustomPayloadPacket packet =
-            ImplRemoteProcedureCall.createC2SPacket(methodPath, arguments);
+        ServerboundCustomPayloadPacket packet = createPacketToSendToServer(methodPath, arguments);
         Minecraft.getInstance().getConnection().send(packet);
+    }
+
+    public static ServerboundCustomPayloadPacket createPacketToSendToServer(String methodPath, Object... arguments) {
+        return ImplRemoteProcedureCall.createC2SPacket(methodPath, arguments);
     }
 }

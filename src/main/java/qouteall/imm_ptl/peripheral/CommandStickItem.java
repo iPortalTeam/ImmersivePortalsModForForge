@@ -123,6 +123,12 @@ public class CommandStickItem extends Item {
             tag.put("descriptionTranslationKeys", listTag);
         }
         
+        public CompoundTag toTag() {
+            CompoundTag tag = new CompoundTag();
+            serialize(tag);
+            return tag;
+        }
+
         public static Data deserialize(CompoundTag tag) {
             return new Data(
                 tag.getString("command"),

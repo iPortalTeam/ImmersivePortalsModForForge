@@ -4,8 +4,8 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "mixins.imm_ptl.refmap.json",
   "mixins": [
-    "common.alternate_dimension.IEChunk1",
     "common.alternate_dimension.IEChunkAccess_AlternateDim",
+    "common.alternate_dimension.IEChunkGenerator_AlternateDim",
     "common.alternate_dimension.IENoiseGeneratorSettings",
     "common.alternate_dimension.IENoiseRouterData",
     "common.alternate_dimension.MixinServerLevel_ModifySeed",
@@ -13,7 +13,6 @@
     "common.dim_stack.MixinLevelInfo",
     "common.dim_stack.MixinLevelProperties",
     "common.dim_stack.MixinMinecraftServer_DimStack",
-    "common.end_portal.IEEndDragonFight",
     "common.end_portal.MixinEnderEyeItem",
     "common.fix_concurrency.MixinWeightedList",
     "common.nether_portal.MixinAbstractFireBlock",
@@ -22,12 +21,15 @@
   ],
   "client": [
     "client.MixinBossHealthOverlay",
+    "client.MixinGui",
     "client.MixinSplashManager",
     "client.alternate_dimension.MixinClientLevelData",
     "client.alternate_dimension.MixinFogRenderer_A",
     "client.alternate_dimension.MixinWorldRenderer_A",
     "client.dim_stack.MixinCreateWorldScreen",
-    "client.dim_stack.MixinCreateWorldScreenMoreTab"
+    "client.dim_stack.MixinCreateWorldScreenMoreTab",
+    "client.portal_wand.MixinDebugRenderer",
+    "client.portal_wand.MixinMinecraft_PortalWand"
   ],
   "injectors": {
     "defaultRequire": 1
