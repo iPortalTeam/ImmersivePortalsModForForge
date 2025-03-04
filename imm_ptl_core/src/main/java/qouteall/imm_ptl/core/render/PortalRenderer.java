@@ -327,6 +327,8 @@ public abstract class PortalRenderer {
             }
         }
         
+        IPModInfoChecking.checkShaderpack();
+
         if (IrisInterface.invoker.isIrisPresent()) {
             if (IrisInterface.invoker.isShaders()) {
                 if (IPCGlobal.experimentalIrisPortalRenderer) {
