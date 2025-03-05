@@ -17,11 +17,19 @@ allprojects {
     apply plugin: 'org.parchmentmc.librarian.forgegradle'
     apply plugin: 'org.spongepowered.mixin'
     apply plugin: 'maven-publish'
+    apply plugin: 'idea'
 
     sourceCompatibility = 17
     targetCompatibility = 17
 
     version = project.mod_version
+
+    idea {
+        module {
+            downloadJavadoc = true
+            downloadSources = true
+        }
+    }
 
     repositories {
         maven { url = 'https://files.minecraftforge.net/maven' }
