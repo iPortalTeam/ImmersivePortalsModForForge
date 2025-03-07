@@ -6,6 +6,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkEvent;
 import qouteall.imm_ptl.core.IPCGlobal;
+import qouteall.imm_ptl.core.teleportation.ClientTeleportationManager;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.dimension.DimId;
 
@@ -34,7 +35,7 @@ public class Dim_Confirm {
 
     public boolean handle(Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context ctx = supplier.get();
-        ctx.enqueueWork(() -> MiscHelper.executeOnRenderThread(() -> IPCGlobal.clientTeleportationManager.acceptSynchronizationDataFromServer(dimensionType, pos, false)));
+        ctx.enqueueWork(() -> MiscHelper.executeOnRenderThread(() -> ClientTeleportationManager.acceptSynchronizationDataFromServer(dimensionType, pos, false)));
         ctx.setPacketHandled(true);
         return true;
     }

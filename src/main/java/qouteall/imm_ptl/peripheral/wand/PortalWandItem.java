@@ -19,15 +19,18 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.fml.LogicalSide;
 import org.jetbrains.annotations.Nullable;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.IPMcHelper;
+import qouteall.imm_ptl.peripheral.platform_specific.PeripheralModEntry;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class PortalWandItem extends Item {
-//    public static final PortalWandItem instance = new PortalWandItem(new Properties());
 
     public static void init() { // TODO @Nick1st
 //        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.TOOLS_AND_UTILITIES).register(
@@ -60,18 +63,20 @@ public class PortalWandItem extends Item {
     }
 
     public static void initClient() {
-//        ClientTickEvents.END_CLIENT_TICK.register(client -> {
-//            if (client.player != null) {
-//                ItemStack itemStack = client.player.getMainHandItem();
-//                if (itemStack.getItem() == instance) {
-//                    updateDisplay(itemStack);
-//                }
-//                else {
-//                    ClientPortalWandPortalCreation.clearCursorPointing();
-//                }
-//            }
-//            ClientPortalWandPortalDrag.tick();
-//        });
+        MinecraftForge.EVENT_BUS.addListener((TickEvent.PlayerTickEvent event) -> {
+            if (event.phase == TickEvent.Phase.END && event.side == LogicalSide.CLIENT) {
+                if (event.player != null) {
+                    ItemStack itemStack = event.player.getMainHandItem();
+                    if (itemStack.getItem() == PeripheralModEntry.PORTAL_WAND.get()) {
+                        updateDisplay(itemStack);
+                    }
+                    else {
+                        ClientPortalWandPortalCreation.clearCursorPointing();
+                    }
+                }
+                ClientPortalWandPortalDrag.tick();
+            }
+        });
 
 
         IPGlobal.clientCleanupSignal.connect(ClientPortalWandPortalCreation::reset);

@@ -1,5 +1,6 @@
 package qouteall.imm_ptl.peripheral.platform_specific;
 
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.*;
@@ -58,11 +59,19 @@ public class PeripheralModEntry {
 
     private static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MODID);
+    private static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
 
     public static final RegistryObject<Block> PORTAL_HELPER_BLOCK = BLOCKS.register("portal_helper", () -> new Block(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).noOcclusion().isRedstoneConductor((a, b, c) -> false)));
     public static final RegistryObject<Item> PORTAL_HELPER_ITEM = ITEMS.register("portal_helper", () -> new PortalHelperItem(PORTAL_HELPER_BLOCK.get(), new Item.Properties()));
     public static final RegistryObject<Item> COMMAND_STICK_ITEM = ITEMS.register("command_stick", () -> new CommandStickItem(new Item.Properties()));
     public static final RegistryObject<Item> PORTAL_WAND = ITEMS.register("portal_wand", () -> new PortalWandItem(new Item.Properties()));
+    public static final RegistryObject<CreativeModeTab> PERIPHERAL_TAB = TABS.register("misc", () -> CreativeModeTab.builder()
+            .title(Component.translatable("imm_ptl.peripheral_tooltip"))
+            .icon(PORTAL_WAND.get()::getDefaultInstance)
+            .displayItems((displayParameters, output) -> {
+                output.accept(PORTAL_WAND.get());
+            })
+            .build());
 
     private static void registerBlockItems() {
         //PeripheralModMain.registerCommandStickTypes();
@@ -85,6 +94,7 @@ public class PeripheralModEntry {
         PeripheralModEntry.registerBlockItems(); //TODO Move this to a real DeferredRegistry @Nick1st
         BLOCKS.register(FMLJavaModLoadingContext.get().getModEventBus());
         ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
+        TABS.register(FMLJavaModLoadingContext.get().getModEventBus());
         PeripheralRegistries.CHUNK_GENERATOR.register(FMLJavaModLoadingContext.get().getModEventBus());
         PeripheralRegistries.BIOME_SOURCE.register(FMLJavaModLoadingContext.get().getModEventBus());
         CommandStickItem.CommandStickData.register(FMLJavaModLoadingContext.get().getModEventBus());

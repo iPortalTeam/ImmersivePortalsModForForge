@@ -3,9 +3,7 @@ package qouteall.imm_ptl.peripheral;
 import com.google.common.collect.Lists;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.biome.BiomeSource;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -17,16 +15,15 @@ import qouteall.imm_ptl.peripheral.alternate_dimension.ErrorTerrainGenerator;
 import qouteall.imm_ptl.peripheral.alternate_dimension.FormulaGenerator;
 import qouteall.imm_ptl.peripheral.dim_stack.DimStackManagement;
 import qouteall.imm_ptl.peripheral.portal_generation.IntrinsicPortalGeneration;
+import qouteall.imm_ptl.peripheral.wand.PortalWandItem;
 
 import java.util.List;
 
 public class PeripheralModMain {
-    
-    public static Block portalHelperBlock;
-    public static BlockItem portalHelperBlockItem;
-    
+
     @OnlyIn(Dist.CLIENT)
     public static void initClient() {
+        PortalWandItem.initClient();
     }
 
     private static final DeferredRegister<Codec<? extends ChunkGenerator>> CHUNK_GENERATOR = DeferredRegister.create(BuiltInRegistries.CHUNK_GENERATOR.key(), "immersive_portals");

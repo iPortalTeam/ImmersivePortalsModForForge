@@ -6,7 +6,6 @@ import qouteall.imm_ptl.core.render.RendererDebug;
 import qouteall.imm_ptl.core.render.RendererDummy;
 import qouteall.imm_ptl.core.render.RendererUsingFrameBuffer;
 import qouteall.imm_ptl.core.render.RendererUsingStencil;
-import qouteall.imm_ptl.core.teleportation.ClientTeleportationManager;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,9 +17,7 @@ public class IPCGlobal {
     public static RendererUsingFrameBuffer rendererUsingFrameBuffer;
     public static RendererDummy rendererDummy = new RendererDummy();
     public static RendererDebug rendererDebug = new RendererDebug();
-    
-    public static ClientTeleportationManager clientTeleportationManager;
-    
+
     public static int maxIdleChunkRendererNum = 500;
     
     public static Map<DimensionType, Integer> renderInfoNumMap = new ConcurrentHashMap<>();
