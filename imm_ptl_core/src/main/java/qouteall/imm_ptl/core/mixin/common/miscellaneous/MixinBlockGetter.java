@@ -14,26 +14,26 @@ import java.util.function.Function;
 
 @Mixin(BlockGetter.class)
 public interface MixinBlockGetter {
-	
-	// avoid lagging due to long block traversal
-	@ModifyVariable(
-		method = "traverseBlocks",
-		at = @At("HEAD"),
-		argsOnly = true,
-		index = 1
-	)
-	private static <T, C> Vec3 onTraverseBlocks(
-		Vec3 originalArgument,
-		Vec3 from, Vec3 _to, C context,
-		BiFunction<C, BlockPos, T> tester, Function<C, T> onFail
-	) {
-		if (from.distanceToSqr(_to) > (512 * 512)) {
-			IPMcHelper.limitedLogger.invoke(() -> {
-				Helper.logger.error("Raycast too far", new Throwable());
-			});
-			return _to.subtract(from).normalize().scale(30).add(from);
-		}
-		return _to;
-	}
+	// TODO @Nick1st
+//	// avoid lagging due to long block traversal
+//	@ModifyVariable(
+//		method = "traverseBlocks",
+//		at = @At("HEAD"),
+//		argsOnly = true,
+//		index = 1
+//	)
+//	private static <T, C> Vec3 onTraverseBlocks(
+//		Vec3 originalArgument,
+//		Vec3 from, Vec3 _to, C context,
+//		BiFunction<C, BlockPos, T> tester, Function<C, T> onFail
+//	) {
+//		if (from.distanceToSqr(_to) > (512 * 512)) {
+//			IPMcHelper.limitedLogger.invoke(() -> {
+//				Helper.logger.error("Raycast too far", new Throwable());
+//			});
+//			return _to.subtract(from).normalize().scale(30).add(from);
+//		}
+//		return _to;
+//	}
 	
 }

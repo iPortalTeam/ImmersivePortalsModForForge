@@ -14,14 +14,15 @@ import java.util.List;
 
 @Mixin(ChunkStatus.class)
 public class MixinChunkStatus {
-    @Inject(
-        method = "lambda$static$16", at = @At("HEAD"),
-        remap = false
-    )
-    private static void redirectPopulateEntities(
-        ChunkStatus var1, ServerLevel world, ChunkGenerator var3, List<ChunkAccess> var4, ChunkAccess chunk,
-        CallbackInfo ci
-    ) {
-        DimStackManagement.replaceBedrock(world, chunk);
-    }
+    // TODO @Nick1st this mixin is broken
+//    @Inject(
+//        method = "lambda$static$16", at = @At("HEAD"),
+//        remap = false
+//    )
+//    private static void redirectPopulateEntities(
+//        ChunkStatus var1, ServerLevel world, ChunkGenerator var3, List<ChunkAccess> var4, ChunkAccess chunk,
+//        CallbackInfo ci
+//    ) {
+//        DimStackManagement.replaceBedrock(world, chunk);
+//    }
 }
