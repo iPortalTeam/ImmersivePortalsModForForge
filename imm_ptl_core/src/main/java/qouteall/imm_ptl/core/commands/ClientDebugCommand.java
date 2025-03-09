@@ -3,8 +3,10 @@ package qouteall.imm_ptl.core.commands;
 import com.google.common.collect.Streams;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -54,6 +56,7 @@ import qouteall.imm_ptl.core.ducks.IEWorldRenderer;
 import qouteall.imm_ptl.core.platform_specific.IPConfig;
 import qouteall.imm_ptl.core.platform_specific.IPConfigGUI;
 import qouteall.imm_ptl.core.portal.Portal;
+import qouteall.imm_ptl.core.portal.PortalLike;
 import qouteall.imm_ptl.core.portal.PortalRenderInfo;
 import qouteall.imm_ptl.core.render.MyBuiltChunkStorage;
 import qouteall.imm_ptl.core.render.MyGameRenderer;
@@ -64,7 +67,7 @@ import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.api.McRemoteProcedureCall;
 import qouteall.q_misc_util.my_util.MyTaskList;
 
-import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.List;
@@ -203,16 +206,15 @@ public class ClientDebugCommand {
         builder = builder.then(Commands
             .literal("report_rendering")
             .executes(context -> {
-                String str = RenderStates.lastPortalRenderInfos
-                    .stream()
-                    .map(
-                        list -> list.stream()
-                            .map(Reference::get)
-                            .collect(Collectors.toList())
-                    )
-                    .collect(Collectors.toList())
-                    .toString();
-                CHelper.printChat(str);
+                StringBuilder sb = new StringBuilder();
+                for (List<WeakReference<PortalLike>> rendering : RenderStates.lastPortalRenderInfos) {
+                    sb.append("----------\n");
+                    for (WeakReference<PortalLike> portalLikeWeakReference : rendering) {
+                        sb.append(portalLikeWeakReference.get().toString());
+                        sb.append("\n");
+                    }
+                }
+                CHelper.printChat(sb.toString());
                 return 0;
             })
         );
@@ -444,6 +446,18 @@ public class ClientDebugCommand {
                 return 0;
             })
         );
+
+        builder.then(Commands
+            .literal("disable_warning_for")
+            .then(Commands
+                .argument("warningKey", StringArgumentType.string())
+                .executes(context -> {
+                    disableWarningFor(StringArgumentType.getString(context, "warningKey"));
+                    context.getSource().sendSuccess(() -> Component.translatable("imm_ptl.warning_disabled"), true);
+                    return 0;
+                })
+            )
+        );
     
         builder.then(Commands
             .literal("disable_update_check")
@@ -602,6 +616,16 @@ public class ClientDebugCommand {
             "log_client_player_colliding_portal_update",
             cond -> IPGlobal.logClientPlayerCollidingPortalUpdate = cond
         );
+        registerSwitchCommand(
+            builder,
+            "entity_unload_debug",
+            cond -> IPGlobal.entityUnloadDebug = cond
+        );
+        registerSwitchCommand(
+            builder,
+            "mesh_render",
+            cond -> IPGlobal.debugRenderPortalShapeMesh = cond
+        );
 
         builder.then(Commands
             .literal("print_class_path")
@@ -659,15 +683,14 @@ public class ClientDebugCommand {
     private static int isClientChunkLoaded(CommandContext<CommandSourceStack> context) {
         int chunkX = IntegerArgumentType.getInteger(context, "chunkX");
         int chunkZ = IntegerArgumentType.getInteger(context, "chunkZ");
-        RemoteCallables.reportClientChunkLoadStatus(chunkX, chunkZ);
+        RemoteCallables.reportClientChunkLoadStatus(Minecraft.getInstance().level.dimension(), chunkX, chunkZ);
         return 0;
     }
     
     public static class RemoteCallables {
-        public static void reportClientChunkLoadStatus(int chunkX, int chunkZ) {
-            ChunkAccess chunk = Minecraft.getInstance().level.getChunk(
-                chunkX, chunkZ
-            );
+        public static void reportClientChunkLoadStatus(ResourceKey<Level> dimension, int chunkX, int chunkZ) {
+            ClientLevel world = ClientWorldLoader.getWorld(dimension);
+            ChunkAccess chunk = world.getChunk(chunkX, chunkZ);
             CHelper.printChat(
                 chunk != null && !(chunk instanceof EmptyLevelChunk) ?
                     "client loaded" : "client not loaded"
@@ -806,7 +829,13 @@ public class ClientDebugCommand {
         ipConfig.enableWarning = false;
         ipConfig.saveConfigFile();
     }
-    
+
+    public static void disableWarningFor(String warningKey) {
+        IPConfig ipConfig = IPConfig.getConfig();
+        ipConfig.disabledWarnings.add(warningKey);
+        ipConfig.saveConfigFile();
+    }
+
     public static void disableUpdateCheck() {
         IPConfig ipConfig = IPConfig.getConfig();
         ipConfig.enableUpdateNotification = false;

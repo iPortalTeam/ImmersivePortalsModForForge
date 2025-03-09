@@ -5,23 +5,20 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
-import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Pose;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import qouteall.imm_ptl.core.IPGlobal;
-import qouteall.imm_ptl.core.block_manipulation.BlockManipulationServer;
-import qouteall.q_misc_util.dimension.DimId;
 import qouteall.imm_ptl.core.portal.global_portals.GlobalPortalStorage;
 import qouteall.q_misc_util.MiscHelper;
+import qouteall.q_misc_util.dimension.DimId;
 
 import java.util.UUID;
+import java.util.function.Supplier;
 
 public class IPNetworking {
 
@@ -33,10 +30,10 @@ public class IPNetworking {
         new ResourceLocation("imm_ptl", "dim_confirm");
     public static final ResourceLocation id_stcUpdateGlobalPortal =
         new ResourceLocation("imm_ptl", "upd_glb_ptl");
-    public static final ResourceLocation id_ctsPlayerAction =
-        new ResourceLocation("imm_ptl", "player_action");
-    public static final ResourceLocation id_ctsRightClick =
-        new ResourceLocation("imm_ptl", "right_click");
+//    public static final ResourceLocation id_ctsPlayerAction =
+//        new ResourceLocation("imm_ptl", "player_action");
+//    public static final ResourceLocation id_ctsRightClick =
+//        new ResourceLocation("imm_ptl", "right_click");
 
     public static void init() {
 
@@ -51,14 +48,6 @@ public class IPNetworking {
             processCtsTeleport(player, buf);
             return true;
         }
-        else if (id_ctsPlayerAction.equals(packedId)) {
-            processCtsPlayerAction(player, buf);
-            return true;
-        }
-        else if (id_ctsRightClick.equals(packedId)) {
-            processCtsRightClick(player, buf);
-            return true;
-        }
         else {
             return false;
         }
@@ -67,7 +56,7 @@ public class IPNetworking {
     // invoking client-only method. avoid dedicated server crash
     public static boolean handleImmPtlCorePacketClientSide(
         ResourceLocation packedId,
-        FriendlyByteBuf buf
+        Supplier<FriendlyByteBuf> buf
     ) {
         return IPNetworkingClient.handleImmPtlCorePacketClientSide(packedId, buf);
     }
@@ -131,37 +120,9 @@ public class IPNetworking {
             );
         });
     }
-    
-    private static void processCtsPlayerAction(ServerPlayer player, FriendlyByteBuf buf) {
-        ResourceKey<Level> dim = DimId.readWorldId(buf, false);
-        ServerboundPlayerActionPacket packet = new ServerboundPlayerActionPacket(buf);
-        IPGlobal.serverTaskList.addTask(() -> {
-            BlockManipulationServer.processBreakBlock(
-                dim, packet,
-                player
-            );
-            return true;
-        });
-    }
-    
-    private static void processCtsRightClick(ServerPlayer player, FriendlyByteBuf buf) {
-        ResourceKey<Level> dim = DimId.readWorldId(buf, false);
-        ServerboundUseItemOnPacket packet = new ServerboundUseItemOnPacket(buf);
-        IPGlobal.serverTaskList.addTask(() -> {
-            BlockManipulationServer.processRightClickBlock(
-                dim, packet,
-                player
-            );
-            return true;
-        });
-    }
-    
+
     public static class RemoteCallables {
-        public static void onClientPlayerUpdatePose(
-            ServerPlayer player, Pose pose
-        ) {
-            player.setPose(pose);
-        }
+
     }
     
 }

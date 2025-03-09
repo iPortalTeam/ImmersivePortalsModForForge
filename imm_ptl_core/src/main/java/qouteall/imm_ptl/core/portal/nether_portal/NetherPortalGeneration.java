@@ -11,6 +11,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.chunk_loading.ChunkLoader;
@@ -25,7 +26,6 @@ import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.my_util.IntBox;
 import qouteall.q_misc_util.my_util.LimitedLogger;
 
-import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
@@ -76,11 +76,8 @@ public class NetherPortalGeneration {
             if (allowForcePlacement) {
                 Helper.err("Cannot find air cube within 32 blocks? " +
                     "Force placed portal. It will occupy normal blocks.");
-                
-                return IntBox.getBoxByBasePointAndSize(
-                    neededAreaSize,
-                    mappedPosInOtherDimension
-                );
+
+                return IntBox.fromBasePointAndSize(mappedPosInOtherDimension, neededAreaSize);
             }
             else {
                 return null;
@@ -129,7 +126,7 @@ public class NetherPortalGeneration {
         Vec3 indicatorPos = fromShape.innerAreaBox.getCenterVec();
         
         LoadingIndicatorEntity indicatorEntity =
-            LoadingIndicatorEntity.entityType.create(fromWorld);
+                IPRegistry.LOADING_INDICATOR.get().create(fromWorld);
         indicatorEntity.isValid = true;
         indicatorEntity.portalShape = fromShape;
         indicatorEntity.setPos(

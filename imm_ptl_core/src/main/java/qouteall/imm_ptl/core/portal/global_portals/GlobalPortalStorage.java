@@ -6,6 +6,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -20,11 +21,13 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.commons.lang3.Validate;
+import org.jetbrains.annotations.NotNull;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.ClientWorldLoader;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.ducks.IEClientWorld;
+import qouteall.imm_ptl.core.network.IPNetworking;
 import qouteall.imm_ptl.core.platform_specific.O_O;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.GlobalPortalUpdate;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
@@ -33,8 +36,7 @@ import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.forge.events.ServerDimensionDynamicUpdateEvent;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -69,14 +71,6 @@ public class GlobalPortalStorage extends SavedData {
         });
 
         MinecraftForge.EVENT_BUS.register(GlobalPortalStorage.class);
-
-//        DimensionAPI.serverDimensionDynamicUpdateEvent.register(dims -> { //TODO Reimplement this !DONE
-//            for (ServerLevel world : MiscHelper.getServer().getAllLevels()) {
-//                GlobalPortalStorage gps = get(world);
-//                gps.clearAbnormalPortals();
-//                gps.syncToAllPlayers();
-//            }
-//        });
 
         if (!O_O.isDedicatedServer()) {
             initClient();
@@ -365,7 +359,7 @@ public class GlobalPortalStorage extends SavedData {
         }
     }
     
-    @Nonnull
+    @NotNull
     public static List<Portal> getGlobalPortals(Level world) {
         List<Portal> result;
         if (world.isClientSide()) {

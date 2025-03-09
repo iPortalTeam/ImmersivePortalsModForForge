@@ -11,7 +11,7 @@ import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.render.context_management.RenderStates;
 import qouteall.imm_ptl.core.render.optimization.GLResourceCache;
 
-@Mixin(value = GlStateManager.class)
+@Mixin(value = GlStateManager.class, remap = false)
 public abstract class MixinGlStateManager {
     
     @Shadow

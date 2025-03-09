@@ -4,6 +4,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.q_misc_util.Helper;
@@ -14,6 +15,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class NormalAnimation implements PortalAnimationDriver {
+
+    public static final int INFINITE_THRESHOLD = 100000;
+
     public static void init() {
         PortalAnimationDriver.registerDeserializer(
             new ResourceLocation("imm_ptl:normal"),
@@ -81,17 +85,25 @@ public class NormalAnimation implements PortalAnimationDriver {
     public final long startingGameTime;
     public final int loopCount;
     
+    /**
+     * Note: only true when using `/portal animation build` to build the animation.
+     * Should be false by default.
+     */
+    public final boolean isBuilding;
+
     private final long ticksPerRound;
     
     public NormalAnimation(
         List<Phase> phases,
         long startingGameTime,
-        int loopCount
+        int loopCount,
+        boolean isBuilding
     ) {
         this.phases = phases;
         this.startingGameTime = startingGameTime;
         this.loopCount = loopCount;
-        
+        this.isBuilding = isBuilding;
+
         long totalTicks = 0;
         for (Phase phase : phases) {
             totalTicks += phase.durationTicks;
@@ -111,14 +123,19 @@ public class NormalAnimation implements PortalAnimationDriver {
         
         int loopCount = compoundTag.getInt("loopCount");
         
-        if (phases.isEmpty() || loopCount < 0) {
-            throw new RuntimeException("invalid NormalAnimation");
+        boolean isBuilding = compoundTag.getBoolean("isBuilding");
+
+        if (!isBuilding) {
+            if (phases.isEmpty() || loopCount < 0) {
+                throw new RuntimeException("invalid NormalAnimation");
+            }
         }
         
         return new NormalAnimation(
             phases,
             startingGameTime,
-            loopCount
+            loopCount,
+            isBuilding
         );
     }
     
@@ -130,12 +147,13 @@ public class NormalAnimation implements PortalAnimationDriver {
         tag.put("phases", Helper.listToListTag(phases, Phase::toTag));
         tag.putLong("startingGameTime", startingGameTime);
         tag.putInt("loopCount", loopCount);
-        
+        tag.putBoolean("isBuilding", isBuilding);
+
         return tag;
     }
     
     private long getTotalDuration() {
-        if (loopCount >= 100000) {
+        if (loopCount >= INFINITE_THRESHOLD) {
             return Long.MAX_VALUE;
         }
         
@@ -143,9 +161,14 @@ public class NormalAnimation implements PortalAnimationDriver {
     }
     
     @Override
+    @NotNull
     public AnimationResult getAnimationResult(long tickTime, float partialTicks, AnimationContext context) {
+        if (isBuilding) {
+            return new AnimationResult(null, false);
+        }
+
         if (ticksPerRound == 0 || phases.isEmpty()) {
-            Helper.err("Invalid NormalAnimation");
+            Helper.err("No phase");
             return new AnimationResult(null, true);
         }
         
@@ -210,7 +233,8 @@ public class NormalAnimation implements PortalAnimationDriver {
         return new NormalAnimation(
             phases.stream().map(phase -> phase.getFlippedVersion()).collect(Collectors.toList()),
             startingGameTime,
-            loopCount
+            loopCount,
+            isBuilding
         );
     }
     
@@ -219,7 +243,8 @@ public class NormalAnimation implements PortalAnimationDriver {
         private List<Phase> phases = new ArrayList<>();
         private long startingGameTime;
         private int loopCount;
-        
+        private boolean isBuilding = false;
+
         public Builder() {
         }
         
@@ -245,8 +270,17 @@ public class NormalAnimation implements PortalAnimationDriver {
             return this;
         }
         
+        /**
+         * Note: only true when using `/portal animation build` to build the animation.
+         * Should be false by default.
+         */
+        public Builder isBuilding(boolean isBuilding) {
+            this.isBuilding = isBuilding;
+            return this;
+        }
+
         public NormalAnimation build() {
-            return new NormalAnimation(phases, startingGameTime, loopCount);
+            return new NormalAnimation(phases, startingGameTime, loopCount, isBuilding);
         }
     }
     
@@ -288,7 +322,7 @@ public class NormalAnimation implements PortalAnimationDriver {
             component.append(phase.getInfo());
             component.append("\n");
         }
-        component.append("] %d times".formatted(loopCount));
+        component.append("] %s times".formatted(loopCount >= INFINITE_THRESHOLD ? "∞" : loopCount));
         return component;
     }
 }

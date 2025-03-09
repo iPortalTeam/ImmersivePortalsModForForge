@@ -108,14 +108,14 @@ public class McRemoteProcedureCall {
         String methodPath,
         Object... arguments
     ) {
-        Packet packet = createPacketToSendToClient(methodPath, arguments);
+        ClientboundCustomPayloadPacket packet = createPacketToSendToClient(methodPath, arguments);
         player.connection.send(packet);
     }
     
     /**
      * Same as the above, but only creates packet and does not send.
      */
-    public static Packet createPacketToSendToClient(
+    public static ClientboundCustomPayloadPacket createPacketToSendToClient(
         String methodPath, Object... arguments
     ) {
         return ImplRemoteProcedureCall.createS2CPacket(methodPath, arguments);

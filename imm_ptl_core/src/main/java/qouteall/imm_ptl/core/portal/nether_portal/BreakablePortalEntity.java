@@ -23,7 +23,7 @@ import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.my_util.DQuaternion;
 import qouteall.q_misc_util.my_util.LimitedLogger;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.UUID;
 
@@ -154,7 +154,7 @@ public abstract class BreakablePortalEntity extends Portal {
     public void tick() {
         super.tick();
         
-        if (level().isClientSide) {
+        if (level().isClientSide()) {
             addSoundAndParticle();
         }
         else {

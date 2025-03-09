@@ -19,7 +19,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
 import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -186,11 +186,15 @@ public class ImplRemoteProcedureCall {
         return new ServerboundCustomPayloadPacket(MiscNetworking.id_ctsRemote, buf);
     }
     
-    public static Packet createS2CPacket(
+    public static ClientboundCustomPayloadPacket createS2CPacket(
         String methodPath,
         Object... arguments
     ) {
-        return Message.INSTANCE.toVanillaPacket(new Remote_StC(methodPath, arguments), NetworkDirection.PLAY_TO_CLIENT);
+        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+
+        serializeStringWithArguments(methodPath, arguments, buf);
+
+        return new ClientboundCustomPayloadPacket(MiscNetworking.id_stcRemote, buf);
     }
     
     @OnlyIn(Dist.CLIENT)

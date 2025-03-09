@@ -1,18 +1,20 @@
 package qouteall.imm_ptl.core.portal;
 
+import com.mojang.logging.LogUtils;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 import qouteall.imm_ptl.core.ducks.IEWorld;
 import qouteall.imm_ptl.core.teleportation.ServerTeleportationManager;
-import qouteall.q_misc_util.Helper;
 
-import javax.annotation.Nullable;
 import java.util.UUID;
 import java.util.function.Consumer;
 
 // the additional features of a portal
 public class PortalExtension {
-    
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     /**
      * @param portal
      * @return the portal extension object
@@ -200,7 +202,7 @@ public class PortalExtension {
                     }
                     else {
                         if (portal.isOtherSideChunkLoaded()) {
-                            Helper.log("portal linking break");
+                            LOGGER.info("portal linking break {}", portal);
                             reversePortalId = null;
                             needsUpdate = true;
                         }
@@ -223,7 +225,7 @@ public class PortalExtension {
                     }
                     else {
                         if (portal.isOtherSideChunkLoaded()) {
-                            Helper.log("portal linking break");
+                            LOGGER.info("portal linking break {}", portal);
                             parallelPortalId = null;
                             needsUpdate = true;
                         }
@@ -257,6 +259,24 @@ public class PortalExtension {
             PortalExtension.get(parallelPortal).bindCluster = true;
         }
         
+        // in older versions, the parallel portal could be itself
+        // correct it
+        if (flippedPortal == portal) {
+            flippedPortal = null;
+            flippedPortalId = null;
+            needsUpdate = true;
+        }
+        if (reversePortal == portal) {
+            reversePortal = null;
+            reversePortalId = null;
+            needsUpdate = true;
+        }
+        if (parallelPortal == portal) {
+            parallelPortal = null;
+            parallelPortalId = null;
+            needsUpdate = true;
+        }
+
         if (needsUpdate) {
             portal.reloadAndSyncToClient();
         }
@@ -325,17 +345,22 @@ public class PortalExtension {
             flippedPortal.scaling = portal.scaling;
             flippedPortal.rotation = portal.rotation;
             
-            if (flippedPortal.specialShape == null) {
-                flippedPortal.width = portal.width;
-                flippedPortal.height = portal.height;
-            }
+            flippedPortal.width = portal.width;
+            flippedPortal.height = portal.height;
             
             PortalManipulation.copyAdditionalProperties(flippedPortal, portal, false);
             
             flippedPortal.animation.defaultAnimation.inverseScale = false;
             
+            if (portal.specialShape != null) {
+                flippedPortal.specialShape = portal.specialShape.getFlippedWithScaling(1.0);
+            }
+            else {
+                flippedPortal.specialShape = null;
+            }
+
             if (sync) {
-                flippedPortal.reloadAndSyncToClient();
+                flippedPortal.reloadAndSyncToClientNextTick();
             }
         }
         
@@ -361,17 +386,22 @@ public class PortalExtension {
                 reversePortal.rotation = null;
             }
             
-            if (reversePortal.specialShape == null) {
-                reversePortal.width = portal.width * portal.getScale();
-                reversePortal.height = portal.height * portal.getScale();
-            }
+            reversePortal.width = portal.width * portal.getScale();
+            reversePortal.height = portal.height * portal.getScale();
             
             PortalManipulation.copyAdditionalProperties(reversePortal, portal, false);
             
             reversePortal.animation.defaultAnimation.inverseScale = true;
             
+            if (portal.specialShape != null) {
+                reversePortal.specialShape = portal.specialShape.getFlippedWithScaling(1.0);
+            }
+            else {
+                reversePortal.specialShape = null;
+            }
+
             if (sync) {
-                reversePortal.reloadAndSyncToClient();
+                reversePortal.reloadAndSyncToClientNextTick();
             }
         }
         
@@ -397,17 +427,17 @@ public class PortalExtension {
                 parallelPortal.rotation = null;
             }
             
-            if (parallelPortal.specialShape == null) {
-                parallelPortal.width = portal.width * portal.getScale();
-                parallelPortal.height = portal.height * portal.getScale();
-            }
+            parallelPortal.width = portal.width * portal.getScale();
+            parallelPortal.height = portal.height * portal.getScale();
             
             PortalManipulation.copyAdditionalProperties(parallelPortal, portal, false);
             
             parallelPortal.animation.defaultAnimation.inverseScale = true;
             
+            parallelPortal.specialShape = portal.specialShape;
+
             if (sync) {
-                parallelPortal.reloadAndSyncToClient();
+                parallelPortal.reloadAndSyncToClientNextTick();
             }
         }
     }

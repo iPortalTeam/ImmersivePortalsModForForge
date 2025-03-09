@@ -11,6 +11,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import qouteall.imm_ptl.core.IPGlobal;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.platform_specific.O_O;
 import qouteall.imm_ptl.core.portal.custom_portal_gen.PortalGenInfo;
 import qouteall.imm_ptl.core.portal.custom_portal_gen.form.NetherPortalLikeForm;
@@ -58,7 +59,7 @@ public class IntrinsicNetherPortalForm extends NetherPortalLikeForm {
     @Override
     public BreakablePortalEntity[] generatePortalEntitiesAndPlaceholder(PortalGenInfo info) {
         info.generatePlaceholderBlocks();
-        BreakablePortalEntity[] portals = info.generateBiWayBiFacedPortal(NetherPortalEntity.entityType);
+        BreakablePortalEntity[] portals = info.generateBiWayBiFacedPortal(IPRegistry.NETHER_PORTAL_NEW.get());
         
         return portals;
     }

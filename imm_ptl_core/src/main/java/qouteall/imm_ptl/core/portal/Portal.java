@@ -1,5 +1,6 @@
 package qouteall.imm_ptl.core.portal;
 
+import com.mojang.logging.LogUtils;
 import net.minecraft.Util;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -36,6 +37,7 @@ import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4d;
 import org.joml.Matrix4f;
+import org.slf4j.Logger;
 import qouteall.imm_ptl.core.CHelper;
 import qouteall.imm_ptl.core.ClientWorldLoader;
 import qouteall.imm_ptl.core.IPGlobal;
@@ -44,6 +46,7 @@ import qouteall.imm_ptl.core.api.ImmPtlEntityExtension;
 import qouteall.imm_ptl.core.compat.PehkuiInterface;
 import qouteall.imm_ptl.core.compat.iris_compatibility.IrisInterface;
 import qouteall.imm_ptl.core.mc_utils.IPEntityEventListenableEntity;
+import qouteall.imm_ptl.core.platform_specific.IPConfig;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.Spawn_Entity;
 import qouteall.imm_ptl.core.portal.animation.*;
@@ -67,8 +70,10 @@ import java.util.stream.Collectors;
 /**
  * Portal entity. Global portals are also entities but not added into world.
  */
-public class Portal extends Entity implements PortalLike, IPEntityEventListenableEntity, PortalRenderable {
-    
+public class Portal extends Entity implements
+    PortalLike, IPEntityEventListenableEntity, PortalRenderable {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     public static final UUID nullUUID = Util.NIL_UUID;
     private static final AABB nullBox = new AABB(0, 0, 0, 0, 0, 0);
     
@@ -159,7 +164,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
     /**
      * Whether the entity gravity direction changes after crossing the portal
      */
-    protected boolean teleportChangesGravity = false;
+    protected boolean teleportChangesGravity = IPConfig.getConfig().portalsChangeGravityByDefault;
     
     /**
      * Whether the player can place and break blocks across the portal
@@ -300,6 +305,9 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         }
         if (compoundTag.contains("teleportChangesGravity")) {
             teleportChangesGravity = compoundTag.getBoolean("teleportChangesGravity");
+        }
+        else {
+            teleportChangesGravity = IPConfig.getConfig().portalsChangeGravityByDefault;
         }
 
         if (compoundTag.contains("portalTag")) {
@@ -490,7 +498,7 @@ public class Portal extends Entity implements PortalLike, IPEntityEventListenabl
         CompoundTag customData = new CompoundTag();
         addAdditionalSaveData(customData);
         
-        Packet packet = McRemoteProcedureCall.createPacketToSendToClient(
+        ClientboundCustomPayloadPacket packet = McRemoteProcedureCall.createPacketToSendToClient(
             "qouteall.imm_ptl.core.portal.Portal.RemoteCallables.acceptPortalDataSync",
             level().dimension(),
             getId(),

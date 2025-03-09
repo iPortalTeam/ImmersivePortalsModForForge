@@ -2,11 +2,10 @@ package qouteall.imm_ptl.core.api.example;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -107,7 +106,9 @@ public class ExampleGuiPortalRendering {
             Vec3 position
         ) {
             if (frameBuffer == null) {
-                frameBuffer = new TextureTarget(100, 100, true, true);
+                // the framebuffer size doesn't matter here
+                // because it will be automatically resized when rendering
+                frameBuffer = new TextureTarget(2, 2, true, true);
             }
             
             Minecraft.getInstance().setScreen(new GuiPortalScreen(dimension, position));
@@ -164,16 +165,18 @@ public class ExampleGuiPortalRendering {
             );
             
             // Create the world render info
-            WorldRenderInfo worldRenderInfo = new WorldRenderInfo(
-                ClientWorldLoader.getWorld(viewingDimension),// the world that it renders
-                cameraPosition,// the camera position
-                cameraTransformation,// the camera transformation
-                true,// does not apply this transformation to the existing player camera
-                null,
-                minecraft.options.getEffectiveRenderDistance(),// render distance
-                false,
-                false
-            );
+            WorldRenderInfo worldRenderInfo = new WorldRenderInfo.Builder()
+                .setWorld(ClientWorldLoader.getWorld(viewingDimension))
+                .setCameraPos(cameraPosition)
+                .setCameraTransformation(cameraTransformation)
+                .setOverwriteCameraTransformation(true) // do not apply camera transformation to existing player camera transformation
+                .setDescription(null)
+                .setRenderDistance(minecraft.options.getEffectiveRenderDistance())
+                .setDoRenderHand(false)
+                .setEnableViewBobbing(false)
+                .setDoRenderSky(false)
+                .setHasFog(false)
+                .build();
             
             // Ask it to render the world into the framebuffer the next frame
             GuiPortalRendering.submitNextFrameRendering(worldRenderInfo, frameBuffer);
@@ -183,17 +186,34 @@ public class ExampleGuiPortalRendering {
             int w = minecraft.getWindow().getWidth();
             MyRenderHelper.drawFramebuffer(
                 frameBuffer,
-                false, false,
+                true, // enable alpha blend
+                false, // don't modify alpha
                 w * 0.2f, w * 0.8f,
                 h * 0.2f, h * 0.8f
             );
 
-            guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 70, 16777215
+            guiGraphics.drawCenteredString(
+                this.font, this.title, this.width / 2, 70, 16777215
             );
         }
         
         @Override
         public boolean isPauseScreen() {
+            return false;
+        }
+
+        // close when E is pressed
+        @Override
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            if (super.keyPressed(keyCode, scanCode, modifiers)) {
+                return true;
+            }
+
+            if (minecraft.options.keyInventory.matches(keyCode, scanCode)) {
+                this.onClose();
+                return true;
+            }
+
             return false;
         }
     }

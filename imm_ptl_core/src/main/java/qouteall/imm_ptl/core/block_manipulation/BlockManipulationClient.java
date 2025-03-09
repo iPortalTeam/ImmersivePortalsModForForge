@@ -2,21 +2,13 @@ package qouteall.imm_ptl.core.block_manipulation;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.multiplayer.MultiPlayerGameMode;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Tuple;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
@@ -24,16 +16,15 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.common.MinecraftForge;
+import org.apache.commons.lang3.Validate;
+import org.jetbrains.annotations.Nullable;
 import qouteall.imm_ptl.core.ClientWorldLoader;
-import qouteall.imm_ptl.core.IPMcHelper;
-import qouteall.imm_ptl.core.commands.PortalCommand;
-import qouteall.imm_ptl.core.mixin.common.MixinEntityAccess;
 import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.PortalPlaceholderBlock;
+import qouteall.imm_ptl.core.portal.PortalUtils;
 
-import javax.annotation.Nullable;
-import java.lang.ref.WeakReference;
 import java.util.function.Supplier;
 
 public class BlockManipulationClient {
@@ -41,12 +32,19 @@ public class BlockManipulationClient {
     
     public static ResourceKey<Level> remotePointedDim;
     public static HitResult remoteHitResult;
-    public static boolean isContextSwitched = false;
     
     public static boolean isPointingToPortal() {
         return remotePointedDim != null;
     }
     
+    @Nullable
+    public static ClientLevel getRemotePointedWorld() {
+        if (remotePointedDim == null) {
+            return null;
+        }
+        return ClientWorldLoader.getWorld(BlockManipulationClient.remotePointedDim);
+    }
+
     private static BlockHitResult createMissedHitResult(Vec3 from, Vec3 to) {
         Vec3 dir = to.subtract(from).normalize();
         
@@ -65,28 +63,28 @@ public class BlockManipulationClient {
         remotePointedDim = null;
         remoteHitResult = null;
         
+        if (MinecraftForge.EVENT_BUS.post(new BlockManipulationServer.CantDoCrossPortalInteractionEvent(client.player))) {
+            return;
+        }
+
         Vec3 cameraPos = client.gameRenderer.getMainCamera().getPosition();
         
         float reachDistance = client.gameMode.getPickRange();
         
-        PortalCommand.getPlayerPointingPortalRaw(
-            client.player, tickDelta, reachDistance, true
-        ).ifPresent(pair -> {
+        PortalUtils.raytracePortalFromEntityView(client.player, tickDelta, reachDistance, true, portal1 -> portal1.isInteractableBy(client.player)).ifPresent(pair -> {
             Portal portal = pair.getFirst();
-            if (portal.isInteractable() && portal.isVisible()) {
-                double distanceToPortalPointing = pair.getSecond().distanceTo(cameraPos);
-                if (distanceToPortalPointing < getCurrentTargetDistance() + 0.2) {
-                    client.hitResult = createMissedHitResult(cameraPos, pair.getSecond());
-                    
-                    updateTargetedBlockThroughPortal(
-                        cameraPos,
-                        client.player.getViewVector(tickDelta),
-                        client.player.level().dimension(),
-                        distanceToPortalPointing,
-                        reachDistance,
-                        portal
-                    );
-                }
+            double distanceToPortalPointing = pair.getSecond().distanceTo(cameraPos);
+            if (distanceToPortalPointing < getCurrentTargetDistance() + 0.2) {
+                client.hitResult = createMissedHitResult(cameraPos, pair.getSecond());
+
+                updateTargetedBlockThroughPortal(
+                    cameraPos,
+                    client.player.getViewVector(tickDelta),
+                    client.player.level().dimension(),
+                    distanceToPortalPointing,
+                    reachDistance,
+                    portal
+                );
             }
         });
     }
@@ -123,10 +121,7 @@ public class BlockManipulationClient {
         Vec3 to = portal.transformPoint(
             cameraPos.add(viewVector.scale(endDistance))
         );
-        
-        //do not touch barrier block through world wrapping portal
-//        from = from.add(to.subtract(from).normalize().multiply(0.00151));
-        
+
         ClipContext context = new ClipContext(
             from,
             to,
@@ -153,7 +148,7 @@ public class BlockManipulationClient {
                 FluidState fluidState = world.getFluidState(blockPos);
                 Vec3 start = rayTraceContext.getFrom();
                 Vec3 end = rayTraceContext.getTo();
-                /**{@link VoxelShape#rayTrace(Vec3d, Vec3d, BlockPos)}*/
+
                 //correct the start pos to avoid being considered inside block
                 Vec3 correctedStart = start.subtract(end.subtract(start).scale(0.0015));
 //                Vec3d correctedStart = start;
@@ -197,155 +192,40 @@ public class BlockManipulationClient {
         
     }
     
-    public static void myHandleBlockBreaking(boolean isKeyPressed) {
-        
-        if (!client.player.isUsingItem()) {
-            if (isKeyPressed && isPointingToPortal()) {
-                BlockHitResult blockHitResult = (BlockHitResult) remoteHitResult;
-                BlockPos blockPos = blockHitResult.getBlockPos();
-                ClientLevel remoteWorld =
-                    ClientWorldLoader.getWorld(remotePointedDim);
-                if (!remoteWorld.getBlockState(blockPos).isAir()) {
-                    Direction direction = blockHitResult.getDirection();
-                    if (myUpdateBlockBreakingProgress(blockPos, direction)) {
-                        client.particleEngine.crack(blockPos, direction);
-                        client.player.swing(InteractionHand.MAIN_HAND);
-                    }
-                }
-                
-            }
-            else {
-                client.gameMode.stopDestroyBlock();
-            }
-        }
-    }
-    
-    //hacky switch
-    public static boolean myUpdateBlockBreakingProgress(
-        BlockPos blockPos,
-        Direction direction
-    ) {
-        ClientLevel targetWorld = ClientWorldLoader.getWorld(remotePointedDim);
-        
-        return withWorldSwitchedAndPlayerDimensionSwitched(
-            targetWorld,
-            () -> {
-                return client.gameMode.continueDestroyBlock(blockPos, direction);
-            }
-        );
-    }
-    
     /**
-     * {@link Minecraft#startAttack()}
+     * It will not switch the dimension of client player
      */
-    public static boolean myAttackBlock() {
-        ClientLevel targetWorld =
-            ClientWorldLoader.getWorld(remotePointedDim);
-        BlockPos blockPos = ((BlockHitResult) remoteHitResult).getBlockPos();
-        
-        if (targetWorld.isEmptyBlock(blockPos)) {
-            return true;
-        }
-        
-        return withWorldSwitchedAndPlayerDimensionSwitched(
-            targetWorld,
-            () -> {
-                client.gameMode.startDestroyBlock(
-                    blockPos,
-                    ((BlockHitResult) remoteHitResult).getDirection()
-                );
-                client.player.swing(InteractionHand.MAIN_HAND);
-                return client.level.getBlockState(blockPos).isAir();
-            }
-        );
-    }
-    
-    public static void myItemUse(InteractionHand hand) {
-        ClientLevel targetWorld =
-            ClientWorldLoader.getWorld(remotePointedDim);
-        
-        ItemStack itemStack = client.player.getItemInHand(hand);
-        BlockHitResult blockHitResult = (BlockHitResult) remoteHitResult;
-        
-        Tuple<BlockHitResult, ResourceKey<Level>> result =
-            BlockManipulationServer.getHitResultForPlacing(targetWorld, blockHitResult);
-        blockHitResult = result.getA();
-        targetWorld = ClientWorldLoader.getWorld(result.getB());
-        remoteHitResult = blockHitResult;
-        remotePointedDim = result.getB();
-        
-        int count = itemStack.getCount();
-        InteractionResult actionResult2 = myInteractBlock(hand, targetWorld, blockHitResult);
-        if (actionResult2.consumesAction()) {
-            if (actionResult2.shouldSwing()) {
-                client.player.swing(hand);
-                if (!itemStack.isEmpty() && (itemStack.getCount() != count || client.gameMode.hasInfiniteItems())) {
-                    client.gameRenderer.itemInHandRenderer.itemUsed(hand);
-                }
-            }
-            
-            return;
-        }
-        
-        if (actionResult2 == InteractionResult.FAIL) {
-            return;
-        }
-        
-        if (!itemStack.isEmpty()) {
-            InteractionResult actionResult3 = withWorldSwitchedAndPlayerDimensionSwitched(
-                targetWorld,
-                () -> client.gameMode.useItem(
-                    client.player,
-                    hand
-                )
-            );
-            if (actionResult3.consumesAction()) {
-                if (actionResult3.shouldSwing()) {
-                    client.player.swing(hand);
-                }
-                
-                client.gameRenderer.itemInHandRenderer.itemUsed(hand);
-                return;
-            }
-        }
-    }
-    
-    private static InteractionResult myInteractBlock(
-        InteractionHand hand,
-        ClientLevel targetWorld,
-        BlockHitResult blockHitResult
+    public static <T> T withSwitchedContext(
+        Supplier<T> func, boolean transformHitResult
     ) {
-        return withWorldSwitchedAndPlayerDimensionSwitched(
-            targetWorld,
-            () -> client.gameMode.useItemOn(
-                client.player, hand, blockHitResult
-            )
-        );
-    }
-    
-    /**
-     * In {@link MultiPlayerGameMode#useItemOn(LocalPlayer, ClientLevel, InteractionHand, BlockHitResult)}
-     * {@link UseOnContext#UseOnContext(Player, InteractionHand, BlockHitResult)}
-     * It will use the player's current dimension which may be wrong when interacting another dimension's block
-     * So also switch the player's dimension
-     */
-    private static <T> T withWorldSwitchedAndPlayerDimensionSwitched(
-        ClientLevel targetWorld,
-        Supplier<T> supplier
-    ) {
-        return IPMcHelper.withSwitchedContext(
-            targetWorld,
-            () -> {
-                Level oldWorld = client.player.level();
-                
-                isContextSwitched = true;
-                ((MixinEntityAccess)client.player).immersive_portals$callSetLevel(targetWorld);
+        Validate.notNull(remoteHitResult);
+        
+        ClientLevel remoteWorld = getRemotePointedWorld();
+        Validate.notNull(remoteWorld);
+
+        HitResult effectiveHitResult;
+
+        if (transformHitResult && (remoteHitResult instanceof BlockHitResult blockHitResult)) {
+            Tuple<BlockHitResult, ResourceKey<Level>> r =
+                BlockManipulationServer.getHitResultForPlacing(remoteWorld, blockHitResult);
+            effectiveHitResult = r.getA();
+            remoteWorld = ClientWorldLoader.getWorld(r.getB());
+            Validate.notNull(remoteWorld);
+            Validate.notNull(effectiveHitResult);
+        }
+        else {
+            effectiveHitResult = remoteHitResult;
+        }
+        
+        return ClientWorldLoader.withSwitchedWorld(
+            remoteWorld, () -> {
+                HitResult originalHitResult = client.hitResult;
+                client.hitResult = effectiveHitResult;
                 try {
-                    return supplier.get();
+                    return func.get();
                 }
                 finally {
-                    isContextSwitched = false;
-                    ((MixinEntityAccess)client.player).immersive_portals$callSetLevel(oldWorld);
+                    client.hitResult = originalHitResult;
                 }
             }
         );

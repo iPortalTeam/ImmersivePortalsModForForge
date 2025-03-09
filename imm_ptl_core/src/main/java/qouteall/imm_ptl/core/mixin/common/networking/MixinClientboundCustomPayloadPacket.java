@@ -1,6 +1,7 @@
 package qouteall.imm_ptl.core.mixin.common.networking;
 
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.BundlePacket;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket;
@@ -17,8 +18,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import qouteall.imm_ptl.core.ducks.IECustomPayloadPacket;
-import qouteall.imm_ptl.core.network.PacketRedirection;
 import qouteall.imm_ptl.core.network.IPNetworking;
+import qouteall.imm_ptl.core.network.PacketRedirection;
 import qouteall.q_misc_util.dimension.DimId;
 
 @Mixin(ClientboundCustomPayloadPacket.class)
@@ -54,10 +55,12 @@ public class MixinClientboundCustomPayloadPacket implements IECustomPayloadPacke
         FriendlyByteBuf _buf, CallbackInfo ci
     ) {
         if (PacketRedirection.isPacketIdOfRedirection(identifier)) {
-            ResourceKey<Level> dimension = DimId.readWorldId(data, true);
+            FriendlyByteBuf buf = data;
             
-            int packetId = data.readInt();
-            Packet packet = PacketRedirection.createPacketById(packetId, data);
+            ResourceKey<Level> dimension = DimId.readWorldId(buf, true);
+
+            int packetId = buf.readInt();
+            Packet packet = PacketRedirection.createPacketById(packetId, buf);
             if (packet == null) {
                 throw new RuntimeException("Unknown packet id %d in %s".formatted(packetId, dimension.location()));
             }
@@ -99,13 +102,29 @@ public class MixinClientboundCustomPayloadPacket implements IECustomPayloadPacke
     )
     private void onHandle(ClientGamePacketListener handler, CallbackInfo ci) {
         if (PacketRedirection.isPacketIdOfRedirection(identifier)) {
-            PacketRedirection.do_handleRedirectedPacketFromNetworkingThread(
+            PacketRedirection.do_handleRedirectedPacket(
                 ip_redirectedDimension, ip_redirectedPacket, handler
             );
             ci.cancel();
         }
         else {
-            boolean handled = IPNetworking.handleImmPtlCorePacketClientSide(identifier, data);
+            // NOTE should not change reader index in `data`
+            boolean handled = IPNetworking.handleImmPtlCorePacketClientSide(
+                identifier,
+
+                // The slice packet has its own offset,
+                // so that reading the data will not affect the original buffer.
+                // It uses slice() instead of copy() to avoid copying the packet data.
+                // In LAN multiplayer, the server owner will read the packet buffer,
+                // but it will also need to write the packet concurrently for sending.
+
+                // Note: in singleplayer and LAN server owner,
+                // the normal packets are not serialized and deserialized. Just packet object passing.
+                // But CustomPayloadPacket is special.
+                // It involves its own buffer reading and writing,
+                // even when the CustomPayloadPacket is not serialized.
+                () -> new FriendlyByteBuf(data.slice())
+            );
             if (handled) {
                 ci.cancel();
             }
@@ -121,6 +140,7 @@ public class MixinClientboundCustomPayloadPacket implements IECustomPayloadPacke
     
     @Override
     public void ip_setRedirectedPacket(Packet<ClientGamePacketListener> packet) {
+        Validate.isTrue(!(packet instanceof BundlePacket<ClientGamePacketListener>));
         ip_redirectedPacket = packet;
     }
     

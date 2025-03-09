@@ -45,11 +45,6 @@ public abstract class MixinEntity implements IEEntity, ImmPtlEntityExtension {
     @Shadow
     private Level level;
 
-
-    public Level ip_getLevel() {
-        return level;
-    }
-
     @Shadow
     protected abstract Vec3 collide(Vec3 vec3d_1);
     

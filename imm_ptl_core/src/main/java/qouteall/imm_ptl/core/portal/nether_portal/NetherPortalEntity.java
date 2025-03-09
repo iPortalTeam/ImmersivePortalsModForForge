@@ -54,15 +54,9 @@ public class NetherPortalEntity extends BreakablePortalEntity {
         0,
         null
     );
-    
-    
-    public static EntityType<NetherPortalEntity> entityType = IPRegistry.NETHER_PORTAL_NEW.get();
-    
-    public NetherPortalEntity(
-        EntityType<?> entityType_1,
-        Level world_1
-    ) {
-        super(entityType_1, world_1);
+
+    public NetherPortalEntity(EntityType<?> entityType, Level world) {
+        super(entityType, world);
     }
     
     @Override

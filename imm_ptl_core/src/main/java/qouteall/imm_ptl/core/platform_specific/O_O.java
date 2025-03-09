@@ -20,11 +20,10 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
-import qouteall.imm_ptl.core.chunk_loading.MyClientChunkManager;
+import org.jetbrains.annotations.Nullable;
+import qouteall.imm_ptl.core.chunk_loading.ImmPtlClientChunkMap;
 import qouteall.imm_ptl.core.portal.custom_portal_gen.PortalGenInfo;
-import qouteall.q_misc_util.Helper;
 
-import javax.annotation.Nullable;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -78,7 +77,7 @@ public class O_O {
     
     @OnlyIn(Dist.CLIENT)
     public static ClientChunkCache createMyClientChunkManager(ClientLevel world, int loadDistance) {
-        return new MyClientChunkManager(world, loadDistance);
+        return new ImmPtlClientChunkMap(world, loadDistance);
     }
     
     public static boolean getIsPehkuiPresent() {
@@ -126,7 +125,7 @@ public class O_O {
         }
     }
 
-    public static @org.jetbrains.annotations.Nullable String getImmPtlVersion() {
+    public static @Nullable String getImmPtlVersion() {
         if (!FMLEnvironment.production) {
             return null;
         }
@@ -154,7 +153,7 @@ public class O_O {
         return "https://github.com/iPortalTeam/ImmersivePortalsMod/issues";
     }
 
-    @org.jetbrains.annotations.Nullable
+    @Nullable
     public static ResourceLocation getModIconLocation(String modid) {
         String path = ModList.get().getModContainerById(modid)
                 .flatMap(c -> c.getModInfo().getLogoFile())
@@ -182,7 +181,7 @@ public class O_O {
         return new ResourceLocation(parts[0], parts[1]);
     }
 
-    @org.jetbrains.annotations.Nullable
+    @Nullable
     public static String getModName(String modid) {
         return ModList.get().getModContainerById(modid)
                 .map(c -> c.getModInfo().getDisplayName())

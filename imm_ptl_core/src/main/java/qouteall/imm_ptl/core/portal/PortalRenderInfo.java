@@ -5,6 +5,8 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.profiling.ProfilerFiller;
 import org.apache.commons.lang3.Validate;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.render.GlQueryObject;
@@ -14,8 +16,6 @@ import qouteall.imm_ptl.core.render.context_management.RenderStates;
 import qouteall.imm_ptl.core.render.context_management.WorldRenderInfo;
 import qouteall.q_misc_util.Helper;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -176,7 +176,7 @@ public class PortalRenderInfo {
         }
     }
     
-    @Nonnull
+    @NotNull
     private Visibility getVisibility(List<UUID> desc) {
         updateQuerySet();
         
@@ -213,12 +213,12 @@ public class PortalRenderInfo {
         }
     }
     
-    public static boolean renderAndDecideVisibility(PortalLike portal, Runnable queryRendering) {
+    public static boolean renderAndDecideVisibility(PortalLike portalLike, Runnable queryRendering) {
         ProfilerFiller profiler = Minecraft.getInstance().getProfiler();
         
         boolean decision;
-        if (IPGlobal.offsetOcclusionQuery && portal instanceof Portal) {
-            PortalRenderInfo renderInfo = get(((Portal) portal));
+        if (IPGlobal.offsetOcclusionQuery && portalLike instanceof Portal portal) {
+            PortalRenderInfo renderInfo = get(portal);
             
             List<UUID> renderingDescription = WorldRenderInfo.getRenderingDescription();
             

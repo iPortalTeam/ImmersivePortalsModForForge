@@ -7,8 +7,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ThreadedLevelLightEngine;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.LevelChunk;
+import org.jetbrains.annotations.Nullable;
 
 public interface IEThreadedAnvilChunkStorage {
     int ip_getWatchDistance();
@@ -34,4 +34,6 @@ public interface IEThreadedAnvilChunkStorage {
     void ip_resendSpawnPacketToTrackers(Entity entity);
     
     Int2ObjectMap<ChunkMap.TrackedEntity> ip_getEntityTrackerMap();
+
+    @Nullable ChunkHolder ip_getUpdatingChunkIfPresent(long chunkPos);
 }

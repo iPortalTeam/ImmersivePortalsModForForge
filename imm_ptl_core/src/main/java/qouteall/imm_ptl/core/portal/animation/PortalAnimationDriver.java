@@ -6,8 +6,7 @@ import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import qouteall.q_misc_util.Helper;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -54,7 +53,7 @@ public interface PortalAnimationDriver {
      * @param context      The context of the animation.
      * @return The animation result
      */
-    @Nonnull
+    @NotNull
     AnimationResult getAnimationResult(
         long tickTime,
         float partialTicks,
@@ -67,11 +66,10 @@ public interface PortalAnimationDriver {
      *
      * @param tickTime World game time.
      * @param context
+     * @return The ending state. Null if the animation is infinite.
      */
     @Nullable
-    default DeltaUnilateralPortalState getEndingResult(long tickTime, AnimationContext context) {
-        return null;
-    }
+    DeltaUnilateralPortalState getEndingResult(long tickTime, AnimationContext context);
     
     /**
      * @return A flipped version of this animation for the flipped portal.

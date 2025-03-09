@@ -16,7 +16,14 @@ import net.minecraft.world.phys.Vec3;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.PortalExtension;
 import qouteall.imm_ptl.core.portal.PortalState;
-import qouteall.imm_ptl.core.portal.animation.*;
+import qouteall.imm_ptl.core.portal.animation.AnimationView;
+import qouteall.imm_ptl.core.portal.animation.DeltaUnilateralPortalState;
+import qouteall.imm_ptl.core.portal.animation.NormalAnimation;
+import qouteall.imm_ptl.core.portal.animation.PortalAnimation;
+import qouteall.imm_ptl.core.portal.animation.PortalAnimationDriver;
+import qouteall.imm_ptl.core.portal.animation.RotationAnimation;
+import qouteall.imm_ptl.core.portal.animation.TimingFunction;
+import qouteall.imm_ptl.core.portal.animation.UnilateralPortalState;
 import qouteall.q_misc_util.my_util.Access;
 import qouteall.q_misc_util.my_util.Vec2d;
 
@@ -27,13 +34,21 @@ public class PortalAnimationCommand {
     static void registerPortalAnimationCommands(LiteralArgumentBuilder<CommandSourceStack> builder) {
         builder.then(Commands.literal("clear")
             .executes(context -> PortalCommand.processPortalTargetedCommand(context, portal -> {
-                PortalExtension.forEachClusterPortal(
-                    portal,
-                    thisPortal -> thisPortal.clearAnimationDrivers(true, false),
-                    flippedPortal -> flippedPortal.clearAnimationDrivers(true, false),
-                    reversePortal -> reversePortal.clearAnimationDrivers(false, true),
-                    parallelPortal -> parallelPortal.clearAnimationDrivers(false, true)
-                );
+                AnimationView animationView = portal.getAnimationView();
+
+                animationView.getThisSideAnimations().clear();
+
+                PortalCommand.reloadPortal(portal);
+                context.getSource().sendSuccess(() -> getAnimationInfo(portal), false);
+            }))
+        );
+
+        builder.then(Commands.literal("clear_both_sides")
+            .executes(context -> PortalCommand.processPortalTargetedCommand(context, portal -> {
+                AnimationView animationView = portal.getAnimationView();
+
+                animationView.getThisSideAnimations().clear();
+                animationView.getOtherSideAnimations().clear();
                 
                 PortalCommand.reloadPortal(portal);
                 context.getSource().sendSuccess(() -> getAnimationInfo(portal), false);
@@ -309,14 +324,12 @@ public class PortalAnimationCommand {
                     animation.otherSideReferenceState =
                         UnilateralPortalState.extractOtherSide(portalState);
                 }
-                
-                NormalAnimation.Phase dummyPhase = new NormalAnimation.Phase.Builder()
-                    .durationTicks(0)
-                    .build();
+
                 NormalAnimation newNormalAnimation = new NormalAnimation.Builder()
-                    .phases(List.of(dummyPhase))
+                    .phases(List.of())
                     .loopCount(1)
                     .startingGameTime(portal.getAnimationEffectiveTime())
+                    .isBuilding(true)
                     .build();
                 animation.thisSideAnimations.add(newNormalAnimation);
                 animation.otherSideAnimations.add(newNormalAnimation); // reusing immutable object
@@ -363,7 +376,7 @@ public class PortalAnimationCommand {
             .then(Commands.argument("index", IntegerArgumentType.integer(0, 100000))
                 .executes(context -> PortalCommand.processPortalTargetedCommand(context, portal -> {
                     int index = IntegerArgumentType.getInteger(context, "index");
-    
+
                     Portal animationHolder = portal.getAnimationHolder();
                     if (animationHolder != null && animationHolder != portal) {
                         sendAnimationHolderFailure(context, animationHolder);
@@ -396,11 +409,13 @@ public class PortalAnimationCommand {
                     animationBuilderContext.thisSideAnimation().set(
                         new NormalAnimation.Builder().from(animationBuilderContext.thisSideAnimation().get())
                             .startingGameTime(newStartingGameTime)
+                            .isBuilding(false)
                             .build()
                     );
                     animationBuilderContext.otherSideAnimation().set(
                         new NormalAnimation.Builder().from(animationBuilderContext.otherSideAnimation().get())
                             .startingGameTime(newStartingGameTime)
+                            .isBuilding(false)
                             .build()
                     );
                     
@@ -463,6 +478,7 @@ public class PortalAnimationCommand {
                 .build())
             .loopCount(thisSideAnimation.loopCount)
             .startingGameTime(thisSideAnimation.startingGameTime)
+            .isBuilding(true)
             .build()
         );
         NormalAnimation otherSideAnimation = animationBuilderContext.otherSideAnimation().get();
@@ -477,6 +493,7 @@ public class PortalAnimationCommand {
                 .build())
             .loopCount(otherSideAnimation.loopCount)
             .startingGameTime(otherSideAnimation.startingGameTime)
+            .isBuilding(true)
             .build()
         );
         

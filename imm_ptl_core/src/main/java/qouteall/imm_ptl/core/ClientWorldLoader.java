@@ -1,5 +1,7 @@
 package qouteall.imm_ptl.core;
 
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.Camera;
@@ -12,30 +14,37 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.commons.lang3.Validate;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import qouteall.imm_ptl.core.ducks.IECamera;
 import qouteall.imm_ptl.core.ducks.IEClientPlayNetworkHandler;
+import qouteall.imm_ptl.core.ducks.IEClientWorld;
 import qouteall.imm_ptl.core.ducks.IEMinecraftClient;
 import qouteall.imm_ptl.core.ducks.IEParticleManager;
 import qouteall.imm_ptl.core.render.context_management.PortalRendering;
-import qouteall.q_misc_util.api.DimensionAPI;
 import qouteall.q_misc_util.dimension.DimensionTypeSync;
-import qouteall.imm_ptl.core.ducks.IECamera;
-import qouteall.imm_ptl.core.ducks.IEClientWorld;
 import qouteall.imm_ptl.core.ducks.IEWorld;
 import qouteall.imm_ptl.core.ducks.IEWorldRenderer;
+import qouteall.imm_ptl.core.mixin.client.accessor.IEClientLevel_Accessor;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.render.context_management.DimensionRenderHelper;
+import qouteall.imm_ptl.core.render.context_management.PortalRendering;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.forge.events.ClientDimensionUpdateEvent;
 import qouteall.q_misc_util.my_util.LimitedLogger;
 import qouteall.q_misc_util.my_util.SignalArged;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +55,8 @@ import java.util.stream.Collectors;
 
 @OnlyIn(Dist.CLIENT)
 public class ClientWorldLoader {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClientWorldLoader.class);
+
     public static final SignalArged<ResourceKey<Level>> clientDimensionDynamicRemoveSignal =
         new SignalArged<>();
     public static final SignalArged<ClientLevel> clientWorldLoadSignal = new SignalArged<>();
@@ -65,23 +76,13 @@ public class ClientWorldLoader {
     
     public static boolean isClientRemoteTicking = false;
     
+    private static boolean isWorldSwitched = false;
+
     public static void init() {
         IPGlobal.clientCleanupSignal.connect(ClientWorldLoader::cleanUp);
 
         MinecraftForge.EVENT_BUS.register(ClientWorldLoader.class);
 
-//        DimensionAPI.clientDimensionUpdateEvent.register((serverDimensions) -> { //TODO Reimplement this !DONE
-//            if (getIsInitialized()) {
-//                List<ResourceKey<Level>> dimensionsToRemove =
-//                    clientWorldMap.keySet().stream()
-//                        .filter(dim -> !serverDimensions.contains(dim)).toList();
-//
-//                for (ResourceKey<Level> dim : dimensionsToRemove) {
-//                    disposeDimensionDynamically(dim);
-//                }
-//
-//            }
-//        });
     }
 
     @SubscribeEvent
@@ -259,11 +260,30 @@ public class ClientWorldLoader {
         clientDimensionDynamicRemoveSignal.emit(dimension);
     }
     
-    //@Nullable
+    @NotNull
     public static LevelRenderer getWorldRenderer(ResourceKey<Level> dimension) {
         initializeIfNeeded();
         
-        return worldRendererMap.get(dimension);
+        LevelRenderer result = worldRendererMap.get(dimension);
+
+        if (result == null) {
+            LOGGER.warn(
+                "Acquiring LevelRenderer before acquiring Level. Something is probably wrong. {}",
+                dimension.location(), new Throwable()
+            );
+
+            // the world renderer is created along with the world
+            // so create the world now
+            getWorld(dimension);
+
+            result = worldRendererMap.get(dimension);
+
+            if (result == null) {
+                throw new RuntimeException("Unable to get LevelRenderer of " + dimension.location());
+            }
+        }
+
+        return result;
     }
     
     
@@ -271,6 +291,7 @@ public class ClientWorldLoader {
      * Get the client world and create if missing.
      * If the dimension id is invalid, it will throw an error
      */
+    @NotNull
     public static ClientLevel getWorld(ResourceKey<Level> dimension) {
         Validate.notNull(dimension);
         Validate.isTrue(client.isSameThread());
@@ -281,7 +302,9 @@ public class ClientWorldLoader {
             return createSecondaryClientWorld(dimension);
         }
         
-        return clientWorldMap.get(dimension);
+        ClientLevel result = clientWorldMap.get(dimension);
+        Validate.notNull(result);
+        return result;
     }
     
     /**
@@ -322,7 +345,10 @@ public class ClientWorldLoader {
             Validate.isTrue(client.level != null, "level is null");
             Validate.isTrue(client.levelRenderer != null, "levelRenderer is null");
             
-            Validate.notNull(client.player, "player is null");
+            Validate.notNull(
+                client.player,
+                "player is null. This may be caused by prior initialization failure. The log may provide useful information."
+            );
             Validate.isTrue(client.player.level() == client.level, "The player level is not the same as client level");
             
             ResourceKey<Level> playerDimension = client.level.dimension();
@@ -362,7 +388,8 @@ public class ClientWorldLoader {
         ClientLevel newWorld;
         try {
             ClientPacketListener mainNetHandler = client.player.connection;
-            
+            Map<String, MapItemSavedData> mapData = ((IEClientLevel_Accessor) client.level).ip_getMapData();
+
             ResourceKey<DimensionType> dimensionTypeKey =
                 DimensionTypeSync.getDimensionTypeKey(dimension);
             ClientLevel.ClientLevelData currentProperty =
@@ -391,6 +418,9 @@ public class ClientWorldLoader {
                 client.level.isDebug(),
                 client.level.getBiomeManager().biomeZoomSeed
             );
+
+            // all worlds share the same map data map
+            ((IEClientLevel_Accessor) newWorld).ip_setMapData(mapData);
         }
         catch (Exception e) {
             throw new IllegalStateException(
@@ -467,6 +497,9 @@ public class ClientWorldLoader {
         isReloadingOtherWorldRenderers = false;
     }
     
+    /**
+     * It will not switch the dimension of client player
+     */
     public static <T> T withSwitchedWorld(ClientLevel newWorld, Supplier<T> supplier) {
         Validate.isTrue(client.isSameThread());
         Validate.isTrue(client.player != null);
@@ -476,7 +509,8 @@ public class ClientWorldLoader {
         ClientLevel originalWorld = client.level;
         LevelRenderer originalWorldRenderer = client.levelRenderer;
         ClientLevel originalNetHandlerWorld = networkHandler.getLevel();
-        
+        boolean originalIsWorldSwitched = isWorldSwitched;
+
         LevelRenderer newWorldRenderer = getWorldRenderer(newWorld.dimension());
         
         Validate.notNull(newWorldRenderer);
@@ -485,8 +519,10 @@ public class ClientWorldLoader {
         ((IEParticleManager) client.particleEngine).ip_setWorld(newWorld);
         ((IEMinecraftClient) client).setWorldRenderer(newWorldRenderer);
         ((IEClientPlayNetworkHandler) networkHandler).ip_setWorld(newWorld);
-        
+        isWorldSwitched = true;
+
         try {
+
             return supplier.get();
         }
         finally {
@@ -500,6 +536,7 @@ public class ClientWorldLoader {
             ((IEMinecraftClient) client).setWorldRenderer(originalWorldRenderer);
             ((IEParticleManager) client.particleEngine).ip_setWorld(originalWorld);
             ((IEClientPlayNetworkHandler) networkHandler).ip_setWorld(originalNetHandlerWorld);
+            isWorldSwitched = originalIsWorldSwitched;
         }
     }
     
@@ -508,5 +545,47 @@ public class ClientWorldLoader {
             runnable.run();
             return null;
         });
+    }
+
+    public static void withSwitchedWorldFailSoft(ResourceKey<Level> dim, Runnable runnable) {
+        ClientLevel world = getOptionalWorld(dim);
+
+        if (world == null) {
+            Helper.err(
+                "Ignoring redirected task of invalid dimension %s"
+                    .formatted(dim.location())
+            );
+            return;
+        }
+
+        withSwitchedWorld(world, runnable);
+    }
+
+    public static boolean getIsWorldSwitched() {
+        return isWorldSwitched;
+    }
+
+    public static class RemoteCallables {
+        public static void checkBiomeRegistry(
+            Map<String, Integer> idMap
+        ) {
+            RegistryAccess registryAccess = Minecraft.getInstance().player.connection.registryAccess();
+            Registry<Biome> biomes = registryAccess.registryOrThrow(Registries.BIOME);
+
+            for (Map.Entry<String, Integer> entry : idMap.entrySet()) {
+                ResourceLocation id = new ResourceLocation(entry.getKey());
+                int expectedId = entry.getValue();
+
+                if (biomes.getId(biomes.get(id)) != expectedId) {
+                    LOGGER.error("Biome id mismatch: " + id + " " + expectedId);
+                }
+            }
+
+            if (idMap.size() != biomes.keySet().size()) {
+                LOGGER.error("Biome id mismatch: size not equal");
+            }
+
+            LOGGER.info("Biome id check finished");
+        }
     }
 }

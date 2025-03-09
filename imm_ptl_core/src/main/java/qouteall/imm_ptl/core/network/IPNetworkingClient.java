@@ -7,8 +7,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
-import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
@@ -28,6 +26,7 @@ import qouteall.q_misc_util.my_util.SignalArged;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 @OnlyIn(Dist.CLIENT)
 public class IPNetworkingClient {
@@ -41,18 +40,18 @@ public class IPNetworkingClient {
 
     public static boolean handleImmPtlCorePacketClientSide(
         ResourceLocation packedId,
-        FriendlyByteBuf buf
+        Supplier<FriendlyByteBuf> buf
     ) {
         if (packedId.equals(IPNetworking.id_stcSpawnEntity)) {
-            processStcSpawnEntity(buf);
+            processStcSpawnEntity(buf.get());
             return true;
         }
         else if (packedId.equals(IPNetworking.id_stcDimensionConfirm)) {
-            processStcDimensionConfirm(buf);
+            processStcDimensionConfirm(buf.get());
             return true;
         }
         else if (packedId.equals(IPNetworking.id_stcUpdateGlobalPortal)) {
-            processGlobalPortalUpdate(buf);
+            processGlobalPortalUpdate(buf.get());
             return true;
         }
         else {
@@ -97,25 +96,25 @@ public class IPNetworkingClient {
         });
     }
     
-    public static Packet createCtsPlayerAction(
-        ResourceKey<Level> dimension,
-        ServerboundPlayerActionPacket packet
-    ) {
-        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-        DimId.writeWorldId(buf, dimension, true);
-        packet.write(buf);
-        return new ServerboundCustomPayloadPacket(IPNetworking.id_ctsPlayerAction, buf);
-    }
-    
-    public static Packet createCtsRightClick(
-        ResourceKey<Level> dimension,
-        ServerboundUseItemOnPacket packet
-    ) {
-        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-        DimId.writeWorldId(buf, dimension, true);
-        packet.write(buf);
-        return new ServerboundCustomPayloadPacket(IPNetworking.id_ctsRightClick, buf);
-    }
+//    public static Packet createCtsPlayerAction(
+//        ResourceKey<Level> dimension,
+//        ServerboundPlayerActionPacket packet
+//    ) {
+//        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+//        DimId.writeWorldId(buf, dimension, true);
+//        packet.write(buf);
+//        return new ServerboundCustomPayloadPacket(IPNetworking.id_ctsPlayerAction, buf);
+//    }
+//
+//    public static Packet createCtsRightClick(
+//        ResourceKey<Level> dimension,
+//        ServerboundUseItemOnPacket packet
+//    ) {
+//        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+//        DimId.writeWorldId(buf, dimension, true);
+//        packet.write(buf);
+//        return new ServerboundCustomPayloadPacket(IPNetworking.id_ctsRightClick, buf);
+//    }
     
     public static Packet createCtsTeleport(
         ResourceKey<Level> dimensionBefore,

@@ -6,6 +6,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraft.world.InteractionResult;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import qouteall.imm_ptl.core.block_manipulation.BlockManipulationServer;
 import qouteall.imm_ptl.core.chunk_loading.*;
 import qouteall.imm_ptl.core.collision.CollisionHelper;
 import qouteall.imm_ptl.core.commands.AxisArgumentType;
@@ -13,6 +14,7 @@ import qouteall.imm_ptl.core.commands.PortalCommand;
 import qouteall.imm_ptl.core.commands.SubCommandArgumentType;
 import qouteall.imm_ptl.core.commands.TimingFunctionArgumentType;
 import qouteall.imm_ptl.core.compat.IPPortingLibCompat;
+import qouteall.imm_ptl.core.debug.DebugUtil;
 import qouteall.imm_ptl.core.miscellaneous.GcMonitor;
 import qouteall.imm_ptl.core.network.IPNetworking;
 import qouteall.imm_ptl.core.platform_specific.IPConfig;
@@ -67,9 +69,11 @@ public class IPModMain {
         
         ServerPerformanceMonitor.init();
         
-        MyLoadingTicket.init();
+        ImmPtlChunkTickets.init();
         
         IPPortingLibCompat.init();
+
+        BlockManipulationServer.init();
         
 //        CommandRegistrationCallback.EVENT.register( // TODO @Nick1st Check this out
 //            (dispatcher, registryAccess, environment) -> PortalCommand.register(dispatcher)
@@ -77,7 +81,9 @@ public class IPModMain {
 //        SubCommandArgumentType.init();
 //        TimingFunctionArgumentType.init();
 //        AxisArgumentType.init();
-        
+    
+        DebugUtil.init();
+
         // intrinsic animation driver types
         RotationAnimation.init();
         NormalAnimation.init();

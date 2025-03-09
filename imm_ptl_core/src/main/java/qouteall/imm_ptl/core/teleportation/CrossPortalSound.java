@@ -15,10 +15,8 @@ import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.render.context_management.RenderStates;
 
-import javax.annotation.Nullable;
-import java.util.ArrayList;
+import org.jetbrains.annotations.Nullable;
 import java.util.Comparator;
-import java.util.List;
 
 @OnlyIn(Dist.CLIENT)
 public class CrossPortalSound {

@@ -1,6 +1,5 @@
 package qouteall.imm_ptl.core.commands;
 
-import com.google.common.collect.Streams;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
@@ -10,18 +9,28 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.datafixers.util.Pair;
+import com.mojang.logging.LogUtils;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.commands.arguments.*;
-import net.minecraft.commands.arguments.coordinates.*;
+import net.minecraft.commands.arguments.ComponentArgument;
+import net.minecraft.commands.arguments.CompoundTagArgument;
+import net.minecraft.commands.arguments.DimensionArgument;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
+import net.minecraft.commands.arguments.coordinates.ColumnPosArgument;
+import net.minecraft.commands.arguments.coordinates.RotationArgument;
+import net.minecraft.commands.arguments.coordinates.Vec3Argument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ColumnPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -31,18 +40,27 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.apache.commons.lang3.Validate;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 import qouteall.imm_ptl.core.IPGlobal;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.api.PortalAPI;
 import qouteall.imm_ptl.core.platform_specific.IPRegistry;
-import qouteall.imm_ptl.core.portal.*;
+import qouteall.imm_ptl.core.portal.GeometryPortalShape;
+import qouteall.imm_ptl.core.portal.Mirror;
+import qouteall.imm_ptl.core.portal.Portal;
+import qouteall.imm_ptl.core.portal.PortalExtension;
+import qouteall.imm_ptl.core.portal.PortalManipulation;
+import qouteall.imm_ptl.core.portal.PortalState;
+import qouteall.imm_ptl.core.portal.PortalUtils;
 import qouteall.imm_ptl.core.portal.animation.UnilateralPortalState;
 import qouteall.imm_ptl.core.portal.global_portals.BorderBarrierFiller;
 import qouteall.imm_ptl.core.portal.global_portals.GlobalPortalStorage;
@@ -54,10 +72,24 @@ import qouteall.imm_ptl.core.teleportation.ServerTeleportationManager;
 import qouteall.q_misc_util.Helper;
 import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.api.McRemoteProcedureCall;
-import qouteall.q_misc_util.my_util.*;
+import qouteall.q_misc_util.my_util.DQuaternion;
+import qouteall.q_misc_util.my_util.GeometryUtil;
+import qouteall.q_misc_util.my_util.IntBox;
+import qouteall.q_misc_util.my_util.Mesh2D;
+import qouteall.q_misc_util.my_util.MyTaskList;
+import qouteall.q_misc_util.my_util.Plane;
+import qouteall.q_misc_util.my_util.SignalBiArged;
+import qouteall.q_misc_util.my_util.Vec2d;
+import qouteall.q_misc_util.my_util.WithDim;
 
-import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -67,6 +99,8 @@ public class PortalCommand {
     public static final SignalBiArged<ServerPlayer, String>
         createCommandStickCommandSignal = new SignalBiArged<>();
     
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     public static void register(
         CommandDispatcher<CommandSourceStack> dispatcher
     ) {
@@ -316,7 +350,7 @@ public class PortalCommand {
                 
                 if (portal == null) {
                     context.getSource().sendSuccess(() ->
-                        Component.literal("You are not pointing to any portal"),
+                            Component.literal("You are not pointing to any portal"),
                         false
                     );
                     return 0;
@@ -324,7 +358,7 @@ public class PortalCommand {
                 
                 if (!portal.getIsGlobal()) {
                     context.getSource().sendSuccess(() ->
-                        Component.literal("You are not pointing to a global portal"),
+                            Component.literal("You are not pointing to a global portal"),
                         false
                     );
                     return 0;
@@ -332,7 +366,7 @@ public class PortalCommand {
                 
                 if (player.position().distanceTo(portal.getOriginPos()) > 64) {
                     context.getSource().sendSuccess(() ->
-                        Component.literal("You are too far away from the portal's center " + portal),
+                            Component.literal("You are too far away from the portal's center " + portal),
                         false
                     );
                     return 0;
@@ -351,7 +385,7 @@ public class PortalCommand {
                 
                 if (portal == null) {
                     context.getSource().sendSuccess(() ->
-                        Component.literal("You are not pointing to any portal"),
+                            Component.literal("You are not pointing to any portal"),
                         false
                     );
                     return 0;
@@ -359,7 +393,7 @@ public class PortalCommand {
                 
                 if (!portal.getIsGlobal()) {
                     context.getSource().sendSuccess(() ->
-                        Component.literal("You are not pointing to a global portal"),
+                            Component.literal("You are not pointing to a global portal"),
                         false
                     );
                     return 0;
@@ -518,6 +552,8 @@ public class PortalCommand {
             .executes(context -> processPortalTargetedCommand(
                 context,
                 portal -> {
+                    PortalExtension.get(portal).bindCluster = false;
+                    reloadPortal(portal);
                     PortalManipulation.removeConnectedPortals(
                         portal,
                         p -> sendMessage(context, "Removed " + p)
@@ -544,12 +580,14 @@ public class PortalCommand {
             .executes(context -> processPortalTargetedCommand(
                 context,
                 portal -> {
+                    HashSet<Portal> removed = new HashSet<>();
                     PortalManipulation.removeConnectedPortals(
                         portal,
-                        p -> sendMessage(context, "Removed " + p)
+                        removed::add
                     );
                     portal.remove(Entity.RemovalReason.KILLED);
-                    sendMessage(context, "Deleted " + portal);
+                    removed.add(portal);
+                    sendMessage(context, "Deleted %d portal entities".formatted(removed.size()));
                 }
             ))
         );
@@ -786,8 +824,12 @@ public class PortalCommand {
         builder.then(Commands.literal("reset_portal_orientation")
             .executes(context -> processPortalTargetedCommand(
                 context, portal -> {
-                    portal.axisW = new Vec3(1, 0, 0);
-                    portal.axisH = new Vec3(0, 1, 0);
+                    UnilateralPortalState thisSideState = portal.getThisSideState();
+                    portal.setThisSideState(new UnilateralPortalState.Builder()
+                        .from(thisSideState)
+                        .orientation(DQuaternion.identity)
+                        .build()
+                    );
                     reloadPortal(portal);
                 }
             ))
@@ -933,6 +975,30 @@ public class PortalCommand {
                 invokeTurnIntoFakeEnterableMirror(context, portal);
             }))
         );
+
+        var shapeBuilder = Commands.literal("shape");
+
+        shapeBuilder.then(Commands.literal("sculpt")
+            .executes(context -> processPortalTargetedCommand(context, portal -> {
+                invokeSculpt(context, portal, true);
+            }))
+            .then(Commands.argument("adjustPortalBounds", BoolArgumentType.bool())
+                .executes(context -> processPortalTargetedCommand(context, portal -> {
+                    boolean adjustPortalBounds =
+                        BoolArgumentType.getBool(context, "adjustPortalBounds");
+                    invokeSculpt(context, portal, adjustPortalBounds);
+                }))
+            )
+        );
+
+        shapeBuilder.then(Commands.literal("reset")
+            .executes(context -> processPortalTargetedCommand(context, portal -> {
+                portal.specialShape = null;
+                reloadPortal(portal);
+            }))
+        );
+
+        builder.then(shapeBuilder);
     }
     
     private static void invokeSetPortalNbt(
@@ -998,9 +1064,7 @@ public class PortalCommand {
     }
     
     public static void reloadPortal(Portal portal) {
-        portal.updateCache();
-        portal.rectifyClusterPortals(true);
-        portal.reloadAndSyncToClient();
+        portal.reloadPortal();
     }
     
     private static void registerPortalTargetedCommandWithRotationArgument(
@@ -1158,10 +1222,10 @@ public class PortalCommand {
                     );
                     
                     context.getSource().sendSuccess(() ->
-                        Component.translatable(
-                            "imm_ptl.command.tpme.success",
-                            entity.getDisplayName()
-                        ),
+                            Component.translatable(
+                                "imm_ptl.command.tpme.success",
+                                entity.getDisplayName()
+                            ),
                         true
                     );
                     
@@ -1180,10 +1244,10 @@ public class PortalCommand {
                     );
                     
                     context.getSource().sendSuccess(() ->
-                        Component.translatable(
-                            "imm_ptl.command.tpme.success",
-                            dest.toString()
-                        ),
+                            Component.translatable(
+                                "imm_ptl.command.tpme.success",
+                                dest.toString()
+                            ),
                         true
                     );
                     
@@ -1206,10 +1270,10 @@ public class PortalCommand {
                         );
                         
                         context.getSource().sendSuccess(() ->
-                            Component.translatable(
-                                "imm_ptl.command.tpme.success",
-                                McHelper.dimensionTypeId(dim).toString() + dest.toString()
-                            ),
+                                Component.translatable(
+                                    "imm_ptl.command.tpme.success",
+                                    McHelper.dimensionTypeId(dim).toString() + dest.toString()
+                                ),
                             true
                         );
                         
@@ -1235,11 +1299,11 @@ public class PortalCommand {
                         );
                         
                         context.getSource().sendSuccess(() ->
-                            Component.translatable(
-                                "imm_ptl.command.tp.success",
-                                numTeleported,
-                                target.getDisplayName()
-                            ),
+                                Component.translatable(
+                                    "imm_ptl.command.tp.success",
+                                    numTeleported,
+                                    target.getDisplayName()
+                                ),
                             true
                         );
                         
@@ -1259,11 +1323,11 @@ public class PortalCommand {
                         );
                         
                         context.getSource().sendSuccess(() ->
-                            Component.translatable(
-                                "imm_ptl.command.tp.success",
-                                numTeleported,
-                                dest.toString()
-                            ),
+                                Component.translatable(
+                                    "imm_ptl.command.tp.success",
+                                    numTeleported,
+                                    dest.toString()
+                                ),
                             true
                         );
                         
@@ -1288,11 +1352,11 @@ public class PortalCommand {
                             );
                             
                             context.getSource().sendSuccess(() ->
-                                Component.translatable(
-                                    "imm_ptl.command.tp.success",
-                                    numTeleported,
-                                    McHelper.dimensionTypeId(dim).toString() + dest.toString()
-                                ),
+                                    Component.translatable(
+                                        "imm_ptl.command.tp.success",
+                                        numTeleported,
+                                        McHelper.dimensionTypeId(dim).toString() + dest.toString()
+                                    ),
                                 true
                             );
                             
@@ -1683,9 +1747,8 @@ public class PortalCommand {
         builder.then(Commands
             .literal("wiki")
             .executes(context -> {
-                McRemoteProcedureCall.tellClientToInvoke(
-                    context.getSource().getPlayerOrException(),
-                    "qouteall.imm_ptl.peripheral.guide.IPGuide.RemoteCallables.showWiki"
+                context.getSource().getPlayerOrException().sendSystemMessage(
+                    McHelper.getLinkText("https://qouteall.fun/immptl/wiki/Commands-Reference")
                 );
                 return 0;
             })
@@ -1825,9 +1888,7 @@ public class PortalCommand {
         for (; ; ) {
             Block block = BuiltInRegistries.BLOCK.getRandom(RandomSource.create()).get().value();
             BlockState state = block.defaultBlockState();
-            if (state.blocksMotion() && state.getPistonPushReaction() == PushReaction.NORMAL
-                && !state.liquid()
-            ) {
+            if (state.isSolid()) {
                 return state;
             }
         }
@@ -1936,6 +1997,9 @@ public class PortalCommand {
         CommandContext<CommandSourceStack> context,
         Portal portal
     ) {
+        PortalExtension.get(portal).bindCluster = true;
+        reloadPortal(portal);
+
         PortalManipulation.completeBiWayBiFacedPortal(
             portal,
             p -> sendMessage(context, "Removed " + p),
@@ -1955,6 +2019,9 @@ public class PortalCommand {
             p -> sendMessage(context, "Removed " + p)
         );
         
+        PortalExtension.get(portal).bindCluster = true;
+        reloadPortal(portal);
+
         Portal result = PortalManipulation.completeBiFacedPortal(
                 portal,
                 IPRegistry.PORTAL.get()
@@ -1974,6 +2041,9 @@ public class PortalCommand {
             p -> sendMessage(context, "Removed " + p)
         );
         
+        PortalExtension.get(portal).bindCluster = true;
+        reloadPortal(portal);
+
         Portal result = PortalManipulation.completeBiWayPortal(
             portal,
                 IPRegistry.PORTAL.get()
@@ -2011,7 +2081,7 @@ public class PortalCommand {
         ServerPlayer player
     ) {
         PortalManipulation.getPortalCluster(
-                pointedPortal.level(),
+            pointedPortal.level(),
             pointedPortal.getOriginPos(),
             pointedPortal.getNormal(),
             p -> true
@@ -2073,7 +2143,10 @@ public class PortalCommand {
     }
     
     public static void sendPortalInfo(CommandContext<CommandSourceStack> context, Portal portal) {
-        sendPortalInfo(c -> sendMessage(context, c), portal);
+        sendPortalInfo(c -> {
+            sendMessage(context, c);
+            Helper.log(c.getString());
+        }, portal);
     }
     
     public static void sendPortalInfo(Consumer<Component> func, Portal portal) {
@@ -2224,8 +2297,8 @@ public class PortalCommand {
             
             if (portal == null) {
                 source.sendSuccess(() ->
-                    Component.literal("You are not pointing to any non-global portal." +
-                        " (This command cannot process global portals)"),
+                        Component.literal("You are not pointing to any non-global portal." +
+                            " (This command cannot process global portals)"),
                     false
                 );
                 return 0;
@@ -2239,9 +2312,9 @@ public class PortalCommand {
         }
         else {
             source.sendSuccess(() ->
-                Component.literal(
-                    "The command executor should be either a player or a portal entity"
-                ),
+                    Component.literal(
+                        "The command executor should be either a player or a portal entity"
+                    ),
                 false
             );
         }
@@ -2249,6 +2322,7 @@ public class PortalCommand {
         return 0;
     }
     
+    @Deprecated
     public static Portal getPlayerPointingPortal(
         ServerPlayer player, boolean includeGlobalPortal
     ) {
@@ -2256,42 +2330,17 @@ public class PortalCommand {
             .map(Pair::getFirst).orElse(null);
     }
     
+    @Deprecated
     public static Optional<Pair<Portal, Vec3>> getPlayerPointingPortalRaw(
         Player player, float tickDelta, double maxDistance, boolean includeGlobalPortal
     ) {
-        Vec3 from = player.getEyePosition(tickDelta);
-        Vec3 to = from.add(player.getViewVector(tickDelta).scale(maxDistance));
-        Level world = player.level();
-        return raytracePortals(world, from, to, includeGlobalPortal);
+        return PortalUtils.raytracePortalFromEntityView(player, tickDelta, maxDistance, includeGlobalPortal, p -> true);
     }
     
     public static Optional<Pair<Portal, Vec3>> raytracePortals(
         Level world, Vec3 from, Vec3 to, boolean includeGlobalPortal
     ) {
-        Stream<Portal> portalStream = McHelper.getEntitiesNearby(
-            world,
-            from,
-            Portal.class,
-            from.distanceTo(to)
-        ).stream();
-        if (includeGlobalPortal) {
-            List<Portal> globalPortals = GlobalPortalStorage.getGlobalPortals(world);
-            portalStream = Streams.concat(
-                portalStream,
-                globalPortals.stream()
-            );
-        }
-        return portalStream.map(
-            portal -> new Pair<Portal, Vec3>(
-                portal, portal.rayTrace(from, to)
-            )
-        ).filter(
-            portalAndHitPos -> portalAndHitPos.getSecond() != null
-        ).min(
-            Comparator.comparingDouble(
-                portalAndHitPos -> portalAndHitPos.getSecond().distanceToSqr(from)
-            )
-        );
+        return PortalUtils.raytracePortals(world, from, to, includeGlobalPortal, p -> true);
     }
     
     /**
@@ -2483,7 +2532,7 @@ public class PortalCommand {
         portal.remove(Entity.RemovalReason.KILLED);
 
         // create the 2 mirrors
-        Mirror thisSideMirror = Mirror.entityType.create(fromWorld);
+        Mirror thisSideMirror = IPRegistry.MIRROR.get().create(fromWorld);
         assert thisSideMirror != null;
         thisSideMirror.dimensionTo = thisSideMirror.level().dimension();
         thisSideMirror.setOriginPos(thisSideState.position());
@@ -2494,7 +2543,7 @@ public class PortalCommand {
         thisSideMirror.specialShape = specialShape;
         thisSideMirror.setRotationTransformationForMirror(spacialRotation);
 
-        Mirror otherSideMirror = Mirror.entityType.create(toWorld);
+        Mirror otherSideMirror = IPRegistry.MIRROR.get().create(toWorld);
         assert otherSideMirror != null;
         otherSideMirror.dimensionTo = otherSideMirror.level().dimension();
         otherSideMirror.setOriginPos(otherSideState.position());
@@ -2529,16 +2578,182 @@ public class PortalCommand {
         ), false);
     }
 
+    private static void invokeSculpt(
+        CommandContext<CommandSourceStack> context, Portal portal, boolean adjustPortalBounds
+    ) {
+        MinecraftServer server = context.getSource().getServer();
+        @Nullable ServerPlayer player = context.getSource().getPlayer();
+
+        ObjectArrayList<AABB> boxes = gatherCollisionBoxesTouching(portal);
+        if (boxes.size() > 40000) {
+            context.getSource().sendFailure(Component.literal("Too many collision boxes to sculpt"));
+            return;
+        }
+        
+        if (portal.specialShape == null) {
+            portal.specialShape = GeometryPortalShape.createDefault();
+        }
+
+        double halfWidth = portal.width / 2;
+        double halfHeight = portal.height / 2;
+        Vec3 axisW = portal.axisW;
+        Vec3 axisH = portal.axisH;
+        Plane plane = new Plane(portal.getOriginPos(), portal.getNormal());
+
+        Mesh2D mesh2D = portal.specialShape.toMesh();
+
+        double areaBefore = mesh2D.getArea() * halfWidth * halfHeight;
+
+        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            int count = 0;
+            for (AABB box : boxes) {
+                ObjectArrayList<Vec2d> polygonVertexes =
+                    GeometryUtil.getSlicePolygonOfCube(
+                        box, plane, axisW, axisH, halfWidth, halfHeight
+                    );
+
+                mesh2D.subtractPolygon(polygonVertexes);
+                count++;
+
+                if (count % 10000 == 0) {
+                    mesh2D.compact();
+                }
+            }
+
+//            mesh2D.checkStorageIntegrity(); // debug
+            mesh2D.simplify();
+//            mesh2D.checkStorageIntegrity(); // debug
+
+        }, Util.backgroundExecutor());
+
+        future.thenRun(() -> server.execute(() -> {
+            if (portal.isRemoved()) {
+                return;
+            }
+
+            double meshArea = mesh2D.getArea();
+            double areaAfter = meshArea * halfWidth * halfHeight;
+
+            if (Math.abs(4.0 - meshArea) < 0.00001) {
+                portal.specialShape = null;
+                if (player != null) {
+                    player.sendSystemMessage(
+                        Component.literal("Portal shape is still rectangular now.")
+                    );
+                }
+                return;
+            }
+
+            if (Math.abs(meshArea) < 0.00001) {
+                if (player != null) {
+                    player.sendSystemMessage(
+                        Component.literal("Sculpt failed because the blocks fully cover the portal.")
+                    );
+                }
+                return;
+            }
+
+            setPortalShapeByMesh(portal, mesh2D, adjustPortalBounds);
+
+            // temporarily disable default animation
+            portal.getDefaultAnimation().setDisableUntil(portal.level().getGameTime() + 5);
+
+            reloadPortal(portal);
+
+            if (player != null) {
+                player.sendSystemMessage(
+                    Component.translatable(
+                        "imm_ptl.sculpted",
+                        String.format("%.4f", areaBefore - areaAfter),
+                        String.format("%.4f", areaBefore),
+                        String.format("%.4f", areaAfter)
+                    )
+                );
+            }
+        }));
+
+        future.exceptionally(throwable -> {
+            LOGGER.error("Error when sculpting portal {}", portal, throwable);
+            if (player != null) {
+                player.sendSystemMessage(Component.literal(
+                    "Failed to sculpt the portal. See the server log for detail."
+                ));
+            }
+            return null;
+        });
+
+        // notify the player if it takes too long
+        IPGlobal.serverTaskList.addTask(MyTaskList.withDelay(
+            5, MyTaskList.oneShotTask(() -> {
+                if (!future.isDone()) {
+                    if (player != null) {
+                        player.sendSystemMessage(
+                            Component.translatable("imm_ptl.sculpting_in_progress")
+                        );
+                    }
+                }
+            })
+        ));
+    }
+
+    private static void setPortalShapeByMesh(
+        Portal portal, Mesh2D mesh2D, boolean adjustPortalBounds
+    ) {
+        if (adjustPortalBounds) {
+            Mesh2D.Rect boundingBox = mesh2D.getBoundingBox();
+            double centerLX = (boundingBox.minX() + boundingBox.maxX()) / 2;
+            double centerLY = (boundingBox.minY() + boundingBox.maxY()) / 2;
+            double lWidth = boundingBox.maxX() - boundingBox.minX();
+            double lHeight = boundingBox.maxY() - boundingBox.minY();
+
+            mesh2D.transformPoints((input) -> new Vec2d(
+                (input.x() - centerLX) / (lWidth / 2),
+                (input.y() - centerLY) / (lHeight / 2)
+            ));
+
+            double oldHalfWidth = portal.width / 2.0;
+            double oldHalfHeight = portal.height / 2.0;
+
+            double newPortalWidth = oldHalfWidth * lWidth;
+            double newPortalHeight = oldHalfHeight * lHeight;
+            Vec3 centerOffset = portal.axisW.scale(centerLX * oldHalfWidth)
+                .add(portal.axisH.scale(centerLY * oldHalfHeight));
+
+            Vec3 otherSideCenterOffset = portal.transformLocalVec(centerOffset);
+
+            portal.setOriginPos(portal.getOriginPos().add(centerOffset));
+            portal.setDestination(portal.getDestPos().add(otherSideCenterOffset));
+            portal.setWidth(newPortalWidth);
+            portal.setHeight(newPortalHeight);
+        }
+
+        portal.specialShape = GeometryPortalShape.fromMesh(mesh2D);
+    }
+
+
+    @NotNull
+    private static ObjectArrayList<AABB> gatherCollisionBoxesTouching(Portal portal) {
+        AABB areaBox = portal.getBoundingBox();
+
+        ObjectArrayList<AABB> boxes = new ObjectArrayList<>();
+        for (VoxelShape blockCollision : portal.level().getBlockCollisions(portal, areaBox)) {
+            if (!blockCollision.isEmpty()) {
+                boxes.addAll(blockCollision.toAabbs());
+            }
+        }
+        return boxes;
+    }
+
     public static class RemoteCallables {
         @OnlyIn(Dist.CLIENT)
-        public static void clientAccelerate(double v) {
+        public static void clientAccelerate(Vec3 vec) {
             Minecraft client = Minecraft.getInstance();
             
             LocalPlayer player = client.player;
             
             McHelper.setWorldVelocity(
                 player,
-                player.getViewVector(1).scale(v / 20)
+                vec
             );
         }
     }

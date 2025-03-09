@@ -7,7 +7,6 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL30C;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 import qouteall.imm_ptl.core.IPCGlobal;
@@ -25,72 +24,22 @@ public abstract class MixinMainTarget extends RenderTarget {
         throw new RuntimeException();
     }
     
-//    @ModifyArgs(
-//        method = "allocateDepthAttachment",
-//        at = @At(
-//            value = "INVOKE",
-//            target = "Lcom/mojang/blaze3d/platform/GlStateManager;_texImage2D(IIIIIIIILjava/nio/IntBuffer;)V"
-//        )
-//    )
-//    private void modifyTexImage2D(Args args) {
-//        boolean isStencilBufferEnabled = ((IEFrameBuffer) this).getIsStencilBufferEnabled();
-//
-//        if (isStencilBufferEnabled) {
-//            args.set(2, IPCGlobal.useSeparatedStencilFormat ? GL_DEPTH32F_STENCIL8 : GL_DEPTH24_STENCIL8);
-//            args.set(6, ARBFramebufferObject.GL_DEPTH_STENCIL);
-//            args.set(7, IPCGlobal.useSeparatedStencilFormat ? GL_FLOAT_32_UNSIGNED_INT_24_8_REV : GL30C.GL_UNSIGNED_INT_24_8);
-//        }
-//    }
-
-    @ModifyArg(
-            method = "allocateDepthAttachment",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lcom/mojang/blaze3d/platform/GlStateManager;_texImage2D(IIIIIIIILjava/nio/IntBuffer;)V"
-            ),
-            index = 2
+    @ModifyArgs(
+        method = "allocateDepthAttachment",
+        at = @At(
+            value = "INVOKE",
+            target = "Lcom/mojang/blaze3d/platform/GlStateManager;_texImage2D(IIIIIIIILjava/nio/IntBuffer;)V",
+            remap = false
+        )
     )
-    private int modifyTexImage2D_1(int pInternalFormat) {
+    private void modifyTexImage2D(Args args) {
         boolean isStencilBufferEnabled = ((IEFrameBuffer) this).getIsStencilBufferEnabled();
 
         if (isStencilBufferEnabled) {
-            pInternalFormat = IPCGlobal.useSeparatedStencilFormat ? GL_DEPTH32F_STENCIL8 : GL_DEPTH24_STENCIL8;
+            args.set(2, IPCGlobal.useSeparatedStencilFormat ? GL_DEPTH32F_STENCIL8 : GL_DEPTH24_STENCIL8);
+            args.set(6, ARBFramebufferObject.GL_DEPTH_STENCIL);
+            args.set(7, IPCGlobal.useSeparatedStencilFormat ? GL_FLOAT_32_UNSIGNED_INT_24_8_REV : GL30C.GL_UNSIGNED_INT_24_8);
         }
-        return pInternalFormat;
-    }
-
-    @ModifyArg(
-            method = "allocateDepthAttachment",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lcom/mojang/blaze3d/platform/GlStateManager;_texImage2D(IIIIIIIILjava/nio/IntBuffer;)V"
-            ),
-            index = 6
-    )
-    private int modifyTexImage2D_2(int pFormat) {
-        boolean isStencilBufferEnabled = ((IEFrameBuffer) this).getIsStencilBufferEnabled();
-
-        if (isStencilBufferEnabled) {
-            pFormat = ARBFramebufferObject.GL_DEPTH_STENCIL;
-        }
-        return pFormat;
-    }
-
-    @ModifyArg(
-            method = "allocateDepthAttachment",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lcom/mojang/blaze3d/platform/GlStateManager;_texImage2D(IIIIIIIILjava/nio/IntBuffer;)V"
-            ),
-            index = 7
-    )
-    private int modifyTexImage2D_3(int pType) {
-        boolean isStencilBufferEnabled = ((IEFrameBuffer) this).getIsStencilBufferEnabled();
-
-        if (isStencilBufferEnabled) {
-            pType = IPCGlobal.useSeparatedStencilFormat ? GL_FLOAT_32_UNSIGNED_INT_24_8_REV : GL30C.GL_UNSIGNED_INT_24_8;
-        }
-        return pType;
     }
     
 //    @Redirect(
@@ -128,24 +77,22 @@ public abstract class MixinMainTarget extends RenderTarget {
 //        }
 //    }
     
-    @ModifyArg( // @Nick1st: Originally @ModifyArgs
+    @ModifyArgs(
         method = "createFrameBuffer",
         at = @At(
             value = "INVOKE",
-            target = "Lcom/mojang/blaze3d/platform/GlStateManager;_glFramebufferTexture2D(IIIII)V"
-        ),
-        index = 1
+            target = "Lcom/mojang/blaze3d/platform/GlStateManager;_glFramebufferTexture2D(IIIII)V",
+            remap = false
+        )
     )
-    private int modifyFrameBufferTexture2d(int pAttachment) {
+    private void modifyFrameBufferTexture2d(Args args) {
         boolean isStencilBufferEnabled = ((IEFrameBuffer) this).getIsStencilBufferEnabled();
         
         if (isStencilBufferEnabled) {
-            if (pAttachment == GL30.GL_DEPTH_ATTACHMENT) {
-                pAttachment = GL30.GL_DEPTH_STENCIL_ATTACHMENT;
+            if ((int) args.get(1) == GL30.GL_DEPTH_ATTACHMENT) {
+                args.set(1, GL30.GL_DEPTH_STENCIL_ATTACHMENT);
             }
         }
-
-        return pAttachment;
     }
     
 //    @Redirect(

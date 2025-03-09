@@ -12,6 +12,9 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.Cancelable;
+import net.minecraftforge.eventbus.api.Event;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -39,6 +42,19 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public abstract class PortalRenderer {
+
+    /**
+     * An event for filtering whether a portal should render.
+     * All listeners' results are ANDed.
+     */
+    @Cancelable
+    public static final class PreRenderPortalEvent extends Event {
+        public final Portal portal;
+
+        public PreRenderPortalEvent(Portal portal) {
+            this.portal = portal;
+        }
+    }
 
     public static record PortalGroupToRender(
         PortalGroup group,
@@ -177,6 +193,12 @@ public abstract class PortalRenderer {
                 }
             }
         }
+
+        boolean predicateTest = MinecraftForge.EVENT_BUS.post(new PreRenderPortalEvent(portal));
+        if (!predicateTest) {
+            return true;
+        }
+
         return false;
     }
     

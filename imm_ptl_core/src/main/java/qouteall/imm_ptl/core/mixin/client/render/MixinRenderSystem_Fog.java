@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import qouteall.imm_ptl.core.render.MyRenderHelper;
 
-@Mixin(value = RenderSystem.class)
+@Mixin(value = RenderSystem.class, remap = false)
 public class MixinRenderSystem_Fog {
     @ModifyVariable(
         method = "Lcom/mojang/blaze3d/systems/RenderSystem;_setShaderFogStart(F)V", at = @At("HEAD"), argsOnly = true

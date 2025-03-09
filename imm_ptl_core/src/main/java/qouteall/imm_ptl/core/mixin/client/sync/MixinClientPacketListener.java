@@ -196,28 +196,11 @@ public abstract class MixinClientPacketListener implements IEClientPlayNetworkHa
     private Entity redirectGetEntityById(ClientLevel clientWorld, int id) {
         Entity entity = clientWorld.getEntity(id);
         if (entity == null) {
-            immptl_limitedLogger.err("missing entity for data tracking " + clientWorld + id);
+            immptl_limitedLogger.err("missing entity for data tracking " + clientWorld + " " + id);
         }
         return entity;
     }
-    
-    // for debug
-    @Redirect(
-        method = "Lnet/minecraft/client/multiplayer/ClientPacketListener;handleSetEntityMotion(Lnet/minecraft/network/protocol/game/ClientboundSetEntityMotionPacket;)V",
-        at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/world/entity/Entity;lerpMotion(DDD)V"
-        )
-    )
-    private void redirectSetVelocityOnOnVelocityUpdate(Entity entity, double x, double y, double z) {
-        if (!entity.isControlledByLocalInstance()) {
-            entity.lerpMotion(x, y, z);
-        }
-        else {
-            immptl_limitedLogger.err("wrong velocity update packet " + entity);
-        }
-    }
-    
+
     // make sure that the game time is synchronized for all dimensions
     @Inject(
         method = "handleSetTime",
@@ -255,6 +238,60 @@ public abstract class MixinClientPacketListener implements IEClientPlayNetworkHa
     private void redirectHandleBlockChangedAck(ClientLevel instance, int seqNumber) {
         for (ClientLevel clientWorld : ClientWorldLoader.getClientWorlds()) {
             clientWorld.handleBlockChangedAck(seqNumber);
+        }
+    }
+
+    @Inject(
+        method = "handleAddEntity",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/util/thread/BlockableEventLoop;)V",
+            shift = At.Shift.AFTER
+        ),
+        cancellable = true
+    )
+    private void onHandleAddEntity(ClientboundAddEntityPacket packet, CallbackInfo ci) {
+        int entityId = packet.getId();
+
+        Entity existingEntity = level.getEntity(entityId);
+
+        if (existingEntity != null && !existingEntity.getPassengers().isEmpty()) {
+            LOGGER.warn("[ImmPtl] Entity already exists and has passengers when accepting add-entity packet. Ignoring. {} {}", existingEntity, packet);
+            ci.cancel();
+        }
+    }
+
+    // for debugging
+    @Inject(
+        method = "handleLevelChunkWithLight",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/util/thread/BlockableEventLoop;)V",
+            shift = At.Shift.AFTER
+        )
+    )
+    private void onHandleLevelChunkWithLight(
+        ClientboundLevelChunkWithLightPacket packet, CallbackInfo ci
+    ) {
+        if (IPGlobal.chunkPacketDebug) {
+            LOGGER.info("Chunk Load Packet {} {} {}", level.dimension().location(), packet.getX(), packet.getZ());
+        }
+    }
+
+    // for debugging
+    @Inject(
+        method = "handleForgetLevelChunk",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/util/thread/BlockableEventLoop;)V",
+            shift = At.Shift.AFTER
+        )
+    )
+    private void onHandleForgetLevelChunk(
+        ClientboundForgetLevelChunkPacket packet, CallbackInfo ci
+    ) {
+        if (IPGlobal.chunkPacketDebug) {
+            LOGGER.info("Chunk Unload Packet {} {} {}", level.dimension().location(), packet.getX(), packet.getZ());
         }
     }
 }

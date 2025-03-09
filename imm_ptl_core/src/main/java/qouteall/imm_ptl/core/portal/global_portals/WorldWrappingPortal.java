@@ -1,6 +1,16 @@
 package qouteall.imm_ptl.core.portal.global_portals;
 
 import qouteall.imm_ptl.core.platform_specific.IPRegistry;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Tuple;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.q_misc_util.Helper;
@@ -12,28 +22,13 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.Tuple;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
-
 public class WorldWrappingPortal extends GlobalTrackedPortal {
-    public static EntityType<WorldWrappingPortal> entityType = IPRegistry.BORDER_PORTAL.get();
     
     public boolean isInward = true;
     public int zoneId = -1;
     
-    public WorldWrappingPortal(
-        EntityType<?> entityType_1,
-        Level world_1
-    ) {
-        super(entityType_1, world_1);
+    public WorldWrappingPortal(EntityType<?> entityType, Level world) {
+        super(entityType, world);
     }
     
     @Override
@@ -63,7 +58,7 @@ public class WorldWrappingPortal extends GlobalTrackedPortal {
         int zoneId,
         boolean isInward
     ) {
-        WorldWrappingPortal portal = entityType.create(serverWorld);
+        WorldWrappingPortal portal = IPRegistry.BORDER_PORTAL.get().create(serverWorld);
         portal.isInward = isInward;
         portal.zoneId = zoneId;
         
@@ -140,11 +135,11 @@ public class WorldWrappingPortal extends GlobalTrackedPortal {
             AABB floatBox = getArea();
             
             return new IntBox(
-                BlockPos.containing(
-                    Math.round(floatBox.minX), McHelper.getMinY(world), Math.round(floatBox.minZ)
+                new BlockPos(
+                    (int) Math.round(floatBox.minX), McHelper.getMinY(world), (int) Math.round(floatBox.minZ)
                 ),
-                BlockPos.containing(
-                    Math.round(floatBox.maxX) - 1, McHelper.getMaxYExclusive(world), Math.round(floatBox.maxZ) - 1
+                new BlockPos(
+                    (int) Math.round(floatBox.maxX) - 1, McHelper.getMaxYExclusive(world), (int) Math.round(floatBox.maxZ) - 1
                 )
             );
         }
@@ -158,11 +153,11 @@ public class WorldWrappingPortal extends GlobalTrackedPortal {
             AABB floatBox = getArea();
             
             return new IntBox(
-                BlockPos.containing(
-                    Math.round(floatBox.minX) - 1, McHelper.getMinY(world), Math.round(floatBox.minZ) - 1
+                new BlockPos(
+                    (int) Math.round(floatBox.minX) - 1, McHelper.getMinY(world), (int) Math.round(floatBox.minZ) - 1
                 ),
-                BlockPos.containing(
-                    Math.round(floatBox.maxX), McHelper.getMaxYExclusive(world), Math.round(floatBox.maxZ)
+                new BlockPos(
+                    (int) Math.round(floatBox.maxX), McHelper.getMaxYExclusive(world), (int) Math.round(floatBox.maxZ)
                 )
             );
         }

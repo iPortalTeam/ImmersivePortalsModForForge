@@ -1,5 +1,10 @@
 package qouteall.imm_ptl.core.portal.global_portals;
 
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.portal.Portal;
@@ -9,14 +14,8 @@ import qouteall.q_misc_util.MiscHelper;
 import qouteall.q_misc_util.my_util.DQuaternion;
 
 import java.util.function.Predicate;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
 
 public class VerticalConnectingPortal extends GlobalTrackedPortal {
-    public static EntityType<VerticalConnectingPortal> entityType = IPRegistry.END_FLOOR_PORTAL.get();
     
     public static enum ConnectorType {
         ceil, floor
@@ -32,11 +31,8 @@ public class VerticalConnectingPortal extends GlobalTrackedPortal {
         }
     }
     
-    public VerticalConnectingPortal(
-        EntityType<?> entityType_1,
-        Level world_1
-    ) {
-        super(entityType_1, world_1);
+    public VerticalConnectingPortal(EntityType<?> entityType, Level world) {
+        super(entityType, world);
     }
     
     public static void connect(
@@ -98,7 +94,7 @@ public class VerticalConnectingPortal extends GlobalTrackedPortal {
         int fromWorldMinY, int fromWorldMaxY, int toWorldMinY, int toWorldMaxY
     ) {
         VerticalConnectingPortal verticalConnectingPortal = new VerticalConnectingPortal(
-            entityType, fromWorld
+                IPRegistry.END_FLOOR_PORTAL.get(), fromWorld
         );
         
         verticalConnectingPortal.dimensionTo = toWorld.dimension();

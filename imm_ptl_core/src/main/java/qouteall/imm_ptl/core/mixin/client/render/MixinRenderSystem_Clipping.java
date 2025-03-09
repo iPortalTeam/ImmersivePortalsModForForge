@@ -14,7 +14,7 @@ import qouteall.imm_ptl.core.render.context_management.RenderStates;
 
 import java.util.function.Supplier;
 
-@Mixin(value = RenderSystem.class)
+@Mixin(value = RenderSystem.class, remap = false)
 public class MixinRenderSystem_Clipping {
     @Inject(
         method = "Lcom/mojang/blaze3d/systems/RenderSystem;setShader(Ljava/util/function/Supplier;)V",

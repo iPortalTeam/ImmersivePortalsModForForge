@@ -9,6 +9,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import qouteall.imm_ptl.core.IPGlobal;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.portal.Portal;
 import qouteall.imm_ptl.core.portal.custom_portal_gen.CustomPortalGeneration;
 import qouteall.imm_ptl.core.portal.custom_portal_gen.PortalGenInfo;
@@ -17,7 +18,7 @@ import qouteall.imm_ptl.core.portal.nether_portal.GeneralBreakablePortal;
 import qouteall.imm_ptl.core.portal.nether_portal.NetherPortalGeneration;
 import qouteall.q_misc_util.my_util.IntBox;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -181,7 +182,7 @@ public abstract class NetherPortalLikeForm extends PortalGenForm {
     
     public Portal[] generatePortalEntitiesAndPlaceholder(PortalGenInfo info) {
         info.generatePlaceholderBlocks();
-        return info.generateBiWayBiFacedPortal(GeneralBreakablePortal.entityType);
+        return info.generateBiWayBiFacedPortal(IPRegistry.GENERAL_BREAKABLE_PORTAL.get());
     }
     
     public abstract void generateNewFrame(

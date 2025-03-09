@@ -11,6 +11,7 @@ import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.Nullable;
 import qouteall.imm_ptl.core.McHelper;
 import qouteall.imm_ptl.core.api.PortalAPI;
+import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 import qouteall.imm_ptl.core.portal.custom_portal_gen.CustomPortalGeneration;
 import qouteall.imm_ptl.core.portal.custom_portal_gen.SimpleBlockPredicate;
 import qouteall.imm_ptl.core.portal.nether_portal.BlockPortalShape;
@@ -80,7 +81,7 @@ public class OneWayForm extends PortalGenForm {
             NetherPortalGeneration.fillInPlaceHolderBlocks(fromWorld, fromShape);
         }
         
-        GeneralBreakablePortal portal = GeneralBreakablePortal.entityType.create(fromWorld);
+        GeneralBreakablePortal portal = IPRegistry.GENERAL_BREAKABLE_PORTAL.get().create(fromWorld);
         Validate.notNull(portal);
         fromShape.initPortalPosAxisShape(portal, Direction.AxisDirection.POSITIVE);
         

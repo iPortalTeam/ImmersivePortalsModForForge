@@ -46,17 +46,17 @@ public class IPMessage {
                 .consumerNetworkThread(Teleport::handle)
                 .add();
 
-        INSTANCE.messageBuilder(PlayerAction.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(PlayerAction::new)
-                .encoder(PlayerAction::toBytes)
-                .consumerNetworkThread(PlayerAction::handle)
-                .add();
+//        INSTANCE.messageBuilder(PlayerAction.class, id(), NetworkDirection.PLAY_TO_SERVER)
+//                .decoder(PlayerAction::new)
+//                .encoder(PlayerAction::toBytes)
+//                .consumerNetworkThread(PlayerAction::handle)
+//                .add();
 
-        INSTANCE.messageBuilder(RightClick.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(RightClick::new)
-                .encoder(RightClick::toBytes)
-                .consumerNetworkThread(RightClick::handle)
-                .add();
+//        INSTANCE.messageBuilder(RightClick.class, id(), NetworkDirection.PLAY_TO_SERVER)
+//                .decoder(RightClick::new)
+//                .encoder(RightClick::toBytes)
+//                .consumerNetworkThread(RightClick::handle)
+//                .add();
 
         INSTANCE.messageBuilder(GlobalPortalUpdate.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(GlobalPortalUpdate::new)

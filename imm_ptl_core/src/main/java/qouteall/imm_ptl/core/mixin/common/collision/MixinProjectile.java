@@ -4,15 +4,9 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import qouteall.imm_ptl.core.platform_specific.IPRegistry;
 
 @Mixin(Projectile.class)
 public abstract class MixinProjectile extends MixinEntity {
@@ -39,17 +33,21 @@ public abstract class MixinProjectile extends MixinEntity {
         return null;
     }
     
-    @Inject(method = "Lnet/minecraft/world/entity/projectile/Projectile;onHit(Lnet/minecraft/world/phys/HitResult;)V", at = @At(value = "HEAD"), cancellable = true)
-    protected void onHit(HitResult hitResult, CallbackInfo ci) {
-        if (hitResult instanceof BlockHitResult) {
-            Block hittingBlock = ip_getLevel().getBlockState(((BlockHitResult) hitResult).getBlockPos()).getBlock();
-            if (hitResult.getType() == HitResult.Type.BLOCK &&
-                hittingBlock == IPRegistry.NETHER_PORTAL_BLOCK.get()
-            ) {
-                ci.cancel();
-            }
-        }
-    }
-    
+//    @Shadow
+//    public abstract void onHit(HitResult hitResult);
+//
+//    @Inject(method = "Lnet/minecraft/world/entity/projectile/Projectile;onHit(Lnet/minecraft/world/phys/HitResult;)V", at = @At(value = "HEAD"), cancellable = true)
+//    protected void onHit(HitResult hitResult, CallbackInfo ci) {
+//        Entity this_ = (Entity) (Object) this;
+//        if (hitResult instanceof BlockHitResult) {
+//            Block hittingBlock = this_.level().getBlockState(((BlockHitResult) hitResult).getBlockPos()).getBlock();
+//            if (hitResult.getType() == HitResult.Type.BLOCK &&
+//                hittingBlock == PortalPlaceholderBlock.instance
+//            ) {
+//                ci.cancel();
+//            }
+//        }
+//    }
+//
     
 }
