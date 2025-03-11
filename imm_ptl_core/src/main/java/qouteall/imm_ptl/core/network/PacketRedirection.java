@@ -31,7 +31,7 @@ public class PacketRedirection {
     private static final Logger LOGGER = LoggerFactory.getLogger(PacketRedirection.class);
 
     public static final ResourceLocation id_stcRedirected =
-        new ResourceLocation("imm_ptl", "rd");
+        ResourceLocation.fromNamespaceAndPath("imm_ptl", "rd");
     
     public static boolean isPacketIdOfRedirection(ResourceLocation packetTypeId) {
         return packetTypeId.getNamespace().equals("imm_ptl") && packetTypeId.getPath().equals("rd");

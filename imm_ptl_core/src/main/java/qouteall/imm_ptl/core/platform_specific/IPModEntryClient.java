@@ -60,9 +60,9 @@ public class IPModEntryClient {
         
     }
 
-    public static void onInitializeClient() {
-        FMLJavaModLoadingContext.get().getModEventBus().register(IPModMainClient.class);
-        FMLJavaModLoadingContext.get().getModEventBus().register(IPModEntryClient.class);
+    public static void onInitializeClient(FMLJavaModLoadingContext context) {
+        context.getModEventBus().register(IPModMainClient.class);
+        context.getModEventBus().register(IPModEntryClient.class);
 
         boolean isSodiumPresent =
                 ModList.get().isLoaded("rubidium");

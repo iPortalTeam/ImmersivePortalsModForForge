@@ -42,7 +42,7 @@ public class DimensionTypeSync {
             String val = tag.getString(key);
             
             ResourceKey<DimensionType> typeKey =
-                ResourceKey.create(Registries.DIMENSION_TYPE, new ResourceLocation(val));
+                ResourceKey.create(Registries.DIMENSION_TYPE, ResourceLocation.parse(val));
             
             result.put(worldKey, typeKey);
         });

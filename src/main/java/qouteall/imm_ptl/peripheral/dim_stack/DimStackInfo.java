@@ -268,7 +268,7 @@ public class DimStackInfo {
         }
         
         try {
-            Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(new ResourceLocation(str));
+            Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(ResourceLocation.parse(str));
             return block.map(Block::defaultBlockState).orElse(null);
         }
         catch (Exception e) {

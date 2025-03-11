@@ -54,7 +54,7 @@ public class DimId {
     }
     
     public static ResourceKey<Level> idToKey(String str) {
-        return idToKey(new ResourceLocation(str));
+        return idToKey(ResourceLocation.parse(str));
     }
     
     public static void putWorldId(CompoundTag tag, String tagName, ResourceKey<Level> dim) {

@@ -30,12 +30,12 @@ import java.util.function.Function;
 public class CustomPortalGeneration {
     public static final ResourceKey<Level> theSameDimension = ResourceKey.create(
         Registries.DIMENSION,
-        new ResourceLocation("imm_ptl:the_same_dimension")
+        ResourceLocation.parse("imm_ptl:the_same_dimension")
     );
     
     public static final ResourceKey<Level> anyDimension = ResourceKey.create(
         Registries.DIMENSION,
-        new ResourceLocation("imm_ptl:any_dimension")
+        ResourceLocation.parse("imm_ptl:any_dimension")
     );
     
     public static final Codec<List<ResourceKey<Level>>> dimensionListCodec =
@@ -46,11 +46,11 @@ public class CustomPortalGeneration {
         new ListCodec<>(stringListCodec);
     
     public static ResourceKey<Registry<Codec<CustomPortalGeneration>>> schemaRegistryKey = ResourceKey.createRegistryKey(
-        new ResourceLocation("imm_ptl:custom_portal_gen_schema")
+        ResourceLocation.parse("imm_ptl:custom_portal_gen_schema")
     );
     
     public static ResourceKey<Registry<CustomPortalGeneration>> registryRegistryKey =
-        ResourceKey.createRegistryKey(new ResourceLocation("imm_ptl:custom_portal_generation"));
+        ResourceKey.createRegistryKey(ResourceLocation.parse("imm_ptl:custom_portal_generation"));
     
     public static final Codec<CustomPortalGeneration> codecV1 =
         RecordCodecBuilder.create(instance -> {
@@ -75,7 +75,7 @@ public class CustomPortalGeneration {
                 schemaRegistryKey, Lifecycle.stable()
             );
             Registry.register(
-                registry, new ResourceLocation("imm_ptl:v1"), codecV1
+                registry, ResourceLocation.parse("imm_ptl:v1"), codecV1
             );
             return registry;
         });

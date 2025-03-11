@@ -20,7 +20,7 @@ public class Message {
     public static void register() {
         // Make the channel. If needed you can do version checking here
         INSTANCE = NetworkRegistry.ChannelBuilder
-                .named(new ResourceLocation("iputil", "messages"))
+                .named(ResourceLocation.fromNamespaceAndPath("iputil", "messages"))
                 .networkProtocolVersion(() -> "1.0")
                 .clientAcceptedVersions(s -> true)
                 .serverAcceptedVersions(s -> true)

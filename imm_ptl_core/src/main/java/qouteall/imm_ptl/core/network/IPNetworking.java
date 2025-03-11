@@ -23,17 +23,17 @@ import java.util.function.Supplier;
 public class IPNetworking {
 
     public static final ResourceLocation id_ctsTeleport =
-        new ResourceLocation("imm_ptl", "teleport");
+        ResourceLocation.fromNamespaceAndPath("imm_ptl", "teleport");
     public static final ResourceLocation id_stcSpawnEntity =
-        new ResourceLocation("imm_ptl", "spawn_entity");
+        ResourceLocation.fromNamespaceAndPath("imm_ptl", "spawn_entity");
     public static final ResourceLocation id_stcDimensionConfirm =
-        new ResourceLocation("imm_ptl", "dim_confirm");
+        ResourceLocation.fromNamespaceAndPath("imm_ptl", "dim_confirm");
     public static final ResourceLocation id_stcUpdateGlobalPortal =
-        new ResourceLocation("imm_ptl", "upd_glb_ptl");
+        ResourceLocation.fromNamespaceAndPath("imm_ptl", "upd_glb_ptl");
 //    public static final ResourceLocation id_ctsPlayerAction =
-//        new ResourceLocation("imm_ptl", "player_action");
+//        ResourceLocation.fromNamespaceAndPath("imm_ptl", "player_action");
 //    public static final ResourceLocation id_ctsRightClick =
-//        new ResourceLocation("imm_ptl", "right_click");
+//        ResourceLocation.fromNamespaceAndPath("imm_ptl", "right_click");
 
     public static void init() {
 

@@ -80,6 +80,10 @@ allprojects {
         implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.4.1")) {
             jarJar.ranged(it, "[0.4.1,)")
         }
+        //compileClasspath("curse.maven:mixinbooster-980731:5146058")
+        //runtimeClasspath("curse.maven:mixinbooster-980731:5146058")
+//        compileOnly(annotationProcessor("curse.maven:mixinbooster-980731:5146058"))
+//        implementation "curse.maven:mixinbooster-980731:5146058"
 
         // Pehkui
         api fg.deobf("com.github.Virtuoel:Pehkui:${project.pehkui_version}")

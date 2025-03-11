@@ -26,7 +26,7 @@ public interface PortalAnimationDriver {
     public static PortalAnimationDriver fromTag(CompoundTag tag) {
         String type = tag.getString("type");
         Function<CompoundTag, PortalAnimationDriver> deserializer = deserializerRegistry.get(
-            new ResourceLocation(type)
+            ResourceLocation.parse(type)
         );
         if (deserializer == null) {
             Helper.err("Unknown animation type " + type);

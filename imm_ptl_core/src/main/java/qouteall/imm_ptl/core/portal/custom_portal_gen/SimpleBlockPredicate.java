@@ -72,7 +72,7 @@ public class SimpleBlockPredicate implements Predicate<BlockState> {
             return DataResult.success(new AirPredicate());
         }
         
-        ResourceLocation id = new ResourceLocation(string);
+        ResourceLocation id = ResourceLocation.parse(string);
         
         TagKey<Block> tagKey = TagKey.create(Registries.BLOCK, id);
         

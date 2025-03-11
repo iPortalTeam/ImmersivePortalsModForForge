@@ -156,7 +156,7 @@ public class CHelper {
     public static ResourceLocation getDimensionIconPath(ResourceKey<Level> dimension) {
         ResourceLocation dimensionId = dimension.location();
 
-        ResourceLocation dimIconPath = new ResourceLocation(
+        ResourceLocation dimIconPath = ResourceLocation.fromNamespaceAndPath(
             dimensionId.getNamespace(),
             "textures/dimension/" + dimensionId.getPath() + ".png"
         );
@@ -172,7 +172,7 @@ public class CHelper {
                 return null;
             }
 
-            ResourceLocation modIconPath = new ResourceLocation(
+            ResourceLocation modIconPath = ResourceLocation.fromNamespaceAndPath(
                 modIconLocation.getNamespace(),
                 modIconLocation.getPath()
             );

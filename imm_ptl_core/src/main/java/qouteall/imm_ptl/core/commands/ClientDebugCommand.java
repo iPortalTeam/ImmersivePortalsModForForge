@@ -815,7 +815,7 @@ public class ClientDebugCommand {
             McRemoteProcedureCall.tellClientToInvoke(
                 player,
                 "qouteall.imm_ptl.core.commands.ClientDebugCommand.TestRemoteCallable.serverToClient",
-                "string", 2, 3.5, new ResourceLocation("imm_ptl:oops"),
+                "string", 2, 3.5, ResourceLocation.parse("imm_ptl:oops"),
                 Level.NETHER, Biomes.JUNGLE,
                 new BlockPos(3, 5, 4),
                 new Vec3(7, 4, 1)

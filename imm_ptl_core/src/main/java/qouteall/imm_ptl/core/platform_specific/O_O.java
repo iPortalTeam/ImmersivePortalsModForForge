@@ -178,7 +178,7 @@ public class O_O {
         if (parts.length != 2) {
             return null;
         }
-        return new ResourceLocation(parts[0], parts[1]);
+        return ResourceLocation.fromNamespaceAndPath(parts[0], parts[1]);
     }
 
     @Nullable

@@ -13,7 +13,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.Vec3;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -103,15 +102,16 @@ public class MixinServerPlayerGameMode {
         method = "handleBlockBreakAction",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/world/phys/Vec3;distanceToSqr(Lnet/minecraft/world/phys/Vec3;)D"
-        )
+            target = "Lnet/minecraft/server/level/ServerPlayer;canReach(Lnet/minecraft/core/BlockPos;D)Z"
+        ),
+        remap = false
     )
-    private double wrapDistanceInHandleBlockBreakAction(Vec3 instance, Vec3 vec, Operation<Double> original) {
+    private boolean wrapDistanceInHandleBlockBreakAction(ServerPlayer instance, BlockPos blockPos, double v, Operation<Boolean> original) {
         ServerLevel redirect = BlockManipulationServer.SERVER_PLAYER_INTERACTION_REDIRECT.get();
         if (redirect != null) {
-            return 0;
+            return true;
         }
-        return original.call(instance, vec);
+        return original.call(instance, blockPos, v);
     }
 
     // record the world for the destroying pos

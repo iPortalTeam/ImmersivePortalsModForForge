@@ -1,5 +1,7 @@
 package qouteall.imm_ptl.core.mixin.client.render.framebuffer;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.pipeline.MainTarget;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import org.lwjgl.opengl.ARBFramebufferObject;
@@ -11,6 +13,8 @@ import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 import qouteall.imm_ptl.core.IPCGlobal;
 import qouteall.imm_ptl.core.ducks.IEFrameBuffer;
+
+import java.nio.IntBuffer;
 
 import static org.lwjgl.opengl.GL30.GL_DEPTH24_STENCIL8;
 import static org.lwjgl.opengl.GL30.GL_DEPTH32F_STENCIL8;
@@ -24,7 +28,7 @@ public abstract class MixinMainTarget extends RenderTarget {
         throw new RuntimeException();
     }
     
-    @ModifyArgs(
+    @WrapOperation(
         method = "allocateDepthAttachment",
         at = @At(
             value = "INVOKE",
@@ -32,14 +36,16 @@ public abstract class MixinMainTarget extends RenderTarget {
             remap = false
         )
     )
-    private void modifyTexImage2D(Args args) {
+    private void modifyTexImage2D(int pTarget, int pLevel, int pInternalFormat, int pWidth, int pHeight, int pBorder, int pFormat, int pType, IntBuffer pPixels, Operation<Void> original) {
         boolean isStencilBufferEnabled = ((IEFrameBuffer) this).getIsStencilBufferEnabled();
 
         if (isStencilBufferEnabled) {
-            args.set(2, IPCGlobal.useSeparatedStencilFormat ? GL_DEPTH32F_STENCIL8 : GL_DEPTH24_STENCIL8);
-            args.set(6, ARBFramebufferObject.GL_DEPTH_STENCIL);
-            args.set(7, IPCGlobal.useSeparatedStencilFormat ? GL_FLOAT_32_UNSIGNED_INT_24_8_REV : GL30C.GL_UNSIGNED_INT_24_8);
+            pInternalFormat = IPCGlobal.useSeparatedStencilFormat ? GL_DEPTH32F_STENCIL8 : GL_DEPTH24_STENCIL8;
+            pFormat = ARBFramebufferObject.GL_DEPTH_STENCIL;
+            pType = IPCGlobal.useSeparatedStencilFormat ? GL_FLOAT_32_UNSIGNED_INT_24_8_REV : GL30C.GL_UNSIGNED_INT_24_8;
         }
+        
+        original.call(pTarget, pLevel, pInternalFormat, pWidth, pHeight, pBorder, pFormat, pType, pPixels);
     }
     
 //    @Redirect(
@@ -77,7 +83,7 @@ public abstract class MixinMainTarget extends RenderTarget {
 //        }
 //    }
     
-    @ModifyArgs(
+    @WrapOperation(
         method = "createFrameBuffer",
         at = @At(
             value = "INVOKE",
@@ -85,14 +91,16 @@ public abstract class MixinMainTarget extends RenderTarget {
             remap = false
         )
     )
-    private void modifyFrameBufferTexture2d(Args args) {
+    private void modifyFrameBufferTexture2d(int pTarget, int pAttachment, int pTexTarget, int pTexture, int pLevel, Operation<Void> original) {
         boolean isStencilBufferEnabled = ((IEFrameBuffer) this).getIsStencilBufferEnabled();
         
         if (isStencilBufferEnabled) {
-            if ((int) args.get(1) == GL30.GL_DEPTH_ATTACHMENT) {
-                args.set(1, GL30.GL_DEPTH_STENCIL_ATTACHMENT);
+            if ((int) pAttachment == GL30.GL_DEPTH_ATTACHMENT) {
+                pAttachment = GL30.GL_DEPTH_STENCIL_ATTACHMENT;
             }
         }
+
+        original.call(pTarget, pAttachment, pTexTarget, pTexture, pLevel);
     }
     
 //    @Redirect(
