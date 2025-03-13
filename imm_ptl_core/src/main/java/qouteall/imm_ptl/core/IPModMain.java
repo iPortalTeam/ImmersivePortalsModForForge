@@ -90,9 +90,6 @@ public class IPModMain {
 
         LifecycleHack.markNamespaceStable("immersive_portals");
         LifecycleHack.markNamespaceStable("imm_ptl");
-
-        MinecraftForge.EVENT_BUS.register(IPModMain.class);
-        MinecraftForge.EVENT_BUS.register(IPModMainClient.class);
     }
 
     @SubscribeEvent

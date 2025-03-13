@@ -70,6 +70,12 @@ public class PeripheralModEntry {
             .icon(PORTAL_WAND.get()::getDefaultInstance)
             .displayItems((displayParameters, output) -> {
                 output.accept(PORTAL_WAND.get());
+                output.accept(PORTAL_HELPER_ITEM.get());
+                CommandStickItem.CommandStickData.getEntries().forEach(entry -> {
+                   ItemStack stack = COMMAND_STICK_ITEM.get().getDefaultInstance();
+                   stack.setTag(entry.get().toTag());
+                   output.accept(stack);
+                });
             })
             .build());
 

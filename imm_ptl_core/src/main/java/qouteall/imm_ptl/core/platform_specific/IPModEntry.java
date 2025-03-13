@@ -14,6 +14,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import qouteall.imm_ptl.core.IPModMain;
+import qouteall.imm_ptl.core.IPModMainClient;
 import qouteall.imm_ptl.core.commands.AxisArgumentType;
 import qouteall.imm_ptl.core.commands.PortalCommand;
 import qouteall.imm_ptl.core.commands.SubCommandArgumentType;
@@ -33,9 +34,13 @@ public class IPModEntry {
             IPModEntryClient.onInitializeClient(context);
         }
 
+        MinecraftForge.EVENT_BUS.register(IPModMain.class);
+        MinecraftForge.EVENT_BUS.register(IPModMainClient.class);
+
 //        IPConfig.register(new ForgeConfigSpec.Builder()); //TODO @Nick1st Check if config is used / functioning
         context.getModEventBus().register(IPConfig.class);
         MinecraftForge.EVENT_BUS.addListener(IPModEntry::registerCommands);
+        MinecraftForge.EVENT_BUS.addListener(IPModEntry::commonSetup);
         context.getModEventBus().register(IPModEntry.class);
         context.getModEventBus().register(IPRegistry.class);
         context.getModEventBus().register(SubCommandArgumentType.class);

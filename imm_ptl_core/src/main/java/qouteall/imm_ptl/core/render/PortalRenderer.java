@@ -38,7 +38,6 @@ import qouteall.q_misc_util.Helper;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public abstract class PortalRenderer {
@@ -48,10 +47,10 @@ public abstract class PortalRenderer {
      * All listeners' results are ANDed.
      */
     @Cancelable
-    public static final class PreRenderPortalEvent extends Event {
+    public static final class DoRenderPortalEvent extends Event {
         public final Portal portal;
 
-        public PreRenderPortalEvent(Portal portal) {
+        public DoRenderPortalEvent(Portal portal) {
             this.portal = portal;
         }
     }
@@ -194,8 +193,8 @@ public abstract class PortalRenderer {
             }
         }
 
-        boolean predicateTest = MinecraftForge.EVENT_BUS.post(new PreRenderPortalEvent(portal));
-        if (!predicateTest) {
+        boolean predicateTest = MinecraftForge.EVENT_BUS.post(new DoRenderPortalEvent(portal));
+        if (predicateTest) {
             return true;
         }
 
