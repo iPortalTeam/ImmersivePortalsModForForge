@@ -18,7 +18,7 @@ import qouteall.q_misc_util.forge.networking.Message;
 @Mod("q_misc_util")
 public class MiscUtilModEntry {
 
-    public MiscUtilModEntry(FMLJavaModLoadingContext context) {
+    public MiscUtilModEntry() {
         DimensionMisc.init();
         
         ExtraDimensionStorage.init();
@@ -27,7 +27,7 @@ public class MiscUtilModEntry {
         
         MiscNetworking.init();
 
-        context.getModEventBus().register(MiscUtilModEntry.class);
+        FMLJavaModLoadingContext.get().getModEventBus().register(MiscUtilModEntry.class);
         MinecraftForge.EVENT_BUS.addListener(MiscUtilModEntry::serverTick);
         MinecraftForge.EVENT_BUS.addListener(MiscUtilModEntry::registerCommand);
         MinecraftForge.EVENT_BUS.register(LevelLoadEvent.class);

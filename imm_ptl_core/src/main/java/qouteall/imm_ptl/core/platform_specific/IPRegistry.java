@@ -24,12 +24,12 @@ public class IPRegistry {
     public static void registerMyDimensionsFabric() {
     }
 
-    public static final RegistryObject<Block> NETHER_PORTAL_BLOCK = RegistryObject.create(ResourceLocation.fromNamespaceAndPath("immersive_portals", "nether_portal_block"), ForgeRegistries.BLOCKS);
+    public static final RegistryObject<Block> NETHER_PORTAL_BLOCK = RegistryObject.create(new ResourceLocation("immersive_portals", "nether_portal_block"), ForgeRegistries.BLOCKS);
 
     @SubscribeEvent
     public static void registerBlocks(RegisterEvent event) {
         event.register(ForgeRegistries.Keys.BLOCKS, handler -> handler.register(
-            ResourceLocation.fromNamespaceAndPath("immersive_portals" , "nether_portal_block"),
+            new ResourceLocation("immersive_portals" , "nether_portal_block"),
             new PortalPlaceholderBlock(BlockBehaviour.Properties
                 .copy(Blocks.NETHER_PORTAL)
                 .noCollission()

@@ -57,7 +57,7 @@ public class ExtraDimensionStorage {
                 for (File nameSpace : subFiles) {
                     if (nameSpace.isDirectory()) {
                         for (File file : nameSpace.listFiles()) {
-                            ResourceLocation id = ResourceLocation.fromNamespaceAndPath(
+                            ResourceLocation id = new ResourceLocation(
                                 nameSpace.getName(), FilenameUtils.getBaseName(file.getName())
                             );
                             

@@ -94,16 +94,16 @@ public class PeripheralModEntry {
         }
     }
 
-    public PeripheralModEntry(FMLJavaModLoadingContext context) {
-        context.getModEventBus().register(PeripheralModEntry.class);
-        context.getModEventBus().addListener(CommandStickItem::buildContents);
+    public PeripheralModEntry() {
+        FMLJavaModLoadingContext.get().getModEventBus().register(PeripheralModEntry.class);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(CommandStickItem::buildContents);
         PeripheralModEntry.registerBlockItems(); //TODO Move this to a real DeferredRegistry @Nick1st
-        BLOCKS.register(context.getModEventBus());
-        ITEMS.register(context.getModEventBus());
-        TABS.register(context.getModEventBus());
-        PeripheralRegistries.CHUNK_GENERATOR.register(context.getModEventBus());
-        PeripheralRegistries.BIOME_SOURCE.register(context.getModEventBus());
-        CommandStickItem.CommandStickData.register(context.getModEventBus());
+        BLOCKS.register(FMLJavaModLoadingContext.get().getModEventBus());
+        ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
+        TABS.register(FMLJavaModLoadingContext.get().getModEventBus());
+        PeripheralRegistries.CHUNK_GENERATOR.register(FMLJavaModLoadingContext.get().getModEventBus());
+        PeripheralRegistries.BIOME_SOURCE.register(FMLJavaModLoadingContext.get().getModEventBus());
+        CommandStickItem.CommandStickData.register(FMLJavaModLoadingContext.get().getModEventBus());
         
         PeripheralModMain.init();
     }

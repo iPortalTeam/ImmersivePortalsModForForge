@@ -24,12 +24,12 @@ import java.util.function.Supplier;
 
 public class MiscNetworking {
     public static final ResourceLocation id_stcRemote =
-        ResourceLocation.fromNamespaceAndPath("imm_ptl", "remote_stc");
+        new ResourceLocation("imm_ptl", "remote_stc");
     public static final ResourceLocation id_ctsRemote =
-        ResourceLocation.fromNamespaceAndPath("imm_ptl", "remote_cts");
+        new ResourceLocation("imm_ptl", "remote_cts");
     
     public static final ResourceLocation id_stcDimSync =
-        ResourceLocation.fromNamespaceAndPath("imm_ptl", "dim_sync");
+        new ResourceLocation("imm_ptl", "dim_sync");
     
     // no need to make this client only
     public static boolean handleMiscUtilPacketClientSide(

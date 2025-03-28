@@ -93,18 +93,18 @@ public abstract class PortalGenTrigger {
     
     static {
         codecRegistry = new MappedRegistry<>(
-            ResourceKey.createRegistryKey(ResourceLocation.parse("imm_ptl:custom_portal_gen_trigger")),
+            ResourceKey.createRegistryKey(new ResourceLocation("imm_ptl:custom_portal_gen_trigger")),
             Lifecycle.stable()
         );
         
         Registry.register(
-            codecRegistry, ResourceLocation.parse("imm_ptl:use_item"), useItemTriggerCodec
+            codecRegistry, new ResourceLocation("imm_ptl:use_item"), useItemTriggerCodec
         );
         Registry.register(
-            codecRegistry, ResourceLocation.parse("imm_ptl:throw_item"), throwItemTriggerCodec
+            codecRegistry, new ResourceLocation("imm_ptl:throw_item"), throwItemTriggerCodec
         );
         Registry.register(
-            codecRegistry, ResourceLocation.parse("imm_ptl:conventional_dimension_change"),
+            codecRegistry, new ResourceLocation("imm_ptl:conventional_dimension_change"),
             ConventionalDimensionChangeTrigger.conventionalDimensionChangeCodec
         );
         

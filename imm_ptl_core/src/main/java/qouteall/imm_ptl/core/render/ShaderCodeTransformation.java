@@ -50,7 +50,7 @@ public class ShaderCodeTransformation {
     
     public static void init() {
         if (IPGlobal.enableClippingMechanism) {
-            String json = McHelper.readTextResource(ResourceLocation.parse(
+            String json = McHelper.readTextResource(new ResourceLocation(
                 "immersive_portals:shaders/shader_transformation.json"
             ));
             configs = IPGlobal.gson.fromJson(

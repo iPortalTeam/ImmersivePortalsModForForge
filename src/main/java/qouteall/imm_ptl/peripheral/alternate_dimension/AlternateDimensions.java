@@ -60,7 +60,7 @@ public class AlternateDimensions {
             .registryOrThrow(Registries.DIMENSION_TYPE)
             .getHolder(ResourceKey.create(
                 Registries.DIMENSION_TYPE,
-                ResourceLocation.parse("immersive_portals:surface_type")
+                new ResourceLocation("immersive_portals:surface_type")
             ))
             .orElseThrow(() -> new RuntimeException("Missing immersive_portals:surface_type"));
         
@@ -68,7 +68,7 @@ public class AlternateDimensions {
             .registryOrThrow(Registries.DIMENSION_TYPE)
             .getHolder(ResourceKey.create(
                 Registries.DIMENSION_TYPE,
-                ResourceLocation.parse("immersive_portals:surface_type_bright")
+                new ResourceLocation("immersive_portals:surface_type_bright")
             ))
             .orElseThrow(() -> new RuntimeException("Missing immersive_portals:surface_type_bright"));
         
@@ -111,27 +111,27 @@ public class AlternateDimensions {
     
     public static final ResourceKey<DimensionType> surfaceType = ResourceKey.create(
         Registries.DIMENSION_TYPE,
-        ResourceLocation.parse("immersive_portals:surface_type")
+        new ResourceLocation("immersive_portals:surface_type")
     );
     public static final ResourceKey<Level> alternate1 = ResourceKey.create(
         Registries.DIMENSION,
-        ResourceLocation.parse("immersive_portals:alternate1")
+        new ResourceLocation("immersive_portals:alternate1")
     );
     public static final ResourceKey<Level> alternate2 = ResourceKey.create(
         Registries.DIMENSION,
-        ResourceLocation.parse("immersive_portals:alternate2")
+        new ResourceLocation("immersive_portals:alternate2")
     );
     public static final ResourceKey<Level> alternate3 = ResourceKey.create(
         Registries.DIMENSION,
-        ResourceLocation.parse("immersive_portals:alternate3")
+        new ResourceLocation("immersive_portals:alternate3")
     );
     public static final ResourceKey<Level> alternate4 = ResourceKey.create(
         Registries.DIMENSION,
-        ResourceLocation.parse("immersive_portals:alternate4")
+        new ResourceLocation("immersive_portals:alternate4")
     );
     public static final ResourceKey<Level> alternate5 = ResourceKey.create(
         Registries.DIMENSION,
-        ResourceLocation.parse("immersive_portals:alternate5")
+        new ResourceLocation("immersive_portals:alternate5")
     );
     
     public static boolean isAlternateDimension(Level world) {

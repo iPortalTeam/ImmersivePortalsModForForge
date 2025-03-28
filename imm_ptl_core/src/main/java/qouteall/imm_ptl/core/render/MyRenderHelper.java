@@ -109,7 +109,7 @@ public class MyRenderHelper {
         ResourceProvider resourceFactory = new ResourceProvider() {
             @Override
             public Optional<Resource> getResource(ResourceLocation resourceLocation) {
-                ResourceLocation corrected = ResourceLocation.fromNamespaceAndPath(
+                ResourceLocation corrected = new ResourceLocation(
                     "immersive_portals", resourceLocation.getPath());
                 return resourceManager.getResource(corrected);
             }

@@ -29,28 +29,28 @@ public class IPModEntry {
 
     public static final String MODID = "imm_ptl_core";
 
-    public IPModEntry(FMLJavaModLoadingContext context) {
+    public IPModEntry() {
         if (FMLEnvironment.dist == Dist.CLIENT) {
-            IPModEntryClient.onInitializeClient(context);
+            IPModEntryClient.onInitializeClient(FMLJavaModLoadingContext.get());
         }
 
         MinecraftForge.EVENT_BUS.register(IPModMain.class);
         MinecraftForge.EVENT_BUS.register(IPModMainClient.class);
 
 //        IPConfig.register(new ForgeConfigSpec.Builder()); //TODO @Nick1st Check if config is used / functioning
-        context.getModEventBus().register(IPConfig.class);
+        FMLJavaModLoadingContext.get().getModEventBus().register(IPConfig.class);
         MinecraftForge.EVENT_BUS.addListener(IPModEntry::registerCommands);
         MinecraftForge.EVENT_BUS.addListener(IPModEntry::commonSetup);
-        context.getModEventBus().register(IPModEntry.class);
-        context.getModEventBus().register(IPRegistry.class);
-        context.getModEventBus().register(SubCommandArgumentType.class);
-        context.getModEventBus().register(TimingFunctionArgumentType.class);
-        context.getModEventBus().register(AxisArgumentType.class);
+        FMLJavaModLoadingContext.get().getModEventBus().register(IPModEntry.class);
+        FMLJavaModLoadingContext.get().getModEventBus().register(IPRegistry.class);
+        FMLJavaModLoadingContext.get().getModEventBus().register(SubCommandArgumentType.class);
+        FMLJavaModLoadingContext.get().getModEventBus().register(TimingFunctionArgumentType.class);
+        FMLJavaModLoadingContext.get().getModEventBus().register(AxisArgumentType.class);
 
         IPModMain.init();
         RequiemCompat.init();
 
-        IPRegistry.registerEntities(context.getModEventBus());
+        IPRegistry.registerEntities(FMLJavaModLoadingContext.get().getModEventBus());
         
         IPRegistry.registerMyDimensionsFabric();
 

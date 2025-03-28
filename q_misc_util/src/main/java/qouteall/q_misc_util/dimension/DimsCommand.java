@@ -28,7 +28,7 @@ public class DimsCommand {
                             DimensionArgument.getDimension(context, "templateDimension");
                         String newDimensionId = StringArgumentType.getString(context, "newDimensionID");
                         
-                        ResourceLocation newDimId = ResourceLocation.parse(newDimensionId);
+                        ResourceLocation newDimId = new ResourceLocation(newDimensionId);
                         
                         if (newDimId.getNamespace().equals("minecraft")) {
                             context.getSource().sendFailure(Component.literal("Invalid namespace"));

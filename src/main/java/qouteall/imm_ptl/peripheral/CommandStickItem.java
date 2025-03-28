@@ -43,9 +43,9 @@ import java.util.stream.Collectors;
 public class CommandStickItem extends Item {
     
     private static final ResourceKey<Registry<Data>> registryRegistryKey =
-        ResourceKey.createRegistryKey(ResourceLocation.parse("immersive_portals:command_stick_type"));
+        ResourceKey.createRegistryKey(new ResourceLocation("immersive_portals:command_stick_type"));
 
-    public static final DeferredRegister<Data> CommandStickData = DeferredRegister.create(ResourceLocation.fromNamespaceAndPath("immersive_portals", "command_stick_type"), "imm_ptl");
+    public static final DeferredRegister<Data> CommandStickData = DeferredRegister.create(new ResourceLocation("immersive_portals", "command_stick_type"), "imm_ptl");
 
 
     public static final Supplier<IForgeRegistry<Data>> REGISTRY = CommandStickData.makeRegistry(RegistryBuilder::new);
@@ -152,7 +152,7 @@ public class CommandStickItem extends Item {
     public static void registerType(String id, Data data) {
         commandStickTypeRegistry.register(
             ResourceKey.create(
-                registryRegistryKey, ResourceLocation.parse(id)
+                registryRegistryKey, new ResourceLocation(id)
             ),
             data,
             Lifecycle.stable()

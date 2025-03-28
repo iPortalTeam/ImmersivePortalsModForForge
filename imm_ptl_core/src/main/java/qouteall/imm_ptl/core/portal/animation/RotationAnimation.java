@@ -13,7 +13,7 @@ public class RotationAnimation implements PortalAnimationDriver {
     
     public static void init() {
         PortalAnimationDriver.registerDeserializer(
-            ResourceLocation.parse("imm_ptl:rotation"),
+            new ResourceLocation("imm_ptl:rotation"),
             RotationAnimation::deserialize
         );
     }

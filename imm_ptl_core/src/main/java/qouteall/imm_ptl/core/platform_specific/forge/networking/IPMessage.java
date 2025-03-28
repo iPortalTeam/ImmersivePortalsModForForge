@@ -20,7 +20,7 @@ public class IPMessage {
     public static void register() {
         // Make the channel. If needed you can do version checking here
         INSTANCE = NetworkRegistry.ChannelBuilder
-                .named(ResourceLocation.fromNamespaceAndPath(IPModEntry.MODID, "messages"))
+                .named(new ResourceLocation(IPModEntry.MODID, "messages"))
                 .networkProtocolVersion(() -> "1.0")
                 .clientAcceptedVersions(s -> true)
                 .serverAcceptedVersions(s -> true)
