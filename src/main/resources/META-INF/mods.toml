@@ -53,3 +53,14 @@ modId="q_misc_util"
 mandatory=true
 versionRange="[0.0.0,)"
 
+[[dependencies.q_misc_util]]
+modId="forge"
+mandatory=true
+versionRange="[47,)"
+
+[[dependencies.q_misc_util]]
+modId="cloth_config"
+mandatory=true
+versionRange="[11.1,)"
+
+
