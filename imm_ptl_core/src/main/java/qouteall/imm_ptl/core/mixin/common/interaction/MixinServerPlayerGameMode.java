@@ -100,10 +100,16 @@ public class MixinServerPlayerGameMode {
     // disable distance check when doing cross-portal interaction
     @WrapOperation(
         method = "handleBlockBreakAction",
-        at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/server/level/ServerPlayer;canReach(Lnet/minecraft/core/BlockPos;D)Z"
-        ),
+        at = {
+            @At(
+                value = "INVOKE",
+                target = "Lnet/minecraft/server/level/ServerPlayer;canReach(Lnet/minecraft/core/BlockPos;D)Z"
+            ),
+            @At(
+                value = "INVOKE",
+                target = "net/minecraft/server/level/ServerPlayer;canReachRaw(Lnet/minecraft/core/BlockPos;D)Z"
+            )
+        },
         remap = false
     )
     private boolean wrapDistanceInHandleBlockBreakAction(ServerPlayer instance, BlockPos blockPos, double v, Operation<Boolean> original) {
