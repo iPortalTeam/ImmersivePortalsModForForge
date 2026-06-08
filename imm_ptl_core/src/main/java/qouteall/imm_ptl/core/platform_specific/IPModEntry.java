@@ -1,7 +1,5 @@
 package qouteall.imm_ptl.core.platform_specific;
 
-//import com.fusionflux.gravity_api.util.GravityChannel;
-//import com.fusionflux.gravity_api.util.packet.DefaultGravityPacket;
 
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -19,6 +17,7 @@ import qouteall.imm_ptl.core.commands.AxisArgumentType;
 import qouteall.imm_ptl.core.commands.PortalCommand;
 import qouteall.imm_ptl.core.commands.SubCommandArgumentType;
 import qouteall.imm_ptl.core.commands.TimingFunctionArgumentType;
+import qouteall.imm_ptl.core.compat.GravityChangerInterface;
 import qouteall.imm_ptl.core.platform_specific.forge.networking.IPMessage;
 import qouteall.q_misc_util.Helper;
 
@@ -73,7 +72,7 @@ public class IPModEntry {
         }
         
         if (ModList.get().isLoaded("gravitychanger")) {
-            //GravityChangerInterface.invoker = new GravityChangerInterface.OnGravityChangerPresent(); // TODO @Nick1st GravityAPI does not exist for Forge
+            GravityChangerInterface.invoker = new GravityChangerInterface.OnGravityChangerPresent(); // DONE @Matthew-Alpha Rebuilt integration for GravityChanger from @Tfarcenim
             Helper.log("Gravity API is present");
         }
         else {

@@ -76,7 +76,7 @@ allprojects {
         minecraft "net.minecraftforge:forge:${project.minecraft_version}-${project.loader_version}"
         annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
-        compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
+        implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
         implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.4.1")) {
             jarJar.ranged(it, "[0.4.1,)")
         }
@@ -87,8 +87,10 @@ allprojects {
 
         // Pehkui
         api fg.deobf("com.github.Virtuoel:Pehkui:${project.pehkui_version}")
+        // GravityChanger Re-Implementation from Matthew-Alpha
+        api fg.deobf("curse.maven:gravity-control-1255017:${project.gravitychanger_fileid}")
         // Twilight Forest
-        api fg.deobf("teamtwilight:twilightforest:${project.twilightforest_version}:universal")
+        //api fg.deobf("teamtwilight:twilightforest:${project.twilightforest_version}:universal")
 //        api fg.deobf("curse.maven:twilightforest-227639:${project.twilightforest_fileid}")
         // Flywheel
 //        compileOnly fg.deobf("com.jozufozu.flywheel:flywheel-forge-1.19.3:${project.flywheel_version}") // TODO @Nick1st there's no flywheel yet
@@ -99,8 +101,8 @@ allprojects {
         // Oculus
         api fg.deobf("curse.maven:oculus-581495:${project.oculus_fileid}") // TODO @Nick1st Oculus support currently non functioning, no Oculus for 1.19 yet
         // Curios
-        runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${project.curios_version}")
-        compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${project.curios_version}:api")
+        api fg.deobf("top.theillusivec4.curios:curios-forge:${project.curios_version}")
+        api fg.deobf("top.theillusivec4.curios:curios-forge:${project.curios_version}:api")
         // Tinkers Construct
             //api fg.deobf("curse.maven:tconstruct-74072:${project.tconstruct_fileid}")
             //api fg.deobf("curse.maven:mantle-74924:${project.mantle_fileid}")
